@@ -1,0 +1,27 @@
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { TokenExpiredFilter } from './common/guards/tokenExpireFilter.guard';
+import { WsAdapter } from '@nestjs/platform-ws';
+import { WebSocketAdapter } from '@nestjs/common';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  app.enableCors({ origin: "*", methods: "*", allowedHeaders: "*", exposedHeaders: "*", });
+
+  app.useGlobalFilters(new TokenExpiredFilter());
+
+  const config = new DocumentBuilder()
+    .setTitle('Caly')
+    .setDescription('DEV API')
+    .setVersion('1.0')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('caly', app, document);
+
+
+
+  await app.listen(3000);
+}
+bootstrap();

@@ -1,0 +1,61 @@
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus } from '@nestjs/common';
+import { ServicesService } from './services.service';
+import { UpdateServiceDto } from './dto/update-service.dto';
+import { ApiTags } from '@nestjs/swagger';
+import CreateServiceDto from './dto/create-service.dto';
+
+@ApiTags('Services')
+@Controller('services')
+export class ServicesController {
+  constructor(private readonly servicesService: ServicesService) { }
+
+  @Post()
+  async create(@Body() createServiceDto: CreateServiceDto) {
+    try {
+      const createdService = await this.servicesService.create(createServiceDto);
+      return { success: true, data: createdService };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Get()
+  async findAll() {
+    try {
+      const services = await this.servicesService.findAll();
+      return { success: true, data: services };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    try {
+      const service = await this.servicesService.findOne(+id);
+      return { success: true, data: service };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @Patch(':id')
+  async update(@Param('id') id: string, @Body() updateServiceDto: UpdateServiceDto) {
+    try {
+      const updatedService = await this.servicesService.update(+id, updateServiceDto);
+      return { success: true, data: updatedService };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Delete(':id')
+  async remove(@Param('id') id: string) {
+    try {
+      await this.servicesService.remove(+id);
+      return { success: true, message: 'Service successfully deleted' };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+}
