@@ -12,7 +12,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { StoresModule } from './stores/stores.module';
 import { Store } from './stores/entities/store.entity';
 import "reflect-metadata";
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ReviewsModule } from './reviews/reviews.module';
 import { ServicesModule } from './services/services.module';
 import { SpecialistsModule } from './specialists/specialists.module';
