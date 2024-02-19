@@ -26,7 +26,7 @@ import { StoreType } from './stores/entities/storeType';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { Appointment } from './appointments/entities/appointment.entity';
 import { TimeSlot } from './appointments/entities/timeslots.entity';
-  
+
 @Module({
   providers: [
     AppService,
@@ -50,6 +50,10 @@ import { TimeSlot } from './appointments/entities/timeslots.entity';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
+      ssl: {
+        rejectUnauthorized: false
+      },
+
       entities: [User, StoreType, Store, Specialist, Service, Appointment, TimeSlot],
       synchronize: true,
       migrations: [],

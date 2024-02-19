@@ -2,12 +2,10 @@ import { BadRequestException, ForbiddenException, HttpException, HttpStatus, Inj
 import { UsersService } from 'src/users/users.service';
 import { User } from 'src/users/entities/user.entity';
 import { Role } from 'src/users/enums/role';
-import * as argon2 from 'argon2';
+import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { SignUpDto } from './dto/signUp.dto';
 import { SignInDto } from './dto/signin.dto';
-
-
 
 @Injectable()
 export class AuthService {
@@ -16,14 +14,9 @@ export class AuthService {
     private jwtService: JwtService,
   ) { }
 
-
-
-
   async signUp(createUserDto: SignUpDto): Promise<{ token: string, refreshToken: string, User: Partial<User> }> {
     try {
-
       createUserDto.email = createUserDto.email.toLowerCase();
-
       Logger.log(createUserDto);
       const existingUser = await this.usersService.findOneByEmail(createUserDto.email);
       Logger.warn(existingUser);
@@ -32,9 +25,7 @@ export class AuthService {
         throw new Error('Email is already in use.');
       }
 
-
       const hash = await this.hashData(createUserDto.password);
-
 
       const newUser = await this.usersService.create({
         ...createUserDto,
@@ -45,7 +36,6 @@ export class AuthService {
       if (!newUser) {
         throw new Error('User creation failed.');
       }
-
 
       const tokens = await this.getTokens(
         newUser.id,
@@ -82,11 +72,6 @@ export class AuthService {
     }
   }
 
-
-
-
-
-
   async signIn(data: SignInDto) {
     try {
       const EXPIRE_TIME = 15 * 60 * 1000;
@@ -97,7 +82,7 @@ export class AuthService {
         throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
       }
 
-      const passwordMatches = await argon2.verify(user.password, data.password);
+      const passwordMatches = await bcrypt.compare(data.password, user.password);
 
       if (!passwordMatches) {
         throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
@@ -127,16 +112,14 @@ export class AuthService {
     }
   }
 
-
   async logout(id: string) {
     return this.usersService.update(id, { refreshToken: null });
   }
 
   private async hashData(data: string): Promise<string> {
-    return argon2.hash(data);
+    const saltRounds = 10;
+    return bcrypt.hash(data, saltRounds);
   }
-
-
 
   async updateRefreshToken(id: string, refreshToken: string) {
     await this.usersService.update(id, {
@@ -145,9 +128,6 @@ export class AuthService {
   }
 
   async getTokens(id: string, email: string, role: string, firstName: string, lastName: string, zipCode: string, state: string) {
-
-
-
     const [token, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         {
@@ -185,11 +165,7 @@ export class AuthService {
       token,
       refreshToken,
     };
-
-
-
   }
-
 
   async refreshToken(user: User): Promise<{ token: string, refreshToken: string, expiresIn: number, User: Partial<User> }> {
     const EXPIRE_TIME = 15 * 60 * 1000;
@@ -199,7 +175,6 @@ export class AuthService {
     await this.updateRefreshToken(user.id, tokens.refreshToken);
 
     const myuser = await this.usersService.findOneById(user.id);
-
 
     const response = {
       token: tokens.token,
@@ -218,8 +193,4 @@ export class AuthService {
 
     return response;
   }
-
-
-
-
 }
