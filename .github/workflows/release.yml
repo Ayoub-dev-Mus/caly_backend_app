@@ -13,7 +13,8 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Build and Deploy using Docker Compose
-        run:
-          docker-compose up -d
+        run: |
+          docker-compose pull
+          docker-compose up --build --force-recreate --no-deps -d
         env:
           DOCKER_BUILDKIT: 1
