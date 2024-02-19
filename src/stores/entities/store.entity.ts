@@ -1,8 +1,5 @@
 
 import { CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, UpdateDateColumn } from "typeorm";
-import { ObjectType, Field } from '@nestjs/graphql';
-
-
 import { PrimaryGeneratedColumn, Column } from 'typeorm';
 import { Specialist } from "src/specialists/entities/specialist.entity";
 import { Service } from "src/services/entities/service.entity";

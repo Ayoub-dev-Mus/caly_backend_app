@@ -10,7 +10,6 @@ import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './common/guards/role.guard';
 import { JwtModule } from '@nestjs/jwt';
 import { StoresModule } from './stores/stores.module';
-import { GraphQLModule } from '@nestjs/graphql';
 import { Store } from './stores/entities/store.entity';
 import "reflect-metadata";
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
