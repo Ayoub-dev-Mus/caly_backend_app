@@ -20,11 +20,9 @@ export class Booking {
     store: Store;
 
 
-    @OneToOne(() => Specialist)
-    @JoinColumn()
+    @ManyToOne(() => Specialist, specialist => specialist.bookings)
     specialist: Specialist;
 
-    @OneToOne(() => Service, service => service.booking)
-    @JoinColumn()
+    @ManyToOne(() => Service, service => service.bookings)
     service: Service;
 }
