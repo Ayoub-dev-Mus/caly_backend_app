@@ -1,6 +1,7 @@
+import { Booking } from 'src/bookings/entities/booking.entity';
 import { Specialist } from 'src/specialists/entities/specialist.entity';
 import { Store } from 'src/stores/entities/store.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, JoinColumn, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 
 
 
@@ -30,4 +31,9 @@ export class Service {
     @ManyToMany(() => Specialist, specialist => specialist.services)
     @JoinTable()
     specialists: Specialist[];
-}
+
+
+
+    @OneToOne(() => Booking, booking => booking.service)
+    booking: Booking;
+}   

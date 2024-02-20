@@ -6,6 +6,7 @@ import { Service } from "src/services/entities/service.entity";
 import { StoreStatus } from "../enums/store.status.enum";
 import { StoreType } from "./storeType";
 import { TimeSlot } from "src/appointments/entities/timeslots.entity";
+import { Booking } from "src/bookings/entities/booking.entity";
 
 
 @Entity()
@@ -32,6 +33,8 @@ export class Store {
   @Column({ type: 'geometry', spatialFeatureType: 'Point', srid: 4326, nullable: true })
   location: { type: string, coordinates: number[] };
 
+  @OneToMany(() => Booking, booking => booking.store)
+  bookings: Booking[];
 
   @ManyToOne(() => StoreType, storeType => storeType.store)
   type: StoreType

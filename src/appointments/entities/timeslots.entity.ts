@@ -1,6 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, OneToOne, JoinColumn } from "typeorm";
 import { Appointment } from "./appointment.entity";
 import { Store } from "src/stores/entities/store.entity";
+import { Booking } from "src/bookings/entities/booking.entity";
 
 @Entity()
 export class TimeSlot {
@@ -16,6 +17,11 @@ export class TimeSlot {
     @Column({ default: true })
     available: boolean;
 
+    
     @ManyToOne(() => Store, store => store.timeSlots)
     store: Store;
+
+    @OneToOne(() => Booking)
+    @JoinColumn()
+    booking: Booking;
 }
