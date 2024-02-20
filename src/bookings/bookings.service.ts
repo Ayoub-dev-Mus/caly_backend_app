@@ -19,7 +19,7 @@ export class BookingsService {
   }
 
   async findAll() {
-    return await this.bookingRepository.find({ relations: ["specialist", "service", "store"] });
+    return await this.bookingRepository.find({ relations: ["specialist", "service", "store" , "timeSlot"] });
   }
 
   async findOne(id: number) {
