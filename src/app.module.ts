@@ -25,6 +25,8 @@ import { AppointmentsModule } from './appointments/appointments.module';
 import { Appointment } from './appointments/entities/appointment.entity';
 import { TimeSlot } from './appointments/entities/timeslots.entity';
 import { Booking } from './bookings/entities/booking.entity';
+import { OffersModule } from './offers/offers.module';
+import { Offer } from './offers/entities/offer.entity';
 
 @Module({
   providers: [
@@ -55,11 +57,11 @@ import { Booking } from './bookings/entities/booking.entity';
         rejectUnauthorized: false
       },
 
-      entities: [User, StoreType, Store, Specialist, Service, Appointment, TimeSlot, Booking],
+      entities: [User, StoreType, Store, Specialist, Service, Appointment, TimeSlot, Booking, Offer],
       synchronize: true,
       migrations: [],
       subscribers: [],
-    }), UsersModule, AuthModule, StoresModule, ReviewsModule, ServicesModule, SpecialistsModule, BookingsModule, NotificationsModule, CalendarsModule, AppointmentsModule],
+    }), UsersModule, AuthModule, StoresModule, ReviewsModule, ServicesModule, SpecialistsModule, BookingsModule, NotificationsModule, CalendarsModule, AppointmentsModule, OffersModule],
   controllers: [AppController],
 
 })

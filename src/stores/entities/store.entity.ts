@@ -7,6 +7,7 @@ import { StoreStatus } from "../enums/store.status.enum";
 import { StoreType } from "./storeType";
 import { TimeSlot } from "src/appointments/entities/timeslots.entity";
 import { Booking } from "src/bookings/entities/booking.entity";
+import { Offer } from "src/offers/entities/offer.entity";
 
 
 @Entity()
@@ -80,6 +81,9 @@ export class Store {
 
   @OneToMany(() => TimeSlot, timeSlot => timeSlot.store)
   timeSlots: TimeSlot[];
+
+  @OneToMany(() => Offer, offer => offer.store)
+  offers: Offer[];
 
 }
 
