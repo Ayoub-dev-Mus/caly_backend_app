@@ -11,7 +11,7 @@ export class Booking {
     id: number;
 
     @CreateDateColumn()
-    cratedAt: Date;
+    createdAt: Date;
 
     @OneToOne(() => TimeSlot, timeSlot => timeSlot.booking)
     timeSlot: TimeSlot;
