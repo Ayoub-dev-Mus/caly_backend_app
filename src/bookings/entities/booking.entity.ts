@@ -2,6 +2,7 @@ import { TimeSlot } from 'src/appointments/entities/timeslots.entity';
 import { Service } from 'src/services/entities/service.entity';
 import { Specialist } from 'src/specialists/entities/specialist.entity';
 import { Store } from 'src/stores/entities/store.entity';
+import { User } from 'src/users/entities/user.entity';
 import { CreateDateColumn, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
 
 
@@ -22,6 +23,9 @@ export class Booking {
 
     @ManyToOne(() => Specialist, specialist => specialist.bookings)
     specialist: Specialist;
+
+    @ManyToOne(() => User, user => user.bookings)
+    user: User;
 
     @ManyToOne(() => Service, service => service.bookings)
     service: Service;

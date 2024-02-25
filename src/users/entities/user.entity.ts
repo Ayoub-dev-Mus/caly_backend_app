@@ -1,5 +1,5 @@
 
-import { Entity } from "typeorm";
+import { Entity, OneToMany } from "typeorm";
 
 import {
     Contains,
@@ -14,6 +14,7 @@ import {
 } from "class-validator"
 
 import { PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Booking } from "src/bookings/entities/booking.entity";
 
 @Entity()
 export class User {
@@ -64,6 +65,13 @@ export class User {
     @Column({ nullable: true })
     @IsString()
     refreshToken: string;
+
+    @Column({ nullable: true })
+    @IsString()
+    resetPasswordToken: string;
+
+    @OneToMany(() => Booking, booking => booking.user)
+    bookings: Booking[];
 
 
 }

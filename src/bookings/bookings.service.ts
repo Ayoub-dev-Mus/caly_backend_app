@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindManyOptions, Repository } from 'typeorm';
 import { Booking } from './entities/booking.entity';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class BookingsService {
@@ -13,15 +14,22 @@ export class BookingsService {
     private readonly bookingRepository: Repository<Booking>
   ) { }
 
-  async create(createBookingDto: CreateBookingDto) {
+  async create(createBookingDto: CreateBookingDto, user: User) {
+    createBookingDto.user = user;
+    Logger.log(createBookingDto);
     const newBooking = this.bookingRepository.create(createBookingDto);
     return await this.bookingRepository.save(newBooking);
   }
 
-  async findAll() {
-    return await this.bookingRepository.find({ relations: ["specialist", "service", "store" , "timeSlot"] });
+  async findAll(user: User, options?: FindManyOptions<Booking>,) {
+    return await this.bookingRepository.find({
+      relations: ["specialist", "service", "store", "timeSlot", "user"],
+      where: {
+        user: { id: user.id }
+      },
+      ...options,
+    });
   }
-
   async findOne(id: number) {
     return await this.bookingRepository.findOne({ where: { id } });
   }

@@ -5,6 +5,7 @@ import { Store } from 'src/stores/entities/store.entity';
 import { IsNotEmpty, IsNumber, IsDate, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { User } from 'src/users/entities/user.entity';
 
 
 export class CreateBookingDto {
@@ -31,4 +32,7 @@ export class CreateBookingDto {
     @ValidateNested()
     @Type(() => Service)
     service: Service;
+
+    @ApiProperty()
+    user: User;
 }

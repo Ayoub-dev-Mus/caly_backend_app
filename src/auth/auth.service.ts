@@ -20,11 +20,6 @@ export class AuthService {
       Logger.log(createUserDto);
       const existingUser = await this.usersService.findOneByEmail(createUserDto.email);
       Logger.warn(existingUser);
-
-      if (existingUser) {
-        throw new Error('Email is already in use.');
-      }
-
       const hash = await this.hashData(createUserDto.password);
 
       const newUser = await this.usersService.create({

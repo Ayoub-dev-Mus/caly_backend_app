@@ -1,22 +1,47 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { GetUser } from '../common/jwtMiddlware';
+import { User } from 'src/users/entities/user.entity';
+import { FindManyOptions } from 'typeorm';
+import { Booking } from './entities/booking.entity';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/role.guard';
+import { HasRoles } from 'src/common/role.decorator';
+import { Role } from 'src/users/enums/role';
 
 @ApiTags('bookings')
 @Controller('bookings')
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) { }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.USER)
   @Post()
-  create(@Body() createBookingDto: CreateBookingDto) {
-    return this.bookingsService.create(createBookingDto);
+  create(@Body() createBookingDto: CreateBookingDto, @GetUser() user: User) {
+    return this.bookingsService.create(createBookingDto, user);
   }
 
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.USER)
   @Get()
-  findAll() {
-    return this.bookingsService.findAll();
+  async findAll(
+    @GetUser() user: User,
+    @Query() query: any,
+  ): Promise<Booking[]> {
+    const options: FindManyOptions<Booking> = {};
+
+    if (query.page) {
+      const page = parseInt(query.page);
+      const pageSize = parseInt(query.pageSize) || 10;
+      options.skip = (page - 1) * pageSize;
+      options.take = pageSize;
+    }
+
+    return this.bookingsService.findAll(user, options);
   }
 
   @Get(':id')
