@@ -39,6 +39,7 @@ export class AuthService {
         newUser.firstName,
         newUser.lastName,
         newUser.state,
+        newUser.address,
         newUser.zipCode
       );
 
@@ -53,6 +54,7 @@ export class AuthService {
           lastName: newUser.lastName,
           zipCode: newUser.zipCode,
           state: newUser.state,
+          address: newUser.address,
           role: newUser.role,
         },
       };
@@ -96,6 +98,7 @@ export class AuthService {
           firstName: user.firstName,
           lastName: user.lastName,
           zipCode: user.zipCode,
+          address: user.address,
           state: user.state,
           role: user.role,
         }
@@ -122,7 +125,7 @@ export class AuthService {
     });
   }
 
-  async getTokens(id: string, email: string, role: string, firstName: string, lastName: string, zipCode: string, state: string) {
+  async getTokens(id: string, email: string, role: string, firstName: string, lastName: string, zipCode: string, state: string, address: string = null) {
     const [token, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         {
@@ -132,6 +135,7 @@ export class AuthService {
           lastName,
           zipCode,
           state,
+          address,
           role
         },
         {
@@ -146,6 +150,7 @@ export class AuthService {
           firstName,
           lastName,
           zipCode,
+          address,
           state,
           role
         },
