@@ -70,6 +70,7 @@ export class User {
     @IsString()
     phoneNumber: string;
 
+    //code
     @Column({ nullable: true })
     @IsString()
     refreshToken: string;
