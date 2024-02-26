@@ -57,6 +57,7 @@ export class AuthService {
           zipCode: newUser.zipCode,
           state: newUser.state,
           address: newUser.address,
+          phone: newUser.phoneNumber,
           role: newUser.role,
         },
       };
