@@ -39,6 +39,7 @@ export class AuthService {
         newUser.firstName,
         newUser.lastName,
         newUser.state,
+
         newUser.address,
         newUser.zipCode,
         newUser.phoneNumber
@@ -88,7 +89,7 @@ export class AuthService {
         throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
       }
 
-      const tokens = await this.getTokens(user.id, user.email, user.role, user.firstName, user.lastName, user.state, user.zipCode, user.address, user.phoneNumber);
+      const tokens = await this.getTokens(user.id, user.email, user.role, user.firstName, user.lastName, user.state, user.zipCode, user.address, user.phoneNumber, user.profilePicture);
       await this.updateRefreshToken(user.id, tokens.refreshToken);
 
       const response = {
@@ -104,6 +105,7 @@ export class AuthService {
           zipCode: user.zipCode,
           address: user.address,
           state: user.state,
+          profilePicture: user.profilePicture,
           role: user.role,
         }
       };
@@ -129,7 +131,7 @@ export class AuthService {
     });
   }
 
-  async getTokens(id: string, email: string, role: string, firstName: string, lastName: string, zipCode: string, state: string, address: string, phoneNumber: string) {
+  async getTokens(id: string, email: string, role: string, firstName: string, lastName: string, zipCode: string, state: string, address: string, phoneNumber: string, profilePicture: string = null) {
     const [token, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         {
@@ -141,6 +143,7 @@ export class AuthService {
           state,
           address,
           phoneNumber,
+          profilePicture,
           role
         },
         {
@@ -158,6 +161,7 @@ export class AuthService {
           state,
           address,
           phoneNumber,
+          profilePicture,
           role
         },
         {

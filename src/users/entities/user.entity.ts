@@ -64,6 +64,10 @@ export class User {
 
     @Column({ nullable: true })
     @IsString()
+    profilePicture: string;
+
+    @Column({ nullable: true })
+    @IsString()
     phoneNumber: string;
 
     @Column({ nullable: true })
