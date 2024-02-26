@@ -17,6 +17,9 @@ export class SignUpDto {
     zipCode: string;
 
     @ApiProperty()
+    phoneNumber: string;
+
+    @ApiProperty()
     state: string;
 
     @ApiProperty()

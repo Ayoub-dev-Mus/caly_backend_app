@@ -40,7 +40,9 @@ export class AuthService {
         newUser.lastName,
         newUser.state,
         newUser.address,
-        newUser.zipCode
+        newUser.zipCode,
+        newUser.phoneNumber
+
       );
 
       // Prepare response object
@@ -85,7 +87,7 @@ export class AuthService {
         throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
       }
 
-      const tokens = await this.getTokens(user.id, user.email, user.role, user.firstName, user.lastName, user.state, user.zipCode);
+      const tokens = await this.getTokens(user.id, user.email, user.role, user.firstName, user.lastName, user.state, user.zipCode, user.address, user.phoneNumber);
       await this.updateRefreshToken(user.id, tokens.refreshToken);
 
       const response = {
@@ -97,6 +99,7 @@ export class AuthService {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          phoneNumber: user.phoneNumber,
           zipCode: user.zipCode,
           address: user.address,
           state: user.state,
@@ -125,7 +128,7 @@ export class AuthService {
     });
   }
 
-  async getTokens(id: string, email: string, role: string, firstName: string, lastName: string, zipCode: string, state: string, address: string = null) {
+  async getTokens(id: string, email: string, role: string, firstName: string, lastName: string, zipCode: string, state: string, address: string, phoneNumber: string) {
     const [token, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         {
@@ -136,6 +139,7 @@ export class AuthService {
           zipCode,
           state,
           address,
+          phoneNumber,
           role
         },
         {
@@ -150,8 +154,9 @@ export class AuthService {
           firstName,
           lastName,
           zipCode,
-          address,
           state,
+          address,
+          phoneNumber,
           role
         },
         {
@@ -170,7 +175,7 @@ export class AuthService {
   async refreshToken(user: User): Promise<{ token: string, refreshToken: string, expiresIn: number, User: Partial<User> }> {
     const EXPIRE_TIME = 15 * 60 * 1000;
 
-    const tokens = await this.getTokens(user.id, user.email, user.role, user.firstName, user.lastName, user.state, user.zipCode);
+    const tokens = await this.getTokens(user.id, user.email, user.role, user.firstName, user.lastName, user.state, user.zipCode, user.address, user.phoneNumber);
 
     await this.updateRefreshToken(user.id, tokens.refreshToken);
 
