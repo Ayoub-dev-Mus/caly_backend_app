@@ -98,38 +98,44 @@ export class UsersService {
         updatedUserData.password = await bcrypt.hash(updatedUserData.password, saltRounds);
       }
 
+
+
+
+
+
       const updateResult = await this.userRepository.update(user.id, updatedUserData);
 
       const myuser = await this.userRepository.findOne({ where: { id: user.id } });
 
       if (updateResult.affected > 0) {
         const token = this.jwtService.sign({
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role,
-          zipCode: user.zipCode,
-          state: user.state,
-          address: user.address,
-          phoneNumber: user.phoneNumber,
-          profilePicture: user.profilePicture
+          id: myuser.id,
+          email: myuser.email,
+          firstName: myuser.firstName,
+          lastName: myuser.lastName,
+          role: myuser.role,
+          zipCode: myuser.zipCode,
+          state: myuser.state,
+          address: myuser.address,
+          phoneNumber: myuser.phoneNumber,
+          profilePicture: myuser.profilePicture
 
         }, { expiresIn: '15m', secret: process.env.JWT_SECRET });
 
         const refreshToken = this.jwtService.sign({
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role,
-          zipCode: user.zipCode,
-          state: user.state,
-          address: user.address,
-          phoneNumber: user.phoneNumber,
-          profilePicture: user.profilePicture
+          id: myuser.id,
+          email: myuser.email,
+          firstName: myuser.firstName,
+          lastName: myuser.lastName,
+          role: myuser.role,
+          zipCode: myuser.zipCode,
+          state: myuser.state,
+          address: myuser.address,
+          phoneNumber: myuser.phoneNumber,
+          profilePicture: myuser.profilePicture
 
         }, { expiresIn: '7d', secret: process.env.JWT_SECRET });
+
 
 
         const response = {
