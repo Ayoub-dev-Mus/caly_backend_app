@@ -4,13 +4,20 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder, UpdateResult } from 'typeorm';
 import { User } from './entities/user.entity';
+import * as bcrypt from 'bcryptjs';
+import { JwtService } from '@nestjs/jwt';
+import { zip } from 'rxjs';
 
 @Injectable()
 export class UsersService {
 
 
-  @InjectRepository(User)
-  private readonly userRepository: Repository<User>;
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private jwtService: JwtService
+  ) { }
+
 
   async create(userData: CreateUserDto): Promise<User | null> {
     try {
@@ -74,6 +81,82 @@ export class UsersService {
     try {
       const deletedUser = await this.userRepository.delete(id);
       return deletedUser
+    } catch (error) {
+      return error.message
+    }
+  }
+
+  async updateUserInfo(user: User, updateData: Partial<User>): Promise<any> {
+    try {
+      const updatedUserData = { ...updateData };
+      delete updatedUserData.id;
+
+      const EXPIRE_TIME = 15 * 60 * 1000;
+
+      if (updatedUserData.password) {
+        const saltRounds = 10;
+        updatedUserData.password = await bcrypt.hash(updatedUserData.password, saltRounds);
+      }
+
+      const updateResult = await this.userRepository.update(user.id, updatedUserData);
+
+      const myuser = await this.userRepository.findOne({ where: { id: user.id } });
+
+      if (updateResult.affected > 0) {
+        const token = this.jwtService.sign({
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          zipCode: user.zipCode,
+          state: user.state,
+          address: user.address,
+          phoneNumber: user.phoneNumber,
+          profilePicture: user.profilePicture
+
+        }, { expiresIn: '15m', secret: process.env.JWT_SECRET });
+
+        const refreshToken = this.jwtService.sign({
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          zipCode: user.zipCode,
+          state: user.state,
+          address: user.address,
+          phoneNumber: user.phoneNumber,
+          profilePicture: user.profilePicture
+
+        }, { expiresIn: '7d', secret: process.env.JWT_SECRET });
+
+
+        const response = {
+          token: token,
+          refreshToken: refreshToken,
+          expiresIn: new Date().setTime(new Date().getTime() + EXPIRE_TIME),
+          User: {
+            id: myuser.id,
+            email: myuser.email,
+            firstName: myuser.firstName,
+            lastName: myuser.lastName,
+            zipCode: myuser.zipCode,
+            state: myuser.state,
+            address: myuser.address,
+            phoneNumber: myuser.phoneNumber,
+            profilePicture: myuser.profilePicture,
+            role: myuser.role,
+          }
+        }
+
+
+
+        return response;
+
+      }
+
+      return { updateResult };
     } catch (error) {
       return error.message
     }
