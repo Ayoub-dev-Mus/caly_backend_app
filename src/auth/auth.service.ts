@@ -287,7 +287,7 @@ export class AuthService {
         from: 'caly22@gmail.com',
         to: email,
         subject: 'Password Reset OTP',
-        text: `Your OTP for password reset is: ${otp}`
+        text: `Your OTP for password reset is : ${otp}`
       };
 
       await transporter.sendMail(mailOptions);
