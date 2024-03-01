@@ -11,9 +11,9 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
-        
 
-      - name: Build and Deploy using Docker Compose
+
+      - name: Build and Deploy Caly using Docker Compose
         run: |
           docker-compose pull
           docker-compose up --build --force-recreate --no-deps -d
