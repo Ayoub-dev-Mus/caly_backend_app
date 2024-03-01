@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - master
-#
+#test
 jobs:
   update_vps:
     runs-on: self-hosted
