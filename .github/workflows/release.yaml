@@ -3,20 +3,15 @@ on:
   push:
     branches:
       - master
-
+#
 jobs:
   update_vps:
     runs-on: self-hosted
 
     steps:
-      - name: Debug Message
-        run: echo "Starting workflow execution"
-
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Debug Message
-        run: echo "Repository checked out successfully"
 
       - name: Build and Deploy Caly using Docker Compose
         run: |
@@ -24,6 +19,3 @@ jobs:
           docker-compose up --build --force-recreate --no-deps -d
         env:
           DOCKER_BUILDKIT: 1
-
-      - name: Debug Message
-        run: echo "Deployment completed"
