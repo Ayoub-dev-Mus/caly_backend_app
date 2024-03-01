@@ -217,7 +217,7 @@ export class AuthService {
         throw new BadRequestException('User with this email does not exist');
       }
 
-      const otp = otpGenerator.generate(6, { digits: true, alphabets: false, upperCase: false, specialChars: false });
+      const otp = this.generateNumericOTP(6);
 
       await this.sendPasswordResetEmail(user.email, otp);
 
@@ -229,7 +229,14 @@ export class AuthService {
       throw error;
     }
   }
-
+  generateNumericOTP(length: number): string {
+    const digits = '0123456789';
+    let otp = '';
+    for (let i = 0; i < length; i++) {
+      otp += digits[Math.floor(Math.random() * 10)];
+    }
+    return otp;
+  }
   async verifyOtp(email: string, otp: string): Promise<boolean> {
     const user = await this.usersService.findOneByEmail(email.toLowerCase());
     if (!user) {
