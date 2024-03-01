@@ -2,7 +2,7 @@ name: Update VPS
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   update_vps:
