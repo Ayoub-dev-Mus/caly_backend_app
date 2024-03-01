@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,38 +15,65 @@ export class BookingsService {
   ) { }
 
   async create(createBookingDto: CreateBookingDto, user: User) {
-    createBookingDto.user = user;
-    Logger.log(createBookingDto);
-    const newBooking = this.bookingRepository.create(createBookingDto);
-    return await this.bookingRepository.save(newBooking);
+    try {
+      createBookingDto.user = user;
+      Logger.log(createBookingDto);
+      const newBooking = this.bookingRepository.create(createBookingDto);
+      return await this.bookingRepository.save(newBooking);
+    } catch (error) {
+      // Log the error or handle it accordingly
+      Logger.error(`Error creating booking: ${error.message}`);
+      throw new Error(`Error creating booking: ${error.message}`);
+    }
   }
 
-  async findAll(user: User, options?: FindManyOptions<Booking>,) {
-    return await this.bookingRepository.find({
-      relations: ["specialist", "service", "store", "timeSlot", "user"],
-      where: {
-        user: { id: user.id }
-      },
-      ...options,
-    });
+  async findAll(user: User, options?: FindManyOptions<Booking>) {
+    try {
+      return await this.bookingRepository.find({
+        relations: ["specialist", "service", "store", "timeSlot", "user"],
+        where: {
+          user: { id: user.id }
+        },
+        ...options,
+      });
+    } catch (error) {
+      Logger.error(`Error finding bookings: ${error.message}`);
+      throw new Error(`Error finding bookings: ${error.message}`);
+    }
   }
+
   async findOne(id: number) {
-    return await this.bookingRepository.findOne({ where: { id } });
+    try {
+      return await this.bookingRepository.findOne({ where: { id } });
+    } catch (error) {
+      Logger.error(`Error finding booking with ID ${id}: ${error.message}`);
+      throw new NotFoundException(`Booking with ID ${id} not found`);
+    }
   }
 
   async update(id: number, updateBookingDto: UpdateBookingDto) {
-    const updatedBooking = await this.bookingRepository.preload({
-      id,
-      ...updateBookingDto,
-    });
-    if (!updatedBooking) {
-      throw new Error(`Booking with ID ${id} not found`);
+    try {
+      const updatedBooking = await this.bookingRepository.preload({
+        id,
+        ...updateBookingDto,
+      });
+      if (!updatedBooking) {
+        throw new NotFoundException(`Booking with ID ${id} not found`);
+      }
+      return await this.bookingRepository.save(updatedBooking);
+    } catch (error) {
+      Logger.error(`Error updating booking with ID ${id}: ${error.message}`);
+      throw new Error(`Error updating booking with ID ${id}: ${error.message}`);
     }
-    return await this.bookingRepository.save(updatedBooking);
   }
 
   async remove(id: number) {
-    const bookingToRemove = await this.findOne(id);
-    return await this.bookingRepository.remove(bookingToRemove);
+    try {
+      const bookingToRemove = await this.findOne(id);
+      return await this.bookingRepository.remove(bookingToRemove);
+    } catch (error) {
+      Logger.error(`Error removing booking with ID ${id}: ${error.message}`);
+      throw new Error(`Error removing booking with ID ${id}: ${error.message}`);
+    }
   }
 }
