@@ -286,7 +286,7 @@ export class AuthService {
       const mailOptions = {
         from: 'caly22@gmail.com',
         to: email,
-        subject: 'Password Reset OTP',
+        subject: 'Password Reset OTP - Caly',
         text: `Your OTP for password reset is : ${otp}`
       };
 
