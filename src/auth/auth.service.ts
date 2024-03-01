@@ -272,7 +272,7 @@ export class AuthService {
     }
   }
 
-
+  // Send password reset email
   async sendPasswordResetEmail(email: string, otp: string): Promise<void> {
     try {
       const transporter = nodemailer.createTransport({
