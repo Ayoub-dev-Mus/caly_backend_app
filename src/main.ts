@@ -12,6 +12,7 @@ async function bootstrap() {
 
   app.useGlobalFilters(new TokenExpiredFilter());
 
+  // app.useWebSocketAdapter(new WsAdapter(app));
   const config = new DocumentBuilder()
     .setTitle('Caly')
     .setDescription('DEV API')
