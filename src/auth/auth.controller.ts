@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, HttpException, HttpStatus, Req, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, HttpException, HttpStatus, Req, BadRequestException, Logger } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { User } from 'src/users/entities/user.entity';
 
@@ -25,6 +25,32 @@ export class AuthController {
     }
   }
 
+  @Post('forgot-password')
+  async forgotPassword(@Body('email') email: string): Promise<void> {
+    await this.authService.forgotPassword(email).catch((error) => {
+      Logger.error('Error during forgot password process', error);
+      throw new BadRequestException(error.message);
+    });
+  }
+
+  @Post('verify-otp')
+  async verifyOtp(@Body('email') email: string, @Body('otp') otp: string): Promise<{ verified: boolean }> {
+    try {
+      const verified = await this.authService.verifyOtp(email, otp);
+      return { verified };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body('email') email: string, @Body('otp') otp: string, @Body('newPassword') newPassword: string): Promise<void> {
+    try {
+      await this.authService.resetPassword(email, otp, newPassword);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
   @Post('/register')
   async signUp(@Body() signUpDto: SignUpDto): Promise<{ token: string, refreshToken: string, User: Partial<User> }> {
     try {

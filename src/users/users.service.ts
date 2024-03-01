@@ -68,7 +68,7 @@ export class UsersService {
     }
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<UpdateResult> {
+  async update(id: string, updateUserDto: Partial<User>): Promise<UpdateResult> {
     try {
       const updatedUser = await this.userRepository.update(id, updateUserDto);
       return updatedUser

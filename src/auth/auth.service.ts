@@ -6,9 +6,14 @@ import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { SignUpDto } from './dto/signUp.dto';
 import { SignInDto } from './dto/signin.dto';
+import * as otpGenerator from 'otp-generator';
+import * as nodemailer from 'nodemailer';
+
 
 @Injectable()
 export class AuthService {
+
+  private otpStore: Map<string, string> = new Map();
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
@@ -203,4 +208,93 @@ export class AuthService {
 
     return response;
   }
+
+  async forgotPassword(email: string): Promise<void> {
+    try {
+      const user = await this.usersService.findOneByEmail(email.toLowerCase());
+
+      if (!user) {
+        throw new BadRequestException('User with this email does not exist');
+      }
+
+      const otp = otpGenerator.generate(6, { digits: true, alphabets: false, upperCase: false, specialChars: false });
+
+      await this.sendPasswordResetEmail(user.email, otp);
+
+      // Store the OTP in the in-memory store
+      this.otpStore.set(user.id, otp);
+
+    } catch (error) {
+      Logger.error('Error during forgot password:', error);
+      throw error;
+    }
+  }
+
+  async verifyOtp(email: string, otp: string): Promise<boolean> {
+    const user = await this.usersService.findOneByEmail(email.toLowerCase());
+    if (!user) {
+      throw new BadRequestException('User with this email does not exist');
+    }
+
+    const storedOTP = this.otpStore.get(user.id);
+
+    Logger.log(storedOTP);
+
+    if (storedOTP === otp) {
+      return true;
+    } else {
+      throw new BadRequestException('Invalid OTP');
+    }
+  }
+
+
+  async resetPassword(email: string, otp: string, newPassword: string): Promise<void> {
+    try {
+      const user = await this.usersService.findOneByEmail(email.toLowerCase());
+
+      if (!user) {
+        throw new BadRequestException('User with this email does not exist');
+      }
+
+      if (!this.otpStore.has(user.id)) {
+        throw new ForbiddenException('OTP expired');
+      }
+
+      const hashedPassword = await this.hashData(newPassword);
+
+      await this.usersService.update(user.id, { password: hashedPassword });
+
+      this.otpStore.delete(user.id);
+
+    } catch (error) {
+      Logger.error('Error resetting password:', error.message);
+      throw error;
+    }
+  }
+
+
+  async sendPasswordResetEmail(email: string, otp: string): Promise<void> {
+    try {
+      const transporter = nodemailer.createTransport({
+        service: 'Gmail',
+        auth: {
+          user: 'ayoub.wahid.28.2000@gmail.com',
+          pass: 'hzjm gmtp sfes pguw'
+        }
+      });
+
+      const mailOptions = {
+        from: 'caly22@gmail.com',
+        to: email,
+        subject: 'Password Reset OTP',
+        text: `Your OTP for password reset is: ${otp}`
+      };
+
+      await transporter.sendMail(mailOptions);
+    } catch (error) {
+      Logger.error('Error sending password reset email:', error);
+      throw error;
+    }
+  }
+
 }
