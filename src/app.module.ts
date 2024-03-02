@@ -27,6 +27,7 @@ import { TimeSlot } from './appointments/entities/timeslots.entity';
 import { Booking } from './bookings/entities/booking.entity';
 import { OffersModule } from './offers/offers.module';
 import { Offer } from './offers/entities/offer.entity';
+import { Review } from './reviews/entities/review.entity';
 
 @Module({
   providers: [
@@ -57,7 +58,7 @@ import { Offer } from './offers/entities/offer.entity';
         rejectUnauthorized: false
       },
 
-      entities: [User, StoreType, Store, Specialist, Service, Appointment, TimeSlot, Booking, Offer],
+      entities: [User, StoreType, Store, Specialist, Service, Appointment, TimeSlot, Booking, Offer, Review],
       synchronize: true,
       migrations: [],
       subscribers: [],

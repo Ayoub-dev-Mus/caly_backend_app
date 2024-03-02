@@ -1,34 +1,50 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, UseGuards } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
+import { GetUser } from 'src/common/jwtMiddlware';
+import { User } from 'src/users/entities/user.entity';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/role.guard';
+import { Role } from 'src/users/enums/role';
+import { HasRoles } from 'src/common/role.decorator';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('reviews')
 @Controller('reviews')
 export class ReviewsController {
-  constructor(private readonly reviewsService: ReviewsService) {}
+  constructor(private readonly reviewsService: ReviewsService) { }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.USER)
   @Post()
-  create(@Body() createReviewDto: CreateReviewDto) {
-    return this.reviewsService.create(createReviewDto);
+  async create(@Body() createReviewDto: CreateReviewDto, @GetUser() user: User) {
+    return await this.reviewsService.create(createReviewDto, user);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.USER)
   @Get()
-  findAll() {
-    return this.reviewsService.findAll();
+  async findAll() {
+    return await this.reviewsService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.reviewsService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    const review = await this.reviewsService.findOne(+id);
+    if (!review) {
+      throw new NotFoundException(`Review with id ${id} not found`);
+    }
+    return review;
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateReviewDto: UpdateReviewDto) {
-    return this.reviewsService.update(+id, updateReviewDto);
+  async update(@Param('id') id: string, @Body() updateReviewDto: UpdateReviewDto) {
+    return await this.reviewsService.update(+id, updateReviewDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.reviewsService.remove(+id);
+  async remove(@Param('id') id: string) {
+    return await this.reviewsService.remove(+id);
   }
 }

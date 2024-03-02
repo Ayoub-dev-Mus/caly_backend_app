@@ -8,6 +8,7 @@ import { StoreType } from "./storeType";
 import { TimeSlot } from "src/appointments/entities/timeslots.entity";
 import { Booking } from "src/bookings/entities/booking.entity";
 import { Offer } from "src/offers/entities/offer.entity";
+import { Review } from "src/reviews/entities/review.entity";
 
 
 @Entity()
@@ -84,6 +85,9 @@ export class Store {
 
   @OneToMany(() => Offer, offer => offer.store)
   offers: Offer[];
+
+  @OneToMany(() => Review, review => review.store)
+  reviews: Review[];
 
 }
 

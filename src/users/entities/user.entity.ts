@@ -15,6 +15,7 @@ import {
 
 import { PrimaryGeneratedColumn, Column } from 'typeorm';
 import { Booking } from "src/bookings/entities/booking.entity";
+import { Review } from "src/reviews/entities/review.entity";
 
 @Entity()
 export class User {
@@ -82,5 +83,7 @@ export class User {
     @OneToMany(() => Booking, booking => booking.user)
     bookings: Booking[];
 
+    @OneToMany(() => Review, review => review.user)
+    reviews: Review[];
 
 }
