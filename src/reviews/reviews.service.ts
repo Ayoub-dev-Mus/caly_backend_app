@@ -2,9 +2,10 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindManyOptions, FindOptionsWhere, Repository } from 'typeorm';
 import { Review } from './entities/review.entity';
 import { User } from 'src/users/entities/user.entity';
+import { Booking } from 'src/bookings/entities/booking.entity';
 
 @Injectable()
 export class ReviewsService {
@@ -21,18 +22,42 @@ export class ReviewsService {
       Logger.log('New review', newReview);
       return await this.reviewRepository.save(newReview);
     } catch (error) {
-      throw new Error('Failed to create review' +  error.message);
+      throw new Error('Failed to create review' + error.message);
     }
   }
 
-  async findAll(): Promise<Review[]> {
+  async findAll(storeId?: number, limit: number = 10, offset: number = 0): Promise<Review[]> {
     try {
-      return await this.reviewRepository.find({ relations: ['store', 'user'] });
+      const whereConditions: FindOptionsWhere<Review> = {};
+
+      if (storeId) {
+        whereConditions.store = { id: storeId };
+      }
+
+      const reviews = await this.reviewRepository.find({
+        relations: ['store', 'user'],
+        where: whereConditions,
+        take: limit,  // Limit the number of reviews returned
+        skip: offset,
+        select:{
+          user:{
+            id:true,
+            firstName:true,
+            lastName:true,
+            profilePicture:true
+          }
+        }
+      });
+
+      Logger.log('Reviews', reviews);
+
+
+      return reviews;
     } catch (error) {
-      // Handle error appropriately
       throw new Error('Failed to fetch reviews');
     }
   }
+
 
   async findOne(id: number): Promise<Review> {
     try {

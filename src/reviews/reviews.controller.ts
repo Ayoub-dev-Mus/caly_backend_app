@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, UseGuards, Query } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
@@ -22,11 +22,14 @@ export class ReviewsController {
     return await this.reviewsService.create(createReviewDto, user);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @HasRoles(Role.ADMIN, Role.USER)
+
   @Get()
-  async findAll() {
-    return await this.reviewsService.findAll();
+  async findAll(
+    @Query('storeId') storeId?: number,
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number
+  ) {
+    return await this.reviewsService.findAll(storeId, limit, offset);
   }
 
   @Get(':id')
