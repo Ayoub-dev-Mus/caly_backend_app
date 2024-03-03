@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Store } from './entities/store.entity';
-import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import { DeleteResult, FindManyOptions, Like, Repository, UpdateResult } from 'typeorm';
 import CreateStoreDto from './dto/create-store.dto';
 import { HttpService } from '@nestjs/axios';
 import { StoreType } from './entities/storeType';
@@ -66,17 +66,35 @@ export class StoresService {
     }
   }
 
-  async findAll(): Promise<Store[]> {
+  async findAll(page: number = 1, pageSize: number = 10, searchTerm: string = ''): Promise<{ stores: Store[], total: number }> {
     try {
-      return await this.storeRepository.find({ relations: ["services", "specialists"] });
+      const options: FindManyOptions<Store> = {
+        relations: ["services", "specialists"],
+        where: searchTerm ? [
+          { name: Like(`%${searchTerm}%`) },
+          { description: Like(`%${searchTerm}%`) },
+        ] : undefined,
+        take: pageSize,
+        skip: (page - 1) * pageSize,
+      };
+
+      const [stores, total] = await this.storeRepository.findAndCount(options);
+
+      return { stores, total };
     } catch (error) {
       throw new Error(error.message);
     }
   }
 
-  async findAllNearestStores(latitude: number, longitude: number): Promise<Store[]> {
+  async findAllNearestStores(
+    latitude: number,
+    longitude: number,
+    searchTerm: string = '',
+    page: number = 1,
+    pageSize: number = 10
+  ): Promise<{ stores: Store[], total: number }> {
     try {
-      const result = await this.storeRepository.createQueryBuilder('store')
+      const queryBuilder = this.storeRepository.createQueryBuilder('store')
         .select([
           'store.id as id',
           'store.name as name',
@@ -99,18 +117,25 @@ export class StoresService {
           'store.twitterLink as twitterLink',
           'json_agg(services) AS services',
           'json_agg(specialists) AS specialists',
-
         ])
         .addSelect('ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography, store.location::geography) / 1000 AS distance')
         .leftJoin('store.services', 'services')
         .leftJoin('store.specialists', 'specialists')
+        .where('LOWER(store.name) LIKE LOWER(:searchTerm)', { searchTerm: `%${searchTerm}%` })
+        .orWhere('LOWER(store.description) LIKE LOWER(:searchTerm)', { searchTerm: `%${searchTerm}%` })
         .groupBy('store.id')
         .orderBy('distance')
         .setParameter('longitude', longitude)
-        .setParameter('latitude', latitude)
+        .setParameter('latitude', latitude);
+
+      const totalCount = await queryBuilder.getCount();
+
+      const result = await queryBuilder
+        .skip((page - 1) * pageSize)
+        .take(pageSize)
         .getRawMany();
 
-      return result;
+      return { stores: result, total: totalCount };
     } catch (error) {
       throw new Error(error.message);
     }

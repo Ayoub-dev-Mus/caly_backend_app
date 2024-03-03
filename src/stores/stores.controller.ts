@@ -30,9 +30,16 @@ export class StoresController {
   }
 
   @Get('nearest')
-  async findAllNearestStores(@Query('latitude') latitude: number, @Query('longitude') longitude: number): Promise<Store[]> {
-    return await this.storesService.findAllNearestStores(latitude, longitude);
+  async findAllNearestStores(
+    @Query('latitude') latitude: number,
+    @Query('longitude') longitude: number,
+    @Query('searchTerm') searchTerm: string,
+    @Query('page') page: number,
+    @Query('pageSize') pageSize: number,
+  ): Promise<{ stores: Store[], total: number }> {
+    return await this.storesService.findAllNearestStores(latitude, longitude, searchTerm, page, pageSize);
   }
+
 
   @Get('/draw-road')
   async drawRoad(@Query('from') from: string, @Query('to') to: string): Promise<any> {
@@ -41,10 +48,13 @@ export class StoresController {
 
 
   @Get()
-  async findAll(): Promise<Store[]> {
-    return await this.storesService.findAll();
+  async findAll(
+    @Query('page') page: number = 1,
+    @Query('pageSize') pageSize: number = 10,
+    @Query('searchTerm') searchTerm: string = ''
+  ): Promise<{ stores: Store[], total: number }> {
+    return await this.storesService.findAll(page, pageSize, searchTerm);
   }
-
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Store> {
     return await this.storesService.findOne(+id);
