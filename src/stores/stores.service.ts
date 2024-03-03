@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Store } from './entities/store.entity';
-import { DeleteResult, FindManyOptions, Like, Repository, UpdateResult } from 'typeorm';
+import { DeleteResult, FindManyOptions, ILike, Like, Repository, UpdateResult } from 'typeorm';
 import CreateStoreDto from './dto/create-store.dto';
 import { HttpService } from '@nestjs/axios';
 import { StoreType } from './entities/storeType';
@@ -71,9 +71,8 @@ export class StoresService {
       const options: FindManyOptions<Store> = {
         relations: ["services", "specialists"],
         where: searchTerm ? [
-          { name: Like(`%${searchTerm}%`) },
-          { description: Like(`%${searchTerm}%`) },
-        ] : undefined,
+          { name: ILike(`%${searchTerm}%`) },
+        ] : {},
         take: pageSize,
         skip: (page - 1) * pageSize,
       };
@@ -85,7 +84,6 @@ export class StoresService {
       throw new Error(error.message);
     }
   }
-
   async findAllNearestStores(
     latitude: number,
     longitude: number,
