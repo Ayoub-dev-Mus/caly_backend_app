@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, HttpException, HttpStatus, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { User } from 'src/users/entities/user.entity';
 import { Role } from 'src/users/enums/role';
@@ -8,7 +8,8 @@ import { SignUpDto } from './dto/signUp.dto';
 import { SignInDto } from './dto/signin.dto';
 import * as otpGenerator from 'otp-generator';
 import * as nodemailer from 'nodemailer';
-
+import { OAuth2Client } from 'google-auth-library';
+import { GoogleStrategy } from './strategy/google.strategy';
 
 @Injectable()
 export class AuthService {
@@ -17,7 +18,11 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private readonly googleStrategy: GoogleStrategy
   ) { }
+
+
+
 
   async signUp(createUserDto: SignUpDto): Promise<{ token: string, refreshToken: string, User: Partial<User> }> {
     try {
@@ -303,5 +308,83 @@ export class AuthService {
       throw error;
     }
   }
+
+
+  async googleLogin(req): Promise<any> {
+    try {
+      if (!req.user) {
+        return 'No user from google';
+      }
+      Logger.log('user from google');
+
+      // At this point, you have the user information from Google
+      // You can process it further, save it to your database, or generate JWT tokens
+
+      // For example:
+      const googleUser = req.user;
+      let user = await this.usersService.findOneByEmail(googleUser.email);
+
+      if (!user) {
+        user = await this.usersService.create({
+          email: googleUser.email,
+          firstName: googleUser.firstName,
+          lastName: googleUser.lastName,
+          role: Role.USER,
+          address: '',
+          phoneNumber: '',
+          zipCode: '',
+          state: '',
+          password: ''
+        });
+
+        // Generate JWT tokens for the new user
+        const tokens = await this.getTokens(user.id, user.email, user.role, user.firstName, user.lastName, user.state, user.zipCode, user.address, user.phoneNumber, user.profilePicture);
+        await this.updateRefreshToken(user.id, tokens.refreshToken);
+
+        return {
+          token: tokens.token,
+          refreshToken: tokens.refreshToken,
+
+          User: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phoneNumber: user.phoneNumber,
+            zipCode: user.zipCode,
+            address: user.address,
+            state: user.state,
+            profilePicture: user.profilePicture,
+            role: user.role,
+          }
+        };
+      }
+
+      // Generate JWT tokens for the existing user
+      const tokens = await this.getTokens(user.id, user.email, user.role, user.firstName, user.lastName, user.state, user.zipCode, user.address, user.phoneNumber, user.profilePicture);
+      await this.updateRefreshToken(user.id, tokens.refreshToken);
+
+      return {
+        token: tokens.token,
+        refreshToken: tokens.refreshToken,
+
+        User: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          phoneNumber: user.phoneNumber,
+          zipCode: user.zipCode,
+          address: user.address,
+          state: user.state,
+          profilePicture: user.profilePicture,
+          role: user.role,
+        }
+      };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
 
 }

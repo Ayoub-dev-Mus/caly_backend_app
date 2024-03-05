@@ -9,11 +9,23 @@ import { ApiTags } from '@nestjs/swagger';
 import { SignInDto } from './dto/signin.dto';
 import { SignUpDto } from './dto/signUp.dto';
 import { UsersService } from 'src/users/users.service';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService, private readonly usersService: UsersService) { }
+
+  @Get('/google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth(@Req() req) { }
+
+  @Get('/google/callback')
+  @UseGuards(AuthGuard('google'))
+  googleAuthRedirect(@Req() req) {
+    return this.authService.googleLogin(req)
+  }
+
 
   @Post('/login')
   async login(@Body() signInDto: SignInDto): Promise<{ token: string, refreshToken: string, User: Partial<User> }> {

@@ -36,10 +36,13 @@ export class CreateUserDto {
     @Length(4)
     password: string;
 
+    @IsString()
+    phoneNumber: string;
+
     @ApiProperty({ example: 'user', description: 'The role of the user' })
     @IsString()
     @Length(8, 20)
     role: string;
 
-    
+
 }
