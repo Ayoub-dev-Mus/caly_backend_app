@@ -41,6 +41,12 @@ export class ReviewsController {
     return review;
   }
 
+  @Get('store/:storeId')
+  async findByStoreId(@Param('storeId') storeId: string) {
+    return await this.reviewsService.getReviewStatistics(+storeId);
+  }
+
+
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateReviewDto: UpdateReviewDto) {
     return await this.reviewsService.update(+id, updateReviewDto);

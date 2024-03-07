@@ -33,4 +33,11 @@ export class Review {
             throw new Error('Rating must be between 1 and 5');
         }
     }
+
+    @BeforeInsert()
+    async checkComment() {
+        if (this.comment.length < 5) {
+            throw new Error('Comment must be at least 5 characters');
+        }
+    }
 }

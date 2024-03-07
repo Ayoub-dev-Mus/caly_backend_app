@@ -26,6 +26,8 @@ export class ReviewsService {
     }
   }
 
+
+
   async findAll(storeId?: number, limit: number = 10, offset: number = 0): Promise<Review[]> {
     try {
       const whereConditions: FindOptionsWhere<Review> = {};
@@ -39,12 +41,12 @@ export class ReviewsService {
         where: whereConditions,
         take: limit,  // Limit the number of reviews returned
         skip: offset,
-        select:{
-          user:{
-            id:true,
-            firstName:true,
-            lastName:true,
-            profilePicture:true
+        select: {
+          user: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profilePicture: true
           }
         }
       });
@@ -94,4 +96,44 @@ export class ReviewsService {
       throw new Error(`Failed to remove review with id ${id}`);
     }
   }
+
+  async getReviewStatistics(storeId: number): Promise<any> {
+    try {
+      // Fetch all reviews for the store
+      const reviews = await this.reviewRepository.find({ where: { store: { id: storeId } } });
+
+      // Filter reviews with more than 5 characters in their comments
+      const filteredReviews = reviews.filter(review => review.comment.length > 5);
+
+      // Calculate total reviews and total rating for filtered reviews
+      const totalReviews = filteredReviews.length;
+
+      // Calculate star ratings
+      const starRatings = [0, 0, 0, 0, 0]; // [1-star, 2-star, 3-star, 4-star, 5-star]
+      filteredReviews.forEach(review => {
+        starRatings[review.rating - 1]++;
+      });
+
+      const totalRatings = starRatings.reduce((acc, val, index) => acc + (index + 1) * val, 0);
+
+      // Calculate average rating based on total ratings count
+      const averageRating = totalReviews > 0 ? totalRatings / totalReviews : 0;
+
+      return {
+        totalReviews,
+        totalRatings,
+        averageRating,
+        starRatings: {
+          '1-star': starRatings[0],
+          '2-star': starRatings[1],
+          '3-star': starRatings[2],
+          '4-star': starRatings[3],
+          '5-star': starRatings[4],
+        },
+      };
+    } catch (error) {
+      throw new Error(`Failed to retrieve review statistics for store ${storeId}`);
+    }
+  }
+
 }
