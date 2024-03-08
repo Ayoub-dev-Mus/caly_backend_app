@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, Repository } from 'typeorm';
+import { FindManyOptions, ILike, Repository } from 'typeorm';
 import { Booking } from './entities/booking.entity';
 import { User } from 'src/users/entities/user.entity';
 
@@ -26,8 +26,7 @@ export class BookingsService {
       throw new Error(`Error creating booking: ${error.message}`);
     }
   }
-
-  async findAll(user: User, createdAt?: Date, options?: FindManyOptions<Booking>) {
+  async findAll(user: User, createdAt?: Date, storeName?: string, options?: FindManyOptions<Booking>) {
     try {
       let whereClause: any = {
         user: { id: user.id }
@@ -37,12 +36,16 @@ export class BookingsService {
         whereClause.createdAt = createdAt;
       }
 
+      if (storeName) {
+        whereClause.store = { name: ILike(`%${storeName}%`) };
+      }
+
       // Pagination options
       const paginationOptions: FindManyOptions<Booking> = {
         relations: ["specialist", "service", "store", "timeSlot", "user"],
         where: whereClause,
-        skip: options?.skip || 0, // default to 0 if not provided
-        take: options?.take || 10, // default to 10 if not provided
+        skip: options?.skip || 0, 
+        take: options?.take || 10,
       };
 
       // Merge with user-provided options

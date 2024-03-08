@@ -30,12 +30,15 @@ export class BookingsController {
   @Get()
   async findAll(
     @GetUser() user: User,
+    @Query('createdAt') createdAt: Date,
+    @Query('storeName') storeName: string,
     @Query() query: any,
   ): Promise<Booking[]> {
-    const { createdAt, skip, take } = query;
+    const { skip, take } = query; // Destructure skip and take from query
 
     const options: FindManyOptions<Booking> = {};
 
+    // Convert skip and take to numbers if provided
     if (skip !== undefined) {
       options.skip = parseInt(skip, 10);
     }
@@ -43,7 +46,7 @@ export class BookingsController {
       options.take = parseInt(take, 10);
     }
 
-    return this.bookingsService.findAll(user, createdAt, options);
+    return this.bookingsService.findAll(user, createdAt, storeName, options);
   }
 
   @Get(':id')
