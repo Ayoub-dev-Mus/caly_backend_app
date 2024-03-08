@@ -32,16 +32,18 @@ export class BookingsController {
     @GetUser() user: User,
     @Query() query: any,
   ): Promise<Booking[]> {
+    const { createdAt, skip, take } = query;
+
     const options: FindManyOptions<Booking> = {};
 
-    if (query.page) {
-      const page = parseInt(query.page);
-      const pageSize = parseInt(query.pageSize) || 10;
-      options.skip = (page - 1) * pageSize;
-      options.take = pageSize;
+    if (skip !== undefined) {
+      options.skip = parseInt(skip, 10);
+    }
+    if (take !== undefined) {
+      options.take = parseInt(take, 10);
     }
 
-    return this.bookingsService.findAll(user, options);
+    return this.bookingsService.findAll(user, createdAt, options);
   }
 
   @Get(':id')

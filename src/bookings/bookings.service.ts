@@ -27,20 +27,34 @@ export class BookingsService {
     }
   }
 
-  async findAll(user: User, options?: FindManyOptions<Booking>) {
+  async findAll(user: User, createdAt?: Date, options?: FindManyOptions<Booking>) {
     try {
-      return await this.bookingRepository.find({
+      let whereClause: any = {
+        user: { id: user.id }
+      };
+
+      if (createdAt) {
+        whereClause.createdAt = createdAt;
+      }
+
+      // Pagination options
+      const paginationOptions: FindManyOptions<Booking> = {
         relations: ["specialist", "service", "store", "timeSlot", "user"],
-        where: {
-          user: { id: user.id }
-        },
-        ...options,
-      });
+        where: whereClause,
+        skip: options?.skip || 0, // default to 0 if not provided
+        take: options?.take || 10, // default to 10 if not provided
+      };
+
+      // Merge with user-provided options
+      const finalOptions = { ...paginationOptions, ...options };
+
+      return await this.bookingRepository.find(finalOptions);
     } catch (error) {
       Logger.error(`Error finding bookings: ${error.message}`);
       throw new Error(`Error finding bookings: ${error.message}`);
     }
   }
+
 
   async findOne(id: number) {
     try {
