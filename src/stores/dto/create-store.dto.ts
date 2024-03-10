@@ -4,6 +4,7 @@ import { Type } from 'class-transformer';
 import { Service } from 'src/services/entities/service.entity';
 import { Specialist } from 'src/specialists/entities/specialist.entity';
 import { StoreStatus } from '../enums/store.status.enum';
+import { StoreType } from '../entities/storeType';
 
 @ApiExtraModels(Specialist, Service) // Add models for additional context
 
@@ -27,6 +28,10 @@ export class CreateStoreDto {
     @IsNotEmpty()
     @IsString()
     city: string;
+
+    @ApiProperty()
+    @IsNotEmpty()
+    type: StoreType;
 
     @ApiProperty()
     @IsNotEmpty()

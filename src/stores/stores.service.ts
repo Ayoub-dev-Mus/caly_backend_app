@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Store } from './entities/store.entity';
-import { DeleteResult, FindManyOptions, ILike, Like, Repository, UpdateResult } from 'typeorm';
+import { Brackets, DeleteResult, FindManyOptions, ILike, Like, Repository, UpdateResult } from 'typeorm';
 import CreateStoreDto from './dto/create-store.dto';
 import { HttpService } from '@nestjs/axios';
 import { StoreType } from './entities/storeType';
@@ -84,15 +84,17 @@ export class StoresService {
       throw new Error(error.message);
     }
   }
+
   async findAllNearestStores(
     latitude: number,
     longitude: number,
     searchTerm: string = '',
     page: number = 1,
-    pageSize: number = 10
+    pageSize: number = 10,
+    storeType?: string // Add storeType parameter
   ): Promise<{ stores: Store[], total: number }> {
     try {
-      const queryBuilder = this.storeRepository.createQueryBuilder('store')
+      let  queryBuilder = this.storeRepository.createQueryBuilder('store')
         .select([
           'store.id as id',
           'store.name as name',
@@ -115,20 +117,31 @@ export class StoresService {
           'store.twitterLink as twitterLink',
           'json_agg(services) AS services',
           'json_agg(specialists) AS specialists',
+          `json_build_object('id', type.id, 'label', type.label, 'icon', type.icon) AS type`
         ])
         .addSelect('ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography, store.location::geography) / 1000 AS distance')
         .leftJoin('store.services', 'services')
         .leftJoin('store.specialists', 'specialists')
-        .where('LOWER(store.name) LIKE LOWER(:searchTerm)', { searchTerm: `%${searchTerm}%` })
-        .orWhere('LOWER(store.description) LIKE LOWER(:searchTerm)', { searchTerm: `%${searchTerm}%` })
-        .groupBy('store.id')
-        .orderBy('distance')
-        .setParameter('longitude', longitude)
-        .setParameter('latitude', latitude);
+        .leftJoin('store.type', 'type')
+        .where(
+          new Brackets(qb => {
+            qb.where('LOWER(store.name) LIKE LOWER(:searchTerm)', { searchTerm: `%${searchTerm}%` })
+              .orWhere('LOWER(store.description) LIKE LOWER(:searchTerm)', { searchTerm: `%${searchTerm}%` });
+          })
+        );
 
-      const totalCount = await queryBuilder.getCount();
+      if (storeType) {
+        queryBuilder = queryBuilder.andWhere('type.id = :storeTypeId', { storeTypeId: storeType });
+      }
+
+      const totalCount = await queryBuilder
+        .groupBy('store.id, type.id, type.label, type.icon')
+        .setParameter('longitude', longitude)
+        .setParameter('latitude', latitude)
+        .getCount();
 
       const result = await queryBuilder
+        .orderBy('distance')
         .skip((page - 1) * pageSize)
         .take(pageSize)
         .getRawMany();
@@ -138,7 +151,6 @@ export class StoresService {
       throw new Error(error.message);
     }
   }
-
 
 
 

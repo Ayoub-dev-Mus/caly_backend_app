@@ -36,8 +36,9 @@ export class StoresController {
     @Query('searchTerm') searchTerm: string,
     @Query('page') page: number,
     @Query('pageSize') pageSize: number,
+    @Query('storeType') storeType?: string
   ): Promise<{ stores: Store[], total: number }> {
-    return await this.storesService.findAllNearestStores(latitude, longitude, searchTerm, page, pageSize);
+    return await this.storesService.findAllNearestStores(latitude, longitude, searchTerm, page, pageSize, storeType);
   }
 
 
