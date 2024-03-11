@@ -94,7 +94,7 @@ export class StoresService {
     storeType?: string // Add storeType parameter
   ): Promise<{ stores: Store[], total: number }> {
     try {
-      let  queryBuilder = this.storeRepository.createQueryBuilder('store')
+      let queryBuilder = this.storeRepository.createQueryBuilder('store')
         .select([
           'store.id as id',
           'store.name as name',
@@ -119,7 +119,7 @@ export class StoresService {
           'json_agg(specialists) AS specialists',
           `json_build_object('id', type.id, 'label', type.label, 'icon', type.icon) AS type`
         ])
-        .addSelect('ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography, store.location::geography) / 1000 AS distance')
+        .addSelect('CAST(ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography, store.location::geography) * 1000 AS INTEGER) AS distance') // Convert distance to integer and represent in meters
         .leftJoin('store.services', 'services')
         .leftJoin('store.specialists', 'specialists')
         .leftJoin('store.type', 'type')
@@ -151,7 +151,6 @@ export class StoresService {
       throw new Error(error.message);
     }
   }
-
 
 
 
