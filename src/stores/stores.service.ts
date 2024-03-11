@@ -119,7 +119,7 @@ export class StoresService {
           'json_agg(specialists) AS specialists',
           `json_build_object('id', type.id, 'label', type.label, 'icon', type.icon) AS type`
         ])
-        .addSelect('CAST(ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography, store.location::geography) * 1000 AS INTEGER) AS distance') // Convert distance to integer and represent in meters
+        .addSelect('ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography, store.location::geography) / 1000 AS distance') // Convert distance to kilometers
         .leftJoin('store.services', 'services')
         .leftJoin('store.specialists', 'specialists')
         .leftJoin('store.type', 'type')
