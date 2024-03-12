@@ -168,6 +168,23 @@ export class UsersService {
     }
   }
 
+  async updatePassword(user: User, updatePasswordDto: UpdatePasswordDto): Promise<UpdateResult> {
+
+    try {
+
+      const isPasswordValid = await bcrypt.compare(updatePasswordDto.oldPassword, user.password);
+      if (!isPasswordValid) {
+        throw new Error('Invalid old password');
+      }
+      const hashedPassword = await bcrypt.hash(updatePasswordDto.newPassword, 10);
+      console.log(hashedPassword)
+      const updaded = await this.userRepository.update(user.id, { password: hashedPassword });
+      return updaded;
+    } catch (error) {
+      throw error
+    }
+
+  }
 
   private applyFilter(
     queryBuilder: SelectQueryBuilder<User>,

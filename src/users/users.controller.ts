@@ -9,6 +9,7 @@ import { HasRoles } from 'src/common/role.decorator';
 import { Role } from './enums/role';
 import { User } from './entities/user.entity';
 import { RolesGuard } from 'src/common/guards/role.guard';
+import { UpdateResult } from 'typeorm';
 
 @ApiTags('users')
 @Controller('users')
@@ -53,6 +54,19 @@ export class UsersController {
     try {
       const updatedUser = await this.usersService.updateUserInfo(user, updateUserDto);
       return updatedUser
+    } catch (error) {
+      new HttpException(error.message, HttpStatus.BAD_REQUEST)
+    }
+  }
+
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.USER)
+  @Post()
+  async updatePassword(@Body() updateUserDto: UpdatePasswordDto, @GetUser() loggedUser: User): Promise<UpdateResult> {
+    try {
+      const user = await this.usersService.updatePassword(loggedUser, updateUserDto);
+      return user
     } catch (error) {
       new HttpException(error.message, HttpStatus.BAD_REQUEST)
     }
