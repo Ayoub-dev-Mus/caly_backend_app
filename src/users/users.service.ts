@@ -7,6 +7,7 @@ import { User } from './entities/user.entity';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { zip } from 'rxjs';
+import { UpdatePasswordDto } from './dto/update-password-dto';
 
 @Injectable()
 export class UsersService {

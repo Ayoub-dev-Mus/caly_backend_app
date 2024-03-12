@@ -10,6 +10,7 @@ import { Role } from './enums/role';
 import { User } from './entities/user.entity';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { UpdateResult } from 'typeorm';
+import { UpdatePasswordDto } from './dto/update-password-dto';
 
 @ApiTags('users')
 @Controller('users')
