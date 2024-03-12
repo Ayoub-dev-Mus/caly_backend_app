@@ -62,7 +62,7 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER)
-  @Post()
+  @Post("/me/update-password")
   async updatePassword(@Body() updateUserDto: UpdatePasswordDto, @GetUser() loggedUser: User): Promise<UpdateResult> {
     try {
       const user = await this.usersService.updatePassword(loggedUser, updateUserDto);
