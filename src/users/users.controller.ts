@@ -67,11 +67,12 @@ export class UsersController {
   async updatePassword(@Body() updateUserDto: UpdatePasswordDto, @GetUser() loggedUser: User): Promise<UpdateResult> {
     try {
       const user = await this.usersService.updatePassword(loggedUser, updateUserDto);
-      return user
+      return user;
     } catch (error) {
-      new HttpException(error.message, HttpStatus.BAD_REQUEST)
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
+
 
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {

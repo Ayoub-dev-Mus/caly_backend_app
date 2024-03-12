@@ -169,22 +169,27 @@ export class UsersService {
     }
   }
 
-  async updatePassword(user: User, updatePasswordDto: UpdatePasswordDto): Promise<UpdateResult> {
-
+  async updatePassword(myuser: User, updatePasswordDto: UpdatePasswordDto): Promise<any> {
     try {
+      const user = await this.userRepository.findOneBy({ id: myuser.id });
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
 
       const isPasswordValid = await bcrypt.compare(updatePasswordDto.oldPassword, user.password);
+      Logger.log(isPasswordValid);
       if (!isPasswordValid) {
-        throw new Error('Invalid old password');
+        throw new HttpException('Invalid password', HttpStatus.BAD_REQUEST);
       }
-      const hashedPassword = await bcrypt.hash(updatePasswordDto.newPassword, 10);
-      console.log(hashedPassword)
-      const updaded = await this.userRepository.update(user.id, { password: hashedPassword });
-      return updaded;
-    } catch (error) {
-      throw error
-    }
 
+      const hashedPassword = await bcrypt.hash(updatePasswordDto.newPassword, 10);
+      const updated = await this.userRepository.update(user.id, { password: hashedPassword });
+      return updated;
+    } catch (error) {
+      Logger.error('Error updating password', error.stack, 'UserService');
+
+      throw error;
+    }
   }
 
   private applyFilter(
