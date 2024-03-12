@@ -14,6 +14,7 @@ describe('StoresController', () => {
     controller = module.get<StoresController>(StoresController);
   });
 
+  // Test if the controller is defined
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
