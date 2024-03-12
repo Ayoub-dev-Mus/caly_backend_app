@@ -60,7 +60,7 @@ export class UsersController {
     }
   }
 
-
+  //fixed
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER)
   @Patch("/me/update-password")
