@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, HttpException, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, HttpException, HttpStatus, UseGuards, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { GetUser } from 'src/common/jwtMiddlware';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Multer } from 'multer';
 import { HasRoles } from 'src/common/role.decorator';
 import { Role } from './enums/role';
 import { User } from './entities/user.entity';
@@ -37,6 +39,19 @@ export class UsersController {
       new HttpException(error.message, HttpStatus.BAD_REQUEST)
     }
   }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.USER)
+  @Patch('upload-profile-image')
+  @UseInterceptors(FileInterceptor('profile'))
+  async uploadImage(@UploadedFile() file: Multer.File, @GetUser() user: User): Promise<void> {
+    try {
+      await this.usersService.updateProfileImage(user, file);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+  
 
   @Get(':email')
   async findOneByEmail(@Param('email') email: string) {

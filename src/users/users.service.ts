@@ -8,16 +8,64 @@ import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { zip } from 'rxjs';
 import { UpdatePasswordDto } from './dto/update-password-dto';
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import multer, { Multer } from 'multer';
+
 
 @Injectable()
 export class UsersService {
-
 
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private jwtService: JwtService
   ) { }
+
+
+  async uploadProfileImage(file: Multer.File): Promise<any> {
+    try {
+      const s3 = new S3Client({
+        region: 'eu-north-1',
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS,
+          secretAccessKey: process.env.AWS_SECRET,
+        },
+      });
+      const key = `${Date.now()}-${file.originalname}`;
+      const uploadParams = {
+        Bucket: 'caly-app-bucker',
+        Key: key,
+        Body: file.buffer,
+      };
+
+      const result = await s3.send(new PutObjectCommand(uploadParams));
+
+
+      if (!result) {
+        throw new Error('Error uploading file to S3');
+      }
+      return key;
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+
+
+
+  async updateProfileImage(user: User, file: Multer.File): Promise<void> {
+    try {
+      const key = await this.uploadProfileImage(file);
+      Logger.log(key);
+      user.profilePicture = `${process.env.AWS_S3_BASE_URL}/${key}`; // Use the key
+      Logger.log(user.profilePicture);
+      await this.userRepository.update(user.id, { profilePicture: user.profilePicture });
+
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
 
 
   async create(userData: CreateUserDto): Promise<User | null> {
