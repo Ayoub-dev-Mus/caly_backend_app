@@ -44,14 +44,16 @@ export class UsersController {
   @HasRoles(Role.ADMIN, Role.USER)
   @Patch('upload-profile-image')
   @UseInterceptors(FileInterceptor('profile'))
-  async uploadImage(@UploadedFile() file: Multer.File, @GetUser() user: User): Promise<void> {
+  async uploadImage(@UploadedFile() file: Multer.File, @GetUser() user: User): Promise<string> {
     try {
-      await this.usersService.updateProfileImage(user, file);
+      const uploadedImage = await this.usersService.updateProfileImage(user, file);
+
+      return uploadedImage;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
-  
+
 
   @Get(':email')
   async findOneByEmail(@Param('email') email: string) {

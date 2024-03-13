@@ -53,14 +53,16 @@ export class UsersService {
 
 
 
- 
-  async updateProfileImage(user: User, file: Multer.File): Promise<void> {
+
+  async updateProfileImage(user: User, file: Multer.File): Promise<string> {
     try {
       const key = await this.uploadProfileImage(file);
       Logger.log(key);
       user.profilePicture = `${process.env.AWS_S3_BASE_URL}/${key}`; // Use the key
       Logger.log(user.profilePicture);
       await this.userRepository.update(user.id, { profilePicture: user.profilePicture });
+
+      return user.profilePicture;
 
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
