@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, ILike, Repository } from 'typeorm';
+import { Between, FindManyOptions, ILike, Repository } from 'typeorm';
 import { Booking } from './entities/booking.entity';
 import { User } from 'src/users/entities/user.entity';
 
@@ -26,6 +26,7 @@ export class BookingsService {
       throw new Error(`Error creating booking: ${error.message}`);
     }
   }
+
   async findAll(user: User, createdAt?: Date, storeName?: string, options?: FindManyOptions<Booking>) {
     try {
       let whereClause: any = {
@@ -33,7 +34,14 @@ export class BookingsService {
       };
 
       if (createdAt) {
-        whereClause.createdAt = createdAt;
+        // Adjust to consider the entire day
+        const startOfDay = new Date(createdAt);
+        startOfDay.setHours(0, 0, 0, 0); // Set to the start of the day
+
+        const endOfDay = new Date(createdAt);
+        endOfDay.setHours(23, 59, 59, 999); // Set to the end of the day
+
+        whereClause.createdAt = Between(startOfDay.toISOString(), endOfDay.toISOString());
       }
 
       if (storeName) {
@@ -43,8 +51,16 @@ export class BookingsService {
       // Pagination options
       const paginationOptions: FindManyOptions<Booking> = {
         relations: ["specialist", "service", "store", "timeSlot", "user"],
+        select: {
+          user: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true
+          }
+        },
         where: whereClause,
-        skip: options?.skip || 0, 
+        skip: options?.skip || 0,
         take: options?.take || 10,
       };
 
@@ -57,7 +73,6 @@ export class BookingsService {
       throw new Error(`Error finding bookings: ${error.message}`);
     }
   }
-
 
   async findOne(id: number) {
     try {

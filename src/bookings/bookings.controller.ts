@@ -30,7 +30,7 @@ export class BookingsController {
   @Get()
   async findAll(
     @GetUser() user: User,
-    @Query('createdAt') createdAt: Date,
+    @Query('createdAt') createdAtString: string, // Receive createdAt as string
     @Query('storeName') storeName: string,
     @Query() query: any,
   ): Promise<Booking[]> {
@@ -46,8 +46,15 @@ export class BookingsController {
       options.take = parseInt(take, 10);
     }
 
+    // This part remains unchanged
+    let createdAt: Date | undefined;
+    if (createdAtString) {
+      createdAt = new Date(createdAtString); // Parse the string to a Date object
+    }
+
     return this.bookingsService.findAll(user, createdAt, storeName, options);
   }
+
 
   @Get(':id')
   findOne(@Param('id') id: string) {

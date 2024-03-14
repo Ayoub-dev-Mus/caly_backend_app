@@ -11,7 +11,7 @@ export class Booking {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ type: 'timestamp' })
     createdAt: Date;
 
     @OneToOne(() => TimeSlot, timeSlot => timeSlot.booking)
