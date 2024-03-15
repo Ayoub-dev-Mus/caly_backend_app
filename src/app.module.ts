@@ -37,6 +37,8 @@ import { Review } from './reviews/entities/review.entity';
       useClass: RolesGuard,
     },
   ],
+
+  exports: [],
   //Comment
   imports: [
     {
@@ -59,6 +61,7 @@ import { Review } from './reviews/entities/review.entity';
       },
 
       entities: [User, StoreType, Store, Specialist, Service, Appointment, TimeSlot, Booking, Offer, Review],
+
       synchronize: true,
       migrations: [],
       subscribers: [],

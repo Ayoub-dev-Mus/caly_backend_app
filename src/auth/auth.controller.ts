@@ -16,16 +16,15 @@ import { AuthGuard } from '@nestjs/passport';
 export class AuthController {
   constructor(private readonly authService: AuthService, private readonly usersService: UsersService) { }
 
-  @Get('/google')
-  @UseGuards(AuthGuard('google'))
-  async googleAuth(@Req() req) { }
-
-  @Get('/google/callback')
-  @UseGuards(AuthGuard('google'))
-  googleAuthRedirect(@Req() req) {
-    return this.authService.googleLogin(req)
+  @Post('google')
+  async authenticateWithGoogle(@Body('token') token: string): Promise<any> {
+    try {
+      const user = await this.authService.googleLogin(token);
+      return { success: true, user };
+    } catch (error) {
+      throw new HttpException('Failed to authenticate with Google ' + error.message, HttpStatus.UNAUTHORIZED,);
+    }
   }
-
 
   @Post('/login')
   async login(@Body() signInDto: SignInDto): Promise<{ token: string, refreshToken: string, User: Partial<User> }> {

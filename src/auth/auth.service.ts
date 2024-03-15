@@ -10,6 +10,8 @@ import * as otpGenerator from 'otp-generator';
 import * as nodemailer from 'nodemailer';
 import { OAuth2Client } from 'google-auth-library';
 import { GoogleStrategy } from './strategy/google.strategy';
+import { GoogleTokenVerifier } from './strategy/googleTokenVerifier';
+import * as admin from 'firebase-admin';
 
 @Injectable()
 export class AuthService {
@@ -18,8 +20,16 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private googleTokenVerifier: GoogleTokenVerifier,
     private readonly googleStrategy: GoogleStrategy
-  ) { }
+  ) {
+    const path = require('path');
+    const serviceAccountPath = path.join(__dirname, '..', '..', 'src', 'config', 'mykey.json');
+    const serviceAccount = require(serviceAccountPath);
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+  }
 
 
 
@@ -36,6 +46,7 @@ export class AuthService {
         ...createUserDto,
         password: hash,
         role: Role.USER,
+        profilePicture: null
       });
 
       if (!newUser) {
@@ -73,9 +84,9 @@ export class AuthService {
         },
       };
 
-      // Update refresh token
-      await this.updateRefreshToken(newUser.id, tokens.refreshToken);
 
+      await this.updateRefreshToken(newUser.id, tokens.refreshToken);
+      console.log(response)
       return response;
     } catch (error) {
       console.error('Error during sign-up:', error);
@@ -310,64 +321,37 @@ export class AuthService {
   }
 
 
-  async googleLogin(req): Promise<any> {
+  async googleLogin(token: string): Promise<any> {
     try {
-      if (!req.user) {
-        return 'No user from google';
-      }
-      Logger.log('user from google');
+      const { email, firstName, lastName, picture } = await this.verifyFirebaseToken(token);
+      Logger.log({ email, firstName, lastName, picture });
 
-      // At this point, you have the user information from Google
-      // You can process it further, save it to your database, or generate JWT tokens
-
-      // For example:
-      const googleUser = req.user;
-      let user = await this.usersService.findOneByEmail(googleUser.email);
+      let user = await this.usersService.findOneByEmail(email);
 
       if (!user) {
+        // When creating a new user, include all information available from Google
         user = await this.usersService.create({
-          email: googleUser.email,
-          firstName: googleUser.firstName,
-          lastName: googleUser.lastName,
+          email,
+          firstName,
+          lastName,
           role: Role.USER,
           address: '',
           phoneNumber: '',
           zipCode: '',
           state: '',
-          password: ''
+          password: '', // Consider how you handle passwords for OAuth users
+          profilePicture: picture, // Assuming you have a field for profile images
         });
-
-        // Generate JWT tokens for the new user
-        const tokens = await this.getTokens(user.id, user.email, user.role, user.firstName, user.lastName, user.state, user.zipCode, user.address, user.phoneNumber, user.profilePicture);
-        await this.updateRefreshToken(user.id, tokens.refreshToken);
-
-        return {
-          token: tokens.token,
-          refreshToken: tokens.refreshToken,
-
-          User: {
-            id: user.id,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            phoneNumber: user.phoneNumber,
-            zipCode: user.zipCode,
-            address: user.address,
-            state: user.state,
-            profilePicture: user.profilePicture,
-            role: user.role,
-          }
-        };
       }
 
-      // Generate JWT tokens for the existing user
+      // Generate JWT tokens
       const tokens = await this.getTokens(user.id, user.email, user.role, user.firstName, user.lastName, user.state, user.zipCode, user.address, user.phoneNumber, user.profilePicture);
       await this.updateRefreshToken(user.id, tokens.refreshToken);
 
+      // Prepare and return the response
       return {
         token: tokens.token,
         refreshToken: tokens.refreshToken,
-
         User: {
           id: user.id,
           email: user.email,
@@ -383,6 +367,31 @@ export class AuthService {
       };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+
+
+  async verifyFirebaseToken(idToken: string): Promise<any> {
+    try {
+      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      // Assuming decodedToken includes 'name' and 'picture'
+      const fullName = decodedToken.name;
+      let firstName = '', lastName = '';
+      if (fullName) {
+        const names = fullName.split(' ');
+        firstName = names[0];
+        lastName = names.slice(1).join(' ');
+      }
+      // Return all needed details including email, first name, last name, and picture if available
+      return {
+        email: decodedToken.email,
+        firstName,
+        lastName,
+        picture: decodedToken.picture,
+      };
+    } catch (error) {
+      throw new HttpException('Failed to verify Firebase ID Token ' + error.message, HttpStatus.BAD_REQUEST);
     }
   }
 

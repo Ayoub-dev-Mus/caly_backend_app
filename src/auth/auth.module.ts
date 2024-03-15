@@ -8,10 +8,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshTokenStrategy } from './strategy/refreshToken.strategy';
 import { User } from 'src/users/entities/user.entity';
 import { GoogleStrategy } from './strategy/google.strategy';
+import { GoogleTokenVerifier } from './strategy/googleTokenVerifier';
 
 @Module({
   imports: [JwtModule.register({}), TypeOrmModule.forFeature([User]), UsersModule],
-  providers: [AuthService, AccessTokenStrategy, RefreshTokenStrategy, JwtService, GoogleStrategy],
+  providers: [AuthService, AccessTokenStrategy, RefreshTokenStrategy, JwtService, GoogleStrategy, GoogleTokenVerifier],
   controllers: [AuthController],
   exports: [AuthModule]
 })
