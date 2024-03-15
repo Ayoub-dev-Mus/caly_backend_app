@@ -26,7 +26,7 @@ export class AuthController {
     }
   }
 
-  //test
+
   @Post('/login')
   async login(@Body() signInDto: SignInDto): Promise<{ token: string, refreshToken: string, User: Partial<User> }> {
     try {
