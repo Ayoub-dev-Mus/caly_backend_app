@@ -84,7 +84,7 @@ export class AuthService {
         },
       };
 
-
+      // Update the refresh token in the database
       await this.updateRefreshToken(newUser.id, tokens.refreshToken);
       console.log(response)
       return response;
