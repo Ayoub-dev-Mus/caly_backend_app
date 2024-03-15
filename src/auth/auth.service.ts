@@ -86,7 +86,7 @@ export class AuthService {
 
       // Update the refresh token in the database
       await this.updateRefreshToken(newUser.id, tokens.refreshToken);
-      console.log(response)
+
       return response;
     } catch (error) {
       console.error('Error during sign-up:', error);
@@ -349,8 +349,8 @@ export class AuthService {
       const tokens = await this.getTokens(user.id, user.email, user.role, user.firstName, user.lastName, user.state, user.zipCode, user.address, user.phoneNumber, user.profilePicture);
       await this.updateRefreshToken(user.id, tokens.refreshToken);
 
-      // Prepare and return the response
-      return {
+
+      const response = {
         token: tokens.token,
         refreshToken: tokens.refreshToken,
         User: {
@@ -366,6 +366,9 @@ export class AuthService {
           role: user.role,
         }
       };
+
+ 
+      return response
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }

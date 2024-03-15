@@ -20,12 +20,13 @@ export class AuthController {
   async authenticateWithGoogle(@Body('token') token: string): Promise<any> {
     try {
       const user = await this.authService.googleLogin(token);
-      return { success: true, user };
+      return user;
     } catch (error) {
       throw new HttpException('Failed to authenticate with Google ' + error.message, HttpStatus.UNAUTHORIZED,);
     }
   }
 
+  //test
   @Post('/login')
   async login(@Body() signInDto: SignInDto): Promise<{ token: string, refreshToken: string, User: Partial<User> }> {
     try {
