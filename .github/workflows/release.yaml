@@ -15,6 +15,7 @@ jobs:
 
       - name: Build and Deploy Caly using Docker Compose
         run: |
-          docker-compose up --force-recreate  -d
+          docker-compose pull
+          docker-compose up --build --force-recreate --no-deps -d
         env:
           DOCKER_BUILDKIT: 1
