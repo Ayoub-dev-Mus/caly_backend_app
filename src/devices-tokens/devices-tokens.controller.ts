@@ -1,15 +1,15 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { DevicesTokensService } from './devices-tokens.service';
-import { CreateDevicesTokenDto } from './dto/create-devices-token.dto';
 import { UpdateDevicesTokenDto } from './dto/update-devices-token.dto';
+import { RegisterTokenDto } from './dto/register-token-dto';
 
 @Controller('devices-tokens')
 export class DevicesTokensController {
   constructor(private readonly devicesTokensService: DevicesTokensService) {}
 
   @Post()
-  create(@Body() createDevicesTokenDto: CreateDevicesTokenDto) {
-    return this.devicesTokensService.create(createDevicesTokenDto);
+  create(@Body() createDevicesTokenDto: RegisterTokenDto) {
+    return this.devicesTokensService.registerToken(createDevicesTokenDto);
   }
 
   @Get()

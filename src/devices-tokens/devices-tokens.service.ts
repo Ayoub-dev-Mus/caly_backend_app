@@ -1,12 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { UpdateDevicesTokenDto } from './dto/update-devices-token.dto';
 import { RegisterTokenDto } from './dto/register-token-dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { DeviceToken } from './entities/devices-token.entity';
 
 @Injectable()
 export class DevicesTokensService {
-  create(createDevicesTokenDto: RegisterTokenDto) {
-    return 'This action adds a new devicesToken';
+  constructor(
+    @InjectRepository(DeviceToken)
+    private deviceTokenRepository: Repository<DeviceToken>,
+  ) {}
+
+  async registerToken(registerTokenDto: RegisterTokenDto): Promise<DeviceToken> {
+    const { token, user } = registerTokenDto;
+    const deviceToken = this.deviceTokenRepository.create({ token, user });
+    return this.deviceTokenRepository.save(deviceToken);
   }
+
 
   findAll() {
     return `This action returns all devicesTokens`;
