@@ -16,6 +16,7 @@ import {
 import { PrimaryGeneratedColumn, Column } from 'typeorm';
 import { Booking } from "src/bookings/entities/booking.entity";
 import { Review } from "src/reviews/entities/review.entity";
+import { DeviceToken } from "src/devices-tokens/entities/devices-token.entity";
 
 @Entity()
 export class User {
@@ -86,4 +87,6 @@ export class User {
     @OneToMany(() => Review, review => review.user)
     reviews: Review[];
 
+    @OneToMany(() => Review, review => review.user)
+    deviceTokens:DeviceToken[];
 }

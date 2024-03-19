@@ -28,6 +28,8 @@ import { Booking } from './bookings/entities/booking.entity';
 import { OffersModule } from './offers/offers.module';
 import { Offer } from './offers/entities/offer.entity';
 import { Review } from './reviews/entities/review.entity';
+import { DeviceTokensModule } from './device-tokens/device-tokens.module';
+import { DevicesTokensModule } from './devices-tokens/devices-tokens.module';
 
 @Module({
   providers: [
@@ -65,7 +67,7 @@ import { Review } from './reviews/entities/review.entity';
       synchronize: true,
       migrations: [],
       subscribers: [],
-    }), UsersModule, AuthModule, StoresModule, ReviewsModule, ServicesModule, SpecialistsModule, BookingsModule, NotificationsModule, CalendarsModule, AppointmentsModule, OffersModule],
+    }), UsersModule, AuthModule, StoresModule, ReviewsModule, ServicesModule, SpecialistsModule, BookingsModule, NotificationsModule, CalendarsModule, AppointmentsModule, OffersModule, DeviceTokensModule, DevicesTokensModule],
   controllers: [AppController],
 
 })
