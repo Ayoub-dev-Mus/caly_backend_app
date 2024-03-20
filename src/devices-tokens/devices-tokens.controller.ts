@@ -1,15 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { DevicesTokensService } from './devices-tokens.service';
-import { UpdateDevicesTokenDto } from './dto/update-devices-token.dto';
 import { RegisterTokenDto } from './dto/register-token-dto';
+import { Role } from 'src/users/enums/role';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/role.guard';
+import { HasRoles } from '../common/role.decorator';
+import { GetUser } from 'src/common/jwtMiddlware';
+import { User } from 'src/users/entities/user.entity';
 
 @Controller('devices-tokens')
 export class DevicesTokensController {
   constructor(private readonly devicesTokensService: DevicesTokensService) {}
 
+
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.USER)
   @Post()
-  create(@Body() createDevicesTokenDto: RegisterTokenDto) {
-    return this.devicesTokensService.registerToken(createDevicesTokenDto);
+  create(@Body() createDevicesTokenDto: RegisterTokenDto , @GetUser() user: User) {
+    return this.devicesTokensService.registerToken(createDevicesTokenDto , user);
   }
 
   @Get()
@@ -22,10 +31,7 @@ export class DevicesTokensController {
     return this.devicesTokensService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDevicesTokenDto: UpdateDevicesTokenDto) {
-    return this.devicesTokensService.update(+id, updateDevicesTokenDto);
-  }
+
 
   @Delete(':id')
   remove(@Param('id') id: string) {

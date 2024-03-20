@@ -28,8 +28,8 @@ import { Booking } from './bookings/entities/booking.entity';
 import { OffersModule } from './offers/offers.module';
 import { Offer } from './offers/entities/offer.entity';
 import { Review } from './reviews/entities/review.entity';
-import { DeviceTokensModule } from './device-tokens/device-tokens.module';
 import { DevicesTokensModule } from './devices-tokens/devices-tokens.module';
+import { DeviceToken } from './devices-tokens/entities/devices-token.entity';
 
 @Module({
   providers: [
@@ -62,12 +62,12 @@ import { DevicesTokensModule } from './devices-tokens/devices-tokens.module';
         rejectUnauthorized: false
       },
 
-      entities: [User, StoreType, Store, Specialist, Service, Appointment, TimeSlot, Booking, Offer, Review],
+      entities: [User, StoreType, Store, Specialist, Service, Appointment, TimeSlot, Booking, Offer, Review , DeviceToken],
 
       synchronize: true,
       migrations: [],
       subscribers: [],
-    }), UsersModule, AuthModule, StoresModule, ReviewsModule, ServicesModule, SpecialistsModule, BookingsModule, NotificationsModule, CalendarsModule, AppointmentsModule, OffersModule, DeviceTokensModule, DevicesTokensModule],
+    }), UsersModule, AuthModule, StoresModule, ReviewsModule, ServicesModule, SpecialistsModule, BookingsModule, NotificationsModule, CalendarsModule, AppointmentsModule, OffersModule, DevicesTokensModule, DevicesTokensModule, ],
   controllers: [AppController],
 
 })

@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { UpdateDevicesTokenDto } from './dto/update-devices-token.dto';
 import { RegisterTokenDto } from './dto/register-token-dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DeviceToken } from './entities/devices-token.entity';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class DevicesTokensService {
@@ -12,9 +12,9 @@ export class DevicesTokensService {
     private deviceTokenRepository: Repository<DeviceToken>,
   ) {}
 
-  async registerToken(registerTokenDto: RegisterTokenDto): Promise<DeviceToken> {
-    const { token, user } = registerTokenDto;
-    const deviceToken = this.deviceTokenRepository.create({ token, user });
+  async registerToken(registerTokenDto: RegisterTokenDto , myuser:User): Promise<DeviceToken> {
+    registerTokenDto.user = myuser;
+    const deviceToken = this.deviceTokenRepository.create(registerTokenDto);
     return this.deviceTokenRepository.save(deviceToken);
   }
 
@@ -27,9 +27,6 @@ export class DevicesTokensService {
     return `This action returns a #${id} devicesToken`;
   }
 
-  update(id: number, updateDevicesTokenDto: UpdateDevicesTokenDto) {
-    return `This action updates a #${id} devicesToken`;
-  }
 
   remove(id: number) {
     return `This action removes a #${id} devicesToken`;
