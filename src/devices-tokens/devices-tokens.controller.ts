@@ -14,11 +14,10 @@ export class DevicesTokensController {
 
 
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @HasRoles(Role.ADMIN, Role.USER)
+
   @Post()
-  create(@Body() createDevicesTokenDto: RegisterTokenDto , @GetUser() user: User) {
-    return this.devicesTokensService.registerToken(createDevicesTokenDto , user);
+  create(@Body() createDevicesTokenDto: RegisterTokenDto ,) {
+    return this.devicesTokensService.registerToken(createDevicesTokenDto );
   }
 
   @Get()

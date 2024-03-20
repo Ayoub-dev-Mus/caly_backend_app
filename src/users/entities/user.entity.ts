@@ -86,7 +86,4 @@ export class User {
 
     @OneToMany(() => Review, review => review.user)
     reviews: Review[];
-
-    @OneToMany(() => Review, review => review.user)
-    deviceTokens:DeviceToken[];
 }

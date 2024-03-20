@@ -12,8 +12,7 @@ export class DevicesTokensService {
     private deviceTokenRepository: Repository<DeviceToken>,
   ) {}
 
-  async registerToken(registerTokenDto: RegisterTokenDto , myuser:User): Promise<DeviceToken> {
-    registerTokenDto.user = myuser;
+  async registerToken(registerTokenDto: RegisterTokenDto): Promise<DeviceToken> {
     const deviceToken = this.deviceTokenRepository.create(registerTokenDto);
     return this.deviceTokenRepository.save(deviceToken);
   }
