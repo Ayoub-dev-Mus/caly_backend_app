@@ -14,22 +14,9 @@ export class NotificationsController {
   }
 
   @Post('send')
-  async sendPushNotification(@Body() notificationData: any): Promise<void> {
-    try {
-      // Send push notification using Firebase Cloud Messaging
-      await admin.messaging().send({
-        notification: {
-          title: notificationData.title,
-          body: notificationData.body,
-        },
-        token: notificationData.deviceToken,
-      });
-
-      console.log('Push notification sent successfully.');
-    } catch (error) {
-      console.error('Error sending push notification:', error);
-      throw error;
-    }
+  async sendNotification(@Body() body: { token: string; title: string; body: string }) {
+    const { token, title, body: messageBody } = body;
+    return this.notificationsService.sendNotificationToDevice(token, title, messageBody);
   }
 
   @Get()
