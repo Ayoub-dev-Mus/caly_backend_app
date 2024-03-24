@@ -30,6 +30,8 @@ import { Offer } from './offers/entities/offer.entity';
 import { Review } from './reviews/entities/review.entity';
 import { DevicesTokensModule } from './devices-tokens/devices-tokens.module';
 import { DeviceToken } from './devices-tokens/entities/devices-token.entity';
+import { MongoModule } from './mongo/mongo.module';
+import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   providers: [
@@ -43,6 +45,8 @@ import { DeviceToken } from './devices-tokens/entities/devices-token.entity';
   exports: [],
   //Comment
   imports: [
+
+    MongooseModule.forRoot('mongodb://127.0.0.1:27017/caly-db-dev'),
     {
       ...JwtModule.register({
         secret: process.env.JWT_SECRET,
@@ -67,7 +71,7 @@ import { DeviceToken } from './devices-tokens/entities/devices-token.entity';
       synchronize: true,
       migrations: [],
       subscribers: [],
-    }), UsersModule, AuthModule, StoresModule, ReviewsModule, ServicesModule, SpecialistsModule, BookingsModule, NotificationsModule, CalendarsModule, AppointmentsModule, OffersModule, DevicesTokensModule, DevicesTokensModule, ],
+    }), UsersModule, AuthModule, StoresModule, ReviewsModule, ServicesModule, SpecialistsModule, BookingsModule, NotificationsModule, CalendarsModule, AppointmentsModule, OffersModule, DevicesTokensModule, DevicesTokensModule, MongoModule, ],
   controllers: [AppController],
 
 })
