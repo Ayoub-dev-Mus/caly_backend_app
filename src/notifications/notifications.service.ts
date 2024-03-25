@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { Notification } from './entities/notification.entity';
 import * as admin from 'firebase-admin';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
 import { CreateNotificationDto } from './dto/create-notification.dto';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class NotificationsService {
@@ -45,6 +46,16 @@ export class NotificationsService {
       console.error('Failed to send notification to device:', error);
       throw error;
     }
+  }
+
+  async markNotificationAsRead(notificationId: number): Promise<void> {
+    await this.notificationRepository.update(notificationId, { readAt: new Date() });
+  }
+
+  @Cron(CronExpression.EVERY_WEEK)
+  async deleteOldNotifications() {
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    await this.notificationRepository.delete({ readAt: LessThan(oneWeekAgo) });
   }
 
   async findAll() {

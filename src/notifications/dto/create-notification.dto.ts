@@ -1,16 +1,27 @@
-import { User } from "src/users/entities/user.entity";
+import { IsNotEmpty, IsString, IsBoolean, IsOptional, IsDate, IsDateString } from 'class-validator';
 
 export class CreateNotificationDto {
-
+    @IsNotEmpty()
+    @IsString()
     title: string;
 
+    @IsOptional()
+    @IsString()
     message: string;
 
-    token: string;
+    @IsOptional()
+    @IsDateString()
+    readAt: Date;
 
-    body: string;
-
-    read: boolean;
-
+    @IsNotEmpty()
+    @IsDate()
     createdAt: Date;
+
+    @IsNotEmpty()
+    @IsString()
+    fcmToken: string;
+
+    @IsNotEmpty()
+    @IsBoolean()
+    sent: boolean;
 }

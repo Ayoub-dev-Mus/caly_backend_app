@@ -32,6 +32,7 @@ import { DevicesTokensModule } from './devices-tokens/devices-tokens.module';
 import { DeviceToken } from './devices-tokens/entities/devices-token.entity';
 import { MongoModule } from './mongo/mongo.module';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   providers: [
@@ -45,6 +46,8 @@ import { MongooseModule } from '@nestjs/mongoose';
   exports: [],
   //Comment
   imports: [
+
+    ScheduleModule.forRoot(),
     {
       ...JwtModule.register({
         secret: process.env.JWT_SECRET,
@@ -64,7 +67,7 @@ import { MongooseModule } from '@nestjs/mongoose';
         rejectUnauthorized: false
       },
 
-      entities: [User, StoreType, Store, Specialist, Service, Appointment, TimeSlot, Booking, Offer, Review , DeviceToken],
+      entities: [User, StoreType, Store, Specialist, Service, Appointment, TimeSlot, Booking, Offer, Review , DeviceToken , Notification],
 
       synchronize: true,
       migrations: [],

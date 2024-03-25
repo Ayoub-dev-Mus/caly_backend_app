@@ -12,11 +12,20 @@ export class Notification {
     message: string; // Message body of the notification
 
     @Column({ nullable: true })
-    userId: number; // Assuming you are referencing a User model
-
-    @Column({ default: false })
-    read: boolean; // Flag to track if the notification has been read
+    readAt: Date; // Timestamp of when the notification was read
 
     @CreateDateColumn()
     createdAt: Date; // Timestamp of when the notification was created
+
+    @Column({ nullable: false })
+    fcmToken: string; // FCM token to which the notification was sent
+
+    @Column({ default: false })
+    sent: boolean; // Whether the notification has been sent
+
+    // Uncomment and adapt if you're associating notifications with specific users
+    // @ManyToOne(() => User, user => user.notifications)
+    // @JoinColumn({ name: 'userId' })
+    // user: User;
+
 }
