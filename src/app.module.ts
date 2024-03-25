@@ -31,7 +31,7 @@ import { Review } from './reviews/entities/review.entity';
 import { DevicesTokensModule } from './devices-tokens/devices-tokens.module';
 import { DeviceToken } from './devices-tokens/entities/devices-token.entity';
 import { MongoModule } from './mongo/mongo.module';
-import { MongooseModule } from '@nestjs/mongoose';
+import { Notification } from './notifications/entities/notification.entity';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
