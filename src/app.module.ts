@@ -45,8 +45,6 @@ import { MongooseModule } from '@nestjs/mongoose';
   exports: [],
   //Comment
   imports: [
-
-    MongooseModule.forRoot('mongodb://127.0.0.1:27017/caly-db-dev'),
     {
       ...JwtModule.register({
         secret: process.env.JWT_SECRET,

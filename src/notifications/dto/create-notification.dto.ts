@@ -1,10 +1,14 @@
+import { User } from "src/users/entities/user.entity";
+
 export class CreateNotificationDto {
 
     title: string;
 
     message: string;
 
-    user: ;
+    token: string;
+
+    body: string;
 
     read: boolean;
 

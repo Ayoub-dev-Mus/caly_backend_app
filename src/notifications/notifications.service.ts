@@ -40,8 +40,6 @@ export class NotificationsService {
   async createNotification(createNotificationDto:CreateNotificationDto) {
     try {
       const savedNotification = await this.notificationRepository.save(createNotificationDto);
-      await this.sendNotificationToDevice(token, title, body);
-      console.log('Notification sent to device:', savedNotification);
       return savedNotification;
     } catch (error) {
       console.error('Failed to send notification to device:', error);
