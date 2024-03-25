@@ -20,6 +20,7 @@ export class NotificationsController {
   }
 
 
+
   @Get('count')
   async notificationCount() :Promise<number> {
     try{
@@ -31,7 +32,7 @@ export class NotificationsController {
     }
   }
 
-  
+
   @Post(':id/mark-as-read')
   async markAsRead(@Param('id') id: number) {
     return this.notificationsService.markNotificationAsRead(id);
