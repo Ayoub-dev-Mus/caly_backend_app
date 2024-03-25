@@ -33,6 +33,7 @@ import { DeviceToken } from './devices-tokens/entities/devices-token.entity';
 import { MongoModule } from './mongo/mongo.module';
 import { Notification } from './notifications/entities/notification.entity';
 import { ScheduleModule } from '@nestjs/schedule';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   providers: [
@@ -72,7 +73,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       synchronize: true,
       migrations: [],
       subscribers: [],
-    }), UsersModule, AuthModule, StoresModule, ReviewsModule, ServicesModule, SpecialistsModule, BookingsModule, NotificationsModule, CalendarsModule, AppointmentsModule, OffersModule, DevicesTokensModule, DevicesTokensModule, MongoModule, ],
+    }), UsersModule, AuthModule, StoresModule, ReviewsModule, ServicesModule, SpecialistsModule, BookingsModule, NotificationsModule, CalendarsModule, AppointmentsModule, OffersModule, DevicesTokensModule, DevicesTokensModule, MongoModule, RedisModule, ],
   controllers: [AppController],
 
 })

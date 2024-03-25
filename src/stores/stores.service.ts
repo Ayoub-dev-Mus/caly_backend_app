@@ -7,6 +7,8 @@ import CreateStoreDto from './dto/create-store.dto';
 import { HttpService } from '@nestjs/axios';
 import { StoreType } from './entities/storeType';
 import { CreateStoreTypeDto } from './dto/create-store-type.dto';
+import { RedisService } from 'src/redis/redis.service';
+import { start } from 'repl';
 
 
 @Injectable()
@@ -21,7 +23,7 @@ export class StoresService {
 
   private readonly googleMapsBaseUrl = 'https://maps.googleapis.com/maps/api';
 
-  constructor(private readonly httpService: HttpService) { }
+  constructor(private readonly httpService: HttpService , private readonly redisService: RedisService) {  }
 
 
   async drawRoad(from: string, to: string): Promise<any> {
@@ -152,6 +154,90 @@ export class StoresService {
     }
   }
 
+  async findAllNearestStoresCached(
+    latitude: number,
+    longitude: number,
+    searchTerm: string = '',
+    page: number = 1,
+    pageSize: number = 10,
+    storeType?: string
+  ): Promise<{ stores: Store[], total: number }> {
+    // Generate a unique cache key based on the function parameters
+    const cacheKey = `stores:nearest:${latitude}:${longitude}:${searchTerm}:${page}:${pageSize}:${storeType || 'all'}`;
+
+    try {
+
+      const cachedResult = await this.redisService.get(cacheKey);
+
+      Logger.log('cachedResult', cachedResult);
+
+      if (cachedResult) {
+        return JSON.parse(cachedResult);
+      }
+    } catch (error) {
+      console.error('Error accessing Redis:', error);
+    }
+
+    let queryBuilder = this.storeRepository.createQueryBuilder('store')
+        .select([
+          'store.id as id',
+          'store.name as name',
+          'store.description as description',
+          'store.address as address',
+          'store.city as city',
+          'store.status as status',
+          'store.zipCode as zipCode',
+          'store.state as state',
+          'store.phone as phone',
+          'store.email as email',
+          'ST_X(store.location) as longitude',
+          'ST_Y(store.location) as latitude',
+          'store.website as website',
+          'store.createdAt as createdAt',
+          'store.updatedAt as updatedAt',
+          'json_agg(store.images) AS images',
+          'store.facebookLink as facebookLink',
+          'store.instagramLink as instagramLink',
+          'store.twitterLink as twitterLink',
+          'json_agg(services) AS services',
+          'json_agg(specialists) AS specialists',
+          `json_build_object('id', type.id, 'label', type.label, 'icon', type.icon) AS type`
+        ])
+        .addSelect('ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography, store.location::geography) / 1000 AS distance') // Convert distance to kilometers
+        .leftJoin('store.services', 'services')
+        .leftJoin('store.specialists', 'specialists')
+        .leftJoin('store.type', 'type')
+        .where(
+          new Brackets(qb => {
+            qb.where('LOWER(store.name) LIKE LOWER(:searchTerm)', { searchTerm: `%${searchTerm}%` })
+              .orWhere('LOWER(store.description) LIKE LOWER(:searchTerm)', { searchTerm: `%${searchTerm}%` });
+          })
+        );
+
+      if (storeType) {
+        queryBuilder = queryBuilder.andWhere('type.id = :storeTypeId', { storeTypeId: storeType });
+      }
+
+      const totalCount = await queryBuilder
+        .groupBy('store.id, type.id, type.label, type.icon')
+        .setParameter('longitude', longitude)
+        .setParameter('latitude', latitude)
+        .getCount();
+
+      const result = await queryBuilder
+        .orderBy('distance')
+        .skip((page - 1) * pageSize)
+        .take(pageSize)
+        .getRawMany();
+    try {
+      await this.redisService.set(cacheKey, JSON.stringify({ stores: result, total: totalCount })); // Adjust expiration as needed
+    } catch (error) {
+      console.error('Error setting cache in Redis:', error);
+      // Handle or ignore cache set error
+    }
+
+    return { stores: result, total: totalCount };
+  }
 
 
   async findOne(id: number): Promise<Store> {
