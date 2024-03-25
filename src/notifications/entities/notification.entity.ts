@@ -1,25 +1,22 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
 
-export type NotificationDocument = HydratedDocument<Notification>;
-
-@Schema()
+@Entity()
 export class Notification {
-    @Prop({ required: true })
+    @PrimaryGeneratedColumn()
+    id: number;
+
+    @Column({ nullable: false })
     title: string; // Title of the notification
 
-    @Prop({ required: false })
+    @Column({ nullable: true })
     message: string; // Message body of the notification
 
-    @Prop()
-    userId: Types.ObjectId; // Assuming you are referencing a User model
+    @Column({ nullable: true })
+    userId: number; // Assuming you are referencing a User model
 
-    @Prop()
+    @Column({ default: false })
     read: boolean; // Flag to track if the notification has been read
 
-    @Prop({ default: Date.now })
+    @CreateDateColumn()
     createdAt: Date; // Timestamp of when the notification was created
-
-
 }
-export const NotificationSchema = SchemaFactory.createForClass(Notification);

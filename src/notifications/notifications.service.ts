@@ -1,16 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { CreateNotificationDto } from './dto/create-notification.dto';
-import { UpdateNotificationDto } from './dto/update-notification.dto';
-import * as admin from 'firebase-admin';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Notification } from './entities/notification.entity';
+import * as admin from 'firebase-admin';
+import { UpdateNotificationDto } from './dto/update-notification.dto';
+import { CreateNotificationDto } from './dto/create-notification.dto';
 
 @Injectable()
 export class NotificationsService {
 
   constructor(
-    @InjectModel(Notification.name) private notificationModel: Model<Notification>,
+    @InjectRepository(Notification)
+    private notificationRepository: Repository<Notification>,
   ) {}
 
   async sendNotificationToDevice(token: string, title: string, body: string) {
@@ -36,43 +37,41 @@ export class NotificationsService {
     }
   }
 
- async createNotification(token: string, title: string, body: string) {
-    // Create and save the notification to the database
-    const notification = new this.notificationModel({ token, title, body });
-    const savedNotification = await notification.save();
-
-    // After saving, attempt to send the notification to the device
+  async createNotification(createNotificationDto:CreateNotificationDto) {
     try {
-      const sendResponse = await this.sendNotificationToDevice(token, title, body);
-      console.log('Notification sent to device:', sendResponse);
+      const savedNotification = await this.notificationRepository.save(createNotificationDto);
+      await this.sendNotificationToDevice(token, title, body);
+      console.log('Notification sent to device:', savedNotification);
+      return savedNotification;
     } catch (error) {
       console.error('Failed to send notification to device:', error);
-      // You might choose to handle this error differently
-      // For example, you could log this error and not throw, depending on your application's needs
       throw error;
     }
-
-    return savedNotification;
   }
 
-  create(createNotificationDto: CreateNotificationDto) {
-    return 'This action adds a new notification';
+  async findAll() {
+    return this.notificationRepository.find();
   }
 
-
-  findAll() {
-    return `This action returns all notifications`;
+  async findOne(id: number) {
+    const notification = await this.notificationRepository.findOne({where: {id: id}});
+    if (!notification) {
+      throw new NotFoundException(`Notification with ID ${id} not found`);
+    }
+    return notification;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} notification`;
+  async update(id: number, updateNotificationDto: UpdateNotificationDto) {
+    const notification = await this.findOne(id);
+    // Update notification properties here
+    // For example:
+    // notification.title = updateNotificationDto.title;
+    // notification.body = updateNotificationDto.body;
+    return this.notificationRepository.save(notification);
   }
 
-  update(id: number, updateNotificationDto: UpdateNotificationDto) {
-    return `This action updates a #${id} notification`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} notification`;
+  async remove(id: number) {
+    const notification = await this.findOne(id);
+    return this.notificationRepository.remove(notification);
   }
 }
