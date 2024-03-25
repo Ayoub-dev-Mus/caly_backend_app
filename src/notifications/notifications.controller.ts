@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
@@ -7,7 +7,6 @@ import * as admin from 'firebase-admin';
 @Controller('notifications')
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
-
   @Post()
   async create(@Body() createNotificationDto:CreateNotificationDto) {
    try{
@@ -19,8 +18,8 @@ export class NotificationsController {
     };
     return message;
    }catch(error){
-    console.error('Failed to create notification:', error);
-    throw error;
+
+     new HttpException('Failed to send notification to device:', error);
    }
   }
 
