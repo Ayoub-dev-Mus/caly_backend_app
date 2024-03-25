@@ -15,16 +15,15 @@ export class NotificationsService {
     private notificationRepository: Repository<Notification>,
   ) {}
 
-  async sendNotificationToDevice(token: string, title: string, body: string) {
+  async sendNotificationToDevice( createNotificationDto:CreateNotificationDto ) {
     const message = {
-      token: token,
+      token: createNotificationDto.fcmToken,
       notification: {
-        title: title,
-        body: body,
+        title: createNotificationDto.title,
       },
       data: {
-        title: title,
-        body: body,
+        title: createNotificationDto.title,
+        message: createNotificationDto.message,
       },
     };
 

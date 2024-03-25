@@ -11,7 +11,7 @@ export class NotificationsController {
   @Post()
   async create(@Body() createNotificationDto:CreateNotificationDto) {
     const savedNotification = await this.notificationsService.createNotification(createNotificationDto);
-    const notificationSend = await this.sendNotification(createNotificationDto);
+    const notificationSend = await this.notificationsService.sendNotificationToDevice(createNotificationDto);
     const message = {
       savedNotification,
       notificationSend,
@@ -20,11 +20,7 @@ export class NotificationsController {
     return message;
   }
 
-  @Post('send')
-  async sendNotification(@Body() body: { token: string; title: string; body: string }) {
-    const { token, title, body: messageBody } = body;
-    return this.notificationsService.sendNotificationToDevice(token, title, messageBody);
-  }
+ 
 
   @Get()
   findAll() {
