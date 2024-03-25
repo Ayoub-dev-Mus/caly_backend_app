@@ -10,6 +10,7 @@ export class NotificationsController {
 
   @Post()
   async create(@Body() createNotificationDto:CreateNotificationDto) {
+   try{
     const savedNotification = await this.notificationsService.createNotification(createNotificationDto);
     const notificationSend = await this.notificationsService.sendNotificationToDevice(createNotificationDto);
     const message = {
@@ -17,6 +18,10 @@ export class NotificationsController {
       notificationSend,
     };
     return message;
+   }catch(error){
+    console.error('Failed to create notification:', error);
+    throw error;
+   }
   }
 
 

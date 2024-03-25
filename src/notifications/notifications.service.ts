@@ -13,31 +13,37 @@ export class NotificationsService {
   constructor(
     @InjectRepository(Notification)
     private notificationRepository: Repository<Notification>,
-  ) {}
+  ) { }
 
-  async sendNotificationToDevice( createNotificationDto:CreateNotificationDto ) {
-    const message = {
-      token: createNotificationDto.fcmToken,
-      notification: {
-        title: createNotificationDto.title,
-      },
-      data: {
-        title: createNotificationDto.title,
-        message: createNotificationDto.message,
-      },
-    };
-
+  async sendNotificationToDevice(createNotificationDto: CreateNotificationDto) {
     try {
-      const response = await admin.messaging().send(message);
-      console.log('Successfully sent message:', response);
-      return response;
+      const message = {
+        token: createNotificationDto.fcmToken,
+        notification: {
+          title: createNotificationDto.title,
+        },
+        data: {
+          title: createNotificationDto.title,
+          message: createNotificationDto.message,
+        },
+      };
+
+      try {
+        const response = await admin.messaging().send(message);
+        console.log('Successfully sent message:', response);
+        return response;
+      } catch (error) {
+        console.log('Error sending message:', error);
+        throw error;
+      }
     } catch (error) {
-      console.log('Error sending message:', error);
+      console.error('Failed to send notification to device:', error);
       throw error;
+
     }
   }
 
-  async createNotification(createNotificationDto:CreateNotificationDto) {
+  async createNotification(createNotificationDto: CreateNotificationDto) {
     try {
       const savedNotification = await this.notificationRepository.save(createNotificationDto);
       return savedNotification;
@@ -61,14 +67,14 @@ export class NotificationsService {
     return this.notificationRepository.find();
   }
 
-  async countNotifications():Promise<number> {
+  async countNotifications(): Promise<number> {
 
     const notifications = await this.notificationRepository.count();
     return notifications
   }
 
   async findOne(id: number) {
-    const notification = await this.notificationRepository.findOne({where: {id: id}});
+    const notification = await this.notificationRepository.findOne({ where: { id: id } });
     if (!notification) {
       throw new NotFoundException(`Notification with ID ${id} not found`);
     }
