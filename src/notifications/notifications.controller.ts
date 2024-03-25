@@ -20,7 +20,10 @@ export class NotificationsController {
     return message;
   }
 
- 
+  @Post(':id/mark-as-read')
+  async markAsRead(@Param('id') id: number) {
+    return this.notificationsService.markNotificationAsRead(id);
+  }
 
   @Get()
   findAll() {
