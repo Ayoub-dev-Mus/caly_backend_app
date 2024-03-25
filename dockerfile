@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --ignore-scripts
 
 COPY . .
 
@@ -23,7 +23,8 @@ COPY package*.json ./
 
 
 #// deploy
-RUN npm install --only=prod
+RUN npm install --only=prod --ignore-scripts
+
 
 
 COPY . .
