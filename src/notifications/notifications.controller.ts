@@ -37,7 +37,7 @@ export class NotificationsController {
   }
 
 
-  @Post(':id/mark-as-read')
+  @Patch(':id/mark-as-read')
   async markAsRead(@Param('id') id: number) {
     return this.notificationsService.markNotificationAsRead(id);
   }
