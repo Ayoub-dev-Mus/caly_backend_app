@@ -16,10 +16,22 @@ export class NotificationsController {
       savedNotification,
       notificationSend,
     };
-
     return message;
   }
 
+
+  @Get('count')
+  async notificationCount() :Promise<number> {
+    try{
+      const count = await this.notificationsService.countNotifications();
+      return count;
+    }catch(error){
+      console.error('Failed to get notification count:', error);
+      throw error;
+    }
+  }
+
+  
   @Post(':id/mark-as-read')
   async markAsRead(@Param('id') id: number) {
     return this.notificationsService.markNotificationAsRead(id);

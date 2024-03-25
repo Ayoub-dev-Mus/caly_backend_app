@@ -61,6 +61,12 @@ export class NotificationsService {
     return this.notificationRepository.find();
   }
 
+  async countNotifications():Promise<number> {
+
+    const notifications = await this.notificationRepository.count();
+    return notifications
+  }
+
   async findOne(id: number) {
     const notification = await this.notificationRepository.findOne({where: {id: id}});
     if (!notification) {
