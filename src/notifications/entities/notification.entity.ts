@@ -23,6 +23,9 @@ export class Notification {
     @Column({ default: false })
     sent: boolean; // Whether the notification has been sent
 
+    @Column({ default: false })
+    read: boolean; // Whether the notification has been read
+
     // Uncomment and adapt if you're associating notifications with specific users
     // @ManyToOne(() => User, user => user.notifications)
     // @JoinColumn({ name: 'userId' })

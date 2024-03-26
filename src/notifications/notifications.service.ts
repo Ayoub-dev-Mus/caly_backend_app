@@ -56,13 +56,16 @@ export class NotificationsService {
   }
 
   async markNotificationAsRead(notificationId: number): Promise<void> {
-    await this.notificationRepository.update(notificationId, { readAt: new Date() });
+    await this.notificationRepository.update(notificationId, { read: true });
   }
 
   @Cron(CronExpression.EVERY_WEEK)
   async deleteOldNotifications() {
     const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    await this.notificationRepository.delete({ readAt: LessThan(oneWeekAgo) });
+    await this.notificationRepository.delete({
+      read: true,
+      readAt: LessThan(oneWeekAgo)
+    });
   }
 
   async findAll() {
@@ -71,7 +74,7 @@ export class NotificationsService {
 
   async countNotifications(): Promise<number> {
 
-    const notifications = await this.notificationRepository.count();
+    const notifications = await this.notificationRepository.count({ where: { read: false } });
     return notifications
   }
 
