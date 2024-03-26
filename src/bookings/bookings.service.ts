@@ -8,11 +8,10 @@ import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class BookingsService {
-
   constructor(
     @InjectRepository(Booking)
-    private readonly bookingRepository: Repository<Booking>
-  ) { }
+    private readonly bookingRepository: Repository<Booking>,
+  ) {}
 
   async create(createBookingDto: CreateBookingDto, user: User) {
     try {
@@ -27,10 +26,15 @@ export class BookingsService {
     }
   }
 
-  async findAll(user: User, createdAt?: Date, storeName?: string, options?: FindManyOptions<Booking>) {
+  async findAll(
+    user: User,
+    createdAt?: Date,
+    storeName?: string,
+    options?: FindManyOptions<Booking>,
+  ) {
     try {
-      let whereClause: any = {
-        user: { id: user.id }
+      const whereClause: any = {
+        user: { id: user.id },
       };
 
       if (createdAt) {
@@ -41,7 +45,10 @@ export class BookingsService {
         const endOfDay = new Date(createdAt);
         endOfDay.setHours(23, 59, 59, 999); // Set to the end of the day
 
-        whereClause.createdAt = Between(startOfDay.toISOString(), endOfDay.toISOString());
+        whereClause.createdAt = Between(
+          startOfDay.toISOString(),
+          endOfDay.toISOString(),
+        );
       }
 
       if (storeName) {
@@ -50,14 +57,14 @@ export class BookingsService {
 
       // Pagination options
       const paginationOptions: FindManyOptions<Booking> = {
-        relations: ["specialist", "service", "store", "timeSlot", "user"],
+        relations: ['specialist', 'service', 'store', 'timeSlot', 'user'],
         select: {
           user: {
             id: true,
             email: true,
             firstName: true,
-            lastName: true
-          }
+            lastName: true,
+          },
         },
         where: whereClause,
         skip: options?.skip || 0,

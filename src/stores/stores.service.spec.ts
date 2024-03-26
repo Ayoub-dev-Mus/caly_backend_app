@@ -12,8 +12,6 @@ describe('StoresService', () => {
     service = module.get<StoresService>(StoresService);
   });
 
-  
-
   it('should be defined', () => {
     expect(service).toBeDefined();
   });

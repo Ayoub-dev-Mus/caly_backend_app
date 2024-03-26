@@ -10,13 +10,12 @@ import { UpdateTimeSlotDto } from './dto/update-timeslot.dto';
 
 @Injectable()
 export class AppointmentsService {
-
   constructor(
     @InjectRepository(Appointment)
     private appointmentRepository: Repository<Appointment>,
     @InjectRepository(TimeSlot)
     private timeSlotRepository: Repository<TimeSlot>,
-  ) { }
+  ) {}
 
   // Appointments CRUD
 
@@ -30,14 +29,20 @@ export class AppointmentsService {
   }
 
   async findOneAppointment(id: number) {
-    const appointment = await this.appointmentRepository.findOne({ where: { id }, relations: ['timeSlots'] });
+    const appointment = await this.appointmentRepository.findOne({
+      where: { id },
+      relations: ['timeSlots'],
+    });
     if (!appointment) {
       throw new NotFoundException(`Appointment with ID ${id} not found`);
     }
     return appointment;
   }
 
-  async updateAppointment(id: number, updateAppointmentDto: UpdateAppointmentDto) {
+  async updateAppointment(
+    id: number,
+    updateAppointmentDto: UpdateAppointmentDto,
+  ) {
     const existingAppointment = await this.findOneAppointment(id);
     this.appointmentRepository.merge(existingAppointment, updateAppointmentDto);
     return this.appointmentRepository.save(existingAppointment);
@@ -59,17 +64,21 @@ export class AppointmentsService {
     return this.timeSlotRepository.find();
   }
 
-
-  async findTimeSlotsByDateAndStore(date: Date, storeId: number): Promise<TimeSlot[]> {
+  async findTimeSlotsByDateAndStore(
+    date: Date,
+    storeId: number,
+  ): Promise<TimeSlot[]> {
     const timeSlots = await this.timeSlotRepository.find({
       where: { date, store: { id: storeId } },
     });
     return timeSlots;
   }
 
-
   async findOneTimeSlot(id: number) {
-    const timeSlot = await this.timeSlotRepository.findOne({ where: { id }, relations: ['appointment'] });
+    const timeSlot = await this.timeSlotRepository.findOne({
+      where: { id },
+      relations: ['appointment'],
+    });
     if (!timeSlot) {
       throw new NotFoundException(`Time slot with ID ${id} not found`);
     }

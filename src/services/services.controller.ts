@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { ApiTags } from '@nestjs/swagger';
@@ -7,12 +17,13 @@ import CreateServiceDto from './dto/create-service.dto';
 @ApiTags('Services')
 @Controller('services')
 export class ServicesController {
-  constructor(private readonly servicesService: ServicesService) { }
+  constructor(private readonly servicesService: ServicesService) {}
 
   @Post()
   async create(@Body() createServiceDto: CreateServiceDto) {
     try {
-      const createdService = await this.servicesService.create(createServiceDto);
+      const createdService =
+        await this.servicesService.create(createServiceDto);
       return { success: true, data: createdService };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -40,9 +51,15 @@ export class ServicesController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateServiceDto: UpdateServiceDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateServiceDto: UpdateServiceDto,
+  ) {
     try {
-      const updatedService = await this.servicesService.update(+id, updateServiceDto);
+      const updatedService = await this.servicesService.update(
+        +id,
+        updateServiceDto,
+      );
       return { success: true, data: updatedService };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);

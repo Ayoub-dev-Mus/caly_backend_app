@@ -1,15 +1,13 @@
-import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from "typeorm";
-import { TimeSlot } from "./timeslots.entity";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Appointment {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    date: Date;
+  @Column()
+  date: Date;
 
-    @Column()
-    status: string;
-
+  @Column()
+  status: string;
 }

@@ -2,18 +2,16 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, FindOptionsWhere, Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { Review } from './entities/review.entity';
 import { User } from 'src/users/entities/user.entity';
-import { Booking } from 'src/bookings/entities/booking.entity';
 
 @Injectable()
 export class ReviewsService {
-
   constructor(
     @InjectRepository(Review)
     private reviewRepository: Repository<Review>,
-  ) { }
+  ) {}
 
   async create(createReviewDto: CreateReviewDto, user: User): Promise<Review> {
     try {
@@ -26,9 +24,11 @@ export class ReviewsService {
     }
   }
 
-
-
-  async findAll(storeId?: number, limit: number = 10, offset: number = 0): Promise<Review[]> {
+  async findAll(
+    storeId?: number,
+    limit: number = 10,
+    offset: number = 0,
+  ): Promise<Review[]> {
     try {
       const whereConditions: FindOptionsWhere<Review> = {};
 
@@ -39,27 +39,25 @@ export class ReviewsService {
       const reviews = await this.reviewRepository.find({
         relations: ['store', 'user'],
         where: whereConditions,
-        take: limit,  // Limit the number of reviews returned
+        take: limit, // Limit the number of reviews returned
         skip: offset,
         select: {
           user: {
             id: true,
             firstName: true,
             lastName: true,
-            profilePicture: true
-          }
-        }
+            profilePicture: true,
+          },
+        },
       });
 
       Logger.log('Reviews', reviews);
-
 
       return reviews;
     } catch (error) {
       throw new Error('Failed to fetch reviews');
     }
   }
-
 
   async findOne(id: number): Promise<Review> {
     try {
@@ -100,21 +98,28 @@ export class ReviewsService {
   async getReviewStatistics(storeId: number): Promise<any> {
     try {
       // Fetch all reviews for the store
-      const reviews = await this.reviewRepository.find({ where: { store: { id: storeId } } });
+      const reviews = await this.reviewRepository.find({
+        where: { store: { id: storeId } },
+      });
 
       // Filter reviews with more than 5 characters in their comments
-      const filteredReviews = reviews.filter(review => review.comment.length > 5);
+      const filteredReviews = reviews.filter(
+        (review) => review.comment.length > 5,
+      );
 
       // Calculate total reviews and total rating for filtered reviews
       const totalReviews = filteredReviews.length;
 
       // Calculate star ratings
       const starRatings = [0, 0, 0, 0, 0]; // [1-star, 2-star, 3-star, 4-star, 5-star]
-      filteredReviews.forEach(review => {
+      filteredReviews.forEach((review) => {
         starRatings[review.rating - 1]++;
       });
 
-      const totalRatings = starRatings.reduce((acc, val, index) => acc + (index + 1) * val, 0);
+      const totalRatings = starRatings.reduce(
+        (acc, val, index) => acc + (index + 1) * val,
+        0,
+      );
 
       // Calculate average rating based on total ratings count
       const averageRating = totalReviews > 0 ? totalRatings / totalReviews : 0;
@@ -132,8 +137,9 @@ export class ReviewsService {
         },
       };
     } catch (error) {
-      throw new Error(`Failed to retrieve review statistics for store ${storeId}`);
+      throw new Error(
+        `Failed to retrieve review statistics for store ${storeId}`,
+      );
     }
   }
-
 }

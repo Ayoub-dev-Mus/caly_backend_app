@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { StoresService } from './stores.service';
 
 import { UpdateStoreDto } from './dto/update-store.dto';
@@ -12,7 +21,7 @@ import { CreateStoreTypeDto } from './dto/create-store-type.dto';
 @ApiTags('Stores')
 @Controller('stores')
 export class StoresController {
-  constructor(private readonly storesService: StoresService) { }
+  constructor(private readonly storesService: StoresService) {}
 
   @Post()
   async create(@Body() createStoreDto: CreateStoreDto): Promise<Store> {
@@ -25,7 +34,9 @@ export class StoresController {
   }
 
   @Post('types')
-  async createStoreType(@Body() storeType: CreateStoreTypeDto): Promise<StoreType> {
+  async createStoreType(
+    @Body() storeType: CreateStoreTypeDto,
+  ): Promise<StoreType> {
     return await this.storesService.createStoreType(storeType);
   }
 
@@ -36,24 +47,32 @@ export class StoresController {
     @Query('searchTerm') searchTerm: string,
     @Query('page') page: number,
     @Query('pageSize') pageSize: number,
-    @Query('storeType') storeType?: string
-  ): Promise<{ stores: Store[], total: number }> {
-    return await this.storesService.findAllNearestStoresCached(latitude, longitude, searchTerm, page, pageSize, storeType);
+    @Query('storeType') storeType?: string,
+  ): Promise<{ stores: Store[]; total: number }> {
+    return await this.storesService.findAllNearestStoresCached(
+      latitude,
+      longitude,
+      searchTerm,
+      page,
+      pageSize,
+      storeType,
+    );
   }
-
 
   @Get('/draw-road')
-  async drawRoad(@Query('from') from: string, @Query('to') to: string): Promise<any> {
+  async drawRoad(
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ): Promise<any> {
     return this.storesService.drawRoad(from, to);
   }
-
 
   @Get()
   async findAll(
     @Query('page') page: number = 1,
     @Query('pageSize') pageSize: number = 10,
-    @Query('searchTerm') searchTerm: string = ''
-  ): Promise<{ stores: Store[], total: number }> {
+    @Query('searchTerm') searchTerm: string = '',
+  ): Promise<{ stores: Store[]; total: number }> {
     return await this.storesService.findAll(page, pageSize, searchTerm);
   }
   @Get(':id')
@@ -62,7 +81,10 @@ export class StoresController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateStoreDto: UpdateStoreDto): Promise<UpdateResult> {
+  async update(
+    @Param('id') id: string,
+    @Body() updateStoreDto: UpdateStoreDto,
+  ): Promise<UpdateResult> {
     return await this.storesService.update(+id, updateStoreDto);
   }
 

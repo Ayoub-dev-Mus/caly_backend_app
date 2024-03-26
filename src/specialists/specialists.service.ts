@@ -10,7 +10,7 @@ export class SpecialistsService {
   constructor(
     @InjectRepository(Specialist)
     private specialistRepository: Repository<Specialist>,
-  ) { }
+  ) {}
 
   async create(createSpecialistDto: CreateSpecialistDto): Promise<Specialist> {
     const newSpecialist = this.specialistRepository.create(createSpecialistDto);
@@ -22,7 +22,9 @@ export class SpecialistsService {
   }
 
   async findOne(id: number): Promise<Specialist> {
-    const specialist = await this.specialistRepository.findOne({ where: { id } });
+    const specialist = await this.specialistRepository.findOne({
+      where: { id },
+    });
     if (!specialist) {
       throw new NotFoundException(`Specialist with ID ${id} not found`);
     }
@@ -30,14 +32,21 @@ export class SpecialistsService {
   }
 
   async findSpecialistsByStoreId(storeId: number): Promise<Specialist[]> {
-    return await this.specialistRepository.find({where: { store: { id: storeId } }});
+    return await this.specialistRepository.find({
+      where: { store: { id: storeId } },
+    });
   }
 
   async findSpecialistsByServiceId(serviceId: number): Promise<Specialist[]> {
-    return await this.specialistRepository.find({ where: { services: { id: serviceId } } });
+    return await this.specialistRepository.find({
+      where: { services: { id: serviceId } },
+    });
   }
 
-  async update(id: number, updateSpecialistDto: UpdateSpecialistDto): Promise<Specialist> {
+  async update(
+    id: number,
+    updateSpecialistDto: UpdateSpecialistDto,
+  ): Promise<Specialist> {
     const existingSpecialist = await this.findOne(id);
     this.specialistRepository.merge(existingSpecialist, updateSpecialistDto);
     return await this.specialistRepository.save(existingSpecialist);

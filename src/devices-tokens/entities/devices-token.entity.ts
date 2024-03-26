@@ -1,6 +1,5 @@
 // src/device-tokens/entities/device-token.entity.ts
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
-import { User } from 'src/users/entities/user.entity';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class DeviceToken {
@@ -9,6 +8,4 @@ export class DeviceToken {
 
   @Column()
   token: string;
-
-
 }

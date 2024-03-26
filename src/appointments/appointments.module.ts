@@ -10,4 +10,4 @@ import { TimeSlot } from './entities/timeslots.entity';
   controllers: [AppointmentsController],
   providers: [AppointmentsService],
 })
-export class AppointmentsModule { }
+export class AppointmentsModule {}

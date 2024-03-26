@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
@@ -10,7 +19,7 @@ import { TimeSlot } from './entities/timeslots.entity';
 @ApiTags('appointments')
 @Controller('appointments')
 export class AppointmentsController {
-  constructor(private readonly appointmentsService: AppointmentsService) { }
+  constructor(private readonly appointmentsService: AppointmentsService) {}
 
   @Post()
   createAppointment(@Body() createAppointmentDto: CreateAppointmentDto) {
@@ -36,8 +45,14 @@ export class AppointmentsController {
   }
 
   @Patch(':id')
-  updateAppointment(@Param('id') id: string, @Body() updateAppointmentDto: UpdateAppointmentDto) {
-    return this.appointmentsService.updateAppointment(+id, updateAppointmentDto);
+  updateAppointment(
+    @Param('id') id: string,
+    @Body() updateAppointmentDto: UpdateAppointmentDto,
+  ) {
+    return this.appointmentsService.updateAppointment(
+      +id,
+      updateAppointmentDto,
+    );
   }
 
   @Delete(':id')
@@ -61,7 +76,10 @@ export class AppointmentsController {
   }
 
   @Patch('/timeslots/:id')
-  updateTimeSlot(@Param('id') id: string, @Body() updateTimeSlotDto: UpdateTimeSlotDto) {
+  updateTimeSlot(
+    @Param('id') id: string,
+    @Body() updateTimeSlotDto: UpdateTimeSlotDto,
+  ) {
     return this.appointmentsService.updateTimeSlot(+id, updateTimeSlotDto);
   }
 

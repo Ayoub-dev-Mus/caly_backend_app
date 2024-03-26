@@ -1,16 +1,13 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { Appointment } from "../entities/appointment.entity";
-
+import { ApiProperty } from '@nestjs/swagger';
+import { Appointment } from '../entities/appointment.entity';
 
 export class UpdateTimeSlotDto {
+  @ApiProperty()
+  time: string;
 
-    @ApiProperty()
-    time: string;
+  @ApiProperty()
+  available: boolean;
 
-
-    @ApiProperty()
-    available: boolean;
-
-    @ApiProperty()
-    appointment: Appointment;
+  @ApiProperty()
+  appointment: Appointment;
 }

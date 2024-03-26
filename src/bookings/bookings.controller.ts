@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
@@ -15,7 +25,7 @@ import { Role } from 'src/users/enums/role';
 @ApiTags('bookings')
 @Controller('bookings')
 export class BookingsController {
-  constructor(private readonly bookingsService: BookingsService) { }
+  constructor(private readonly bookingsService: BookingsService) {}
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER)
@@ -23,7 +33,6 @@ export class BookingsController {
   create(@Body() createBookingDto: CreateBookingDto, @GetUser() user: User) {
     return this.bookingsService.create(createBookingDto, user);
   }
-
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER)
@@ -54,7 +63,6 @@ export class BookingsController {
 
     return this.bookingsService.findAll(user, createdAt, storeName, options);
   }
-
 
   @Get(':id')
   findOne(@Param('id') id: string) {

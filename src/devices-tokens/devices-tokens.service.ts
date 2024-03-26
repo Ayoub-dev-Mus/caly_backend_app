@@ -3,7 +3,6 @@ import { RegisterTokenDto } from './dto/register-token-dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DeviceToken } from './entities/devices-token.entity';
-import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class DevicesTokensService {
@@ -12,11 +11,12 @@ export class DevicesTokensService {
     private deviceTokenRepository: Repository<DeviceToken>,
   ) {}
 
-  async registerToken(registerTokenDto: RegisterTokenDto): Promise<DeviceToken> {
+  async registerToken(
+    registerTokenDto: RegisterTokenDto,
+  ): Promise<DeviceToken> {
     const deviceToken = this.deviceTokenRepository.create(registerTokenDto);
     return this.deviceTokenRepository.save(deviceToken);
   }
-
 
   findAll() {
     return `This action returns all devicesTokens`;
@@ -25,7 +25,6 @@ export class DevicesTokensService {
   findOne(id: number) {
     return `This action returns a #${id} devicesToken`;
   }
-
 
   remove(id: number) {
     return `This action removes a #${id} devicesToken`;

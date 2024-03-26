@@ -2,19 +2,22 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Store } from './entities/store.entity';
-import { Brackets, DeleteResult, FindManyOptions, ILike, Like, Repository, UpdateResult } from 'typeorm';
+import {
+  Brackets,
+  DeleteResult,
+  FindManyOptions,
+  ILike,
+  Repository,
+  UpdateResult,
+} from 'typeorm';
 import CreateStoreDto from './dto/create-store.dto';
 import { HttpService } from '@nestjs/axios';
 import { StoreType } from './entities/storeType';
 import { CreateStoreTypeDto } from './dto/create-store-type.dto';
 import { RedisService } from 'src/redis/redis.service';
-import { start } from 'repl';
-
 
 @Injectable()
 export class StoresService {
-
-
   @InjectRepository(Store)
   private storeRepository: Repository<Store>;
 
@@ -23,8 +26,10 @@ export class StoresService {
 
   private readonly googleMapsBaseUrl = 'https://maps.googleapis.com/maps/api';
 
-  constructor(private readonly httpService: HttpService , private readonly redisService: RedisService) {  }
-
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly redisService: RedisService,
+  ) {}
 
   async drawRoad(from: string, to: string): Promise<any> {
     const response = await this.httpService
@@ -34,14 +39,14 @@ export class StoresService {
           destination: to,
           key: 'AIzaSyCxkDMCXkDyX9JpeOdsLUqTJBaLjdsIiBQ',
         },
-      }).toPromise();
+      })
+      .toPromise();
 
     if (response && response.data) {
       return response.data;
     }
     return null;
   }
-
 
   async findAllStoreTypes(): Promise<StoreType[]> {
     try {
@@ -59,7 +64,6 @@ export class StoresService {
     }
   }
 
-
   async create(createStoreDto: CreateStoreDto): Promise<Store> {
     try {
       return await this.storeRepository.save(createStoreDto);
@@ -68,13 +72,15 @@ export class StoresService {
     }
   }
 
-  async findAll(page: number = 1, pageSize: number = 10, searchTerm: string = ''): Promise<{ stores: Store[], total: number }> {
+  async findAll(
+    page: number = 1,
+    pageSize: number = 10,
+    searchTerm: string = '',
+  ): Promise<{ stores: Store[]; total: number }> {
     try {
       const options: FindManyOptions<Store> = {
-        relations: ["services", "specialists"],
-        where: searchTerm ? [
-          { name: ILike(`%${searchTerm}%`) },
-        ] : {},
+        relations: ['services', 'specialists'],
+        where: searchTerm ? [{ name: ILike(`%${searchTerm}%`) }] : {},
         take: pageSize,
         skip: (page - 1) * pageSize,
       };
@@ -93,10 +99,11 @@ export class StoresService {
     searchTerm: string = '',
     page: number = 1,
     pageSize: number = 10,
-    storeType?: string // Add storeType parameter
-  ): Promise<{ stores: Store[], total: number }> {
+    storeType?: string, // Add storeType parameter
+  ): Promise<{ stores: Store[]; total: number }> {
     try {
-      let queryBuilder = this.storeRepository.createQueryBuilder('store')
+      let queryBuilder = this.storeRepository
+        .createQueryBuilder('store')
         .select([
           'store.id as id',
           'store.name as name',
@@ -119,21 +126,28 @@ export class StoresService {
           'store.twitterLink as twitterLink',
           'json_agg(services) AS services',
           'json_agg(specialists) AS specialists',
-          `json_build_object('id', type.id, 'label', type.label, 'icon', type.icon) AS type`
+          `json_build_object('id', type.id, 'label', type.label, 'icon', type.icon) AS type`,
         ])
-        .addSelect('ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography, store.location::geography) / 1000 AS distance') // Convert distance to kilometers
+        .addSelect(
+          'ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography, store.location::geography) / 1000 AS distance',
+        ) // Convert distance to kilometers
         .leftJoin('store.services', 'services')
         .leftJoin('store.specialists', 'specialists')
         .leftJoin('store.type', 'type')
         .where(
-          new Brackets(qb => {
-            qb.where('LOWER(store.name) LIKE LOWER(:searchTerm)', { searchTerm: `%${searchTerm}%` })
-              .orWhere('LOWER(store.description) LIKE LOWER(:searchTerm)', { searchTerm: `%${searchTerm}%` });
-          })
+          new Brackets((qb) => {
+            qb.where('LOWER(store.name) LIKE LOWER(:searchTerm)', {
+              searchTerm: `%${searchTerm}%`,
+            }).orWhere('LOWER(store.description) LIKE LOWER(:searchTerm)', {
+              searchTerm: `%${searchTerm}%`,
+            });
+          }),
         );
 
       if (storeType) {
-        queryBuilder = queryBuilder.andWhere('type.id = :storeTypeId', { storeTypeId: storeType });
+        queryBuilder = queryBuilder.andWhere('type.id = :storeTypeId', {
+          storeTypeId: storeType,
+        });
       }
 
       const totalCount = await queryBuilder
@@ -160,13 +174,12 @@ export class StoresService {
     searchTerm: string = '',
     page: number = 1,
     pageSize: number = 10,
-    storeType?: string
-  ): Promise<{ stores: Store[], total: number }> {
+    storeType?: string,
+  ): Promise<{ stores: Store[]; total: number }> {
     // Generate a unique cache key based on the function parameters
     const cacheKey = `stores:nearest:${latitude}:${longitude}:${searchTerm}:${page}:${pageSize}:${storeType || 'all'}`;
 
     try {
-
       const cachedResult = await this.redisService.get(cacheKey);
 
       Logger.log('cachedResult', cachedResult);
@@ -178,59 +191,70 @@ export class StoresService {
       console.error('Error accessing Redis:', error);
     }
 
-    let queryBuilder = this.storeRepository.createQueryBuilder('store')
-        .select([
-          'store.id as id',
-          'store.name as name',
-          'store.description as description',
-          'store.address as address',
-          'store.city as city',
-          'store.status as status',
-          'store.zipCode as zipCode',
-          'store.state as state',
-          'store.phone as phone',
-          'store.email as email',
-          'ST_X(store.location) as longitude',
-          'ST_Y(store.location) as latitude',
-          'store.website as website',
-          'store.createdAt as createdAt',
-          'store.updatedAt as updatedAt',
-          'json_agg(store.images) AS images',
-          'store.facebookLink as facebookLink',
-          'store.instagramLink as instagramLink',
-          'store.twitterLink as twitterLink',
-          'json_agg(services) AS services',
-          'json_agg(specialists) AS specialists',
-          `json_build_object('id', type.id, 'label', type.label, 'icon', type.icon) AS type`
-        ])
-        .addSelect('ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography, store.location::geography) / 1000 AS distance') // Convert distance to kilometers
-        .leftJoin('store.services', 'services')
-        .leftJoin('store.specialists', 'specialists')
-        .leftJoin('store.type', 'type')
-        .where(
-          new Brackets(qb => {
-            qb.where('LOWER(store.name) LIKE LOWER(:searchTerm)', { searchTerm: `%${searchTerm}%` })
-              .orWhere('LOWER(store.description) LIKE LOWER(:searchTerm)', { searchTerm: `%${searchTerm}%` });
-          })
-        );
+    let queryBuilder = this.storeRepository
+      .createQueryBuilder('store')
+      .select([
+        'store.id as id',
+        'store.name as name',
+        'store.description as description',
+        'store.address as address',
+        'store.city as city',
+        'store.status as status',
+        'store.zipCode as zipCode',
+        'store.state as state',
+        'store.phone as phone',
+        'store.email as email',
+        'ST_X(store.location) as longitude',
+        'ST_Y(store.location) as latitude',
+        'store.website as website',
+        'store.createdAt as createdAt',
+        'store.updatedAt as updatedAt',
+        'json_agg(store.images) AS images',
+        'store.facebookLink as facebookLink',
+        'store.instagramLink as instagramLink',
+        'store.twitterLink as twitterLink',
+        'json_agg(services) AS services',
+        'json_agg(specialists) AS specialists',
+        `json_build_object('id', type.id, 'label', type.label, 'icon', type.icon) AS type`,
+      ])
+      .addSelect(
+        'ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography, store.location::geography) / 1000 AS distance',
+      ) // Convert distance to kilometers
+      .leftJoin('store.services', 'services')
+      .leftJoin('store.specialists', 'specialists')
+      .leftJoin('store.type', 'type')
+      .where(
+        new Brackets((qb) => {
+          qb.where('LOWER(store.name) LIKE LOWER(:searchTerm)', {
+            searchTerm: `%${searchTerm}%`,
+          }).orWhere('LOWER(store.description) LIKE LOWER(:searchTerm)', {
+            searchTerm: `%${searchTerm}%`,
+          });
+        }),
+      );
 
-      if (storeType) {
-        queryBuilder = queryBuilder.andWhere('type.id = :storeTypeId', { storeTypeId: storeType });
-      }
+    if (storeType) {
+      queryBuilder = queryBuilder.andWhere('type.id = :storeTypeId', {
+        storeTypeId: storeType,
+      });
+    }
 
-      const totalCount = await queryBuilder
-        .groupBy('store.id, type.id, type.label, type.icon')
-        .setParameter('longitude', longitude)
-        .setParameter('latitude', latitude)
-        .getCount();
+    const totalCount = await queryBuilder
+      .groupBy('store.id, type.id, type.label, type.icon')
+      .setParameter('longitude', longitude)
+      .setParameter('latitude', latitude)
+      .getCount();
 
-      const result = await queryBuilder
-        .orderBy('distance')
-        .skip((page - 1) * pageSize)
-        .take(pageSize)
-        .getRawMany();
+    const result = await queryBuilder
+      .orderBy('distance')
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getRawMany();
     try {
-      await this.redisService.set(cacheKey, JSON.stringify({ stores: result, total: totalCount })); // Adjust expiration as needed
+      await this.redisService.set(
+        cacheKey,
+        JSON.stringify({ stores: result, total: totalCount }),
+      ); // Adjust expiration as needed
     } catch (error) {
       console.error('Error setting cache in Redis:', error);
       // Handle or ignore cache set error
@@ -238,7 +262,6 @@ export class StoresService {
 
     return { stores: result, total: totalCount };
   }
-
 
   async findOne(id: number): Promise<Store> {
     try {
@@ -252,7 +275,10 @@ export class StoresService {
     }
   }
 
-  async update(id: number, updateStoreDto: UpdateStoreDto): Promise<UpdateResult> {
+  async update(
+    id: number,
+    updateStoreDto: UpdateStoreDto,
+  ): Promise<UpdateResult> {
     try {
       return await this.storeRepository.update({ id }, updateStoreDto);
     } catch (error) {
@@ -264,10 +290,7 @@ export class StoresService {
     try {
       return await this.storeRepository.delete({ id });
     } catch (error) {
-
       throw new Error('Failed to delete store.');
     }
   }
-
-
 }

@@ -1,6 +1,3 @@
-import { User } from "src/users/entities/user.entity";
-
 export class RegisterTokenDto {
-    token: string;
-
-  }
+  token: string;
+}

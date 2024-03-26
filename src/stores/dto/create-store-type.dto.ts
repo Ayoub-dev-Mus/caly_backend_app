@@ -1,10 +1,9 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateStoreTypeDto {
+  @ApiProperty()
+  label: string;
 
-    @ApiProperty()
-    label: string;
-
-    @ApiProperty()
-    icon: string;
+  @ApiProperty()
+  icon: string;
 }

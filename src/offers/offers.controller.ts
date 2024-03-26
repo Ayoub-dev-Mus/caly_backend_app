@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  NotFoundException,
+} from '@nestjs/common';
 import { OffersService } from './offers.service';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { UpdateOfferDto } from './dto/update-offer.dto';
@@ -7,7 +16,7 @@ import { ApiTags } from '@nestjs/swagger';
 @ApiTags('offers')
 @Controller('offers')
 export class OffersController {
-  constructor(private readonly offersService: OffersService) { }
+  constructor(private readonly offersService: OffersService) {}
 
   @Post()
   async create(@Body() createOfferDto: CreateOfferDto) {
@@ -29,7 +38,10 @@ export class OffersController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateOfferDto: UpdateOfferDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateOfferDto: UpdateOfferDto,
+  ) {
     try {
       return await this.offersService.update(+id, updateOfferDto);
     } catch (error) {

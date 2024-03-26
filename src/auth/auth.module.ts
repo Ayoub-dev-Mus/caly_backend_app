@@ -11,9 +11,20 @@ import { GoogleStrategy } from './strategy/google.strategy';
 import { GoogleTokenVerifier } from './strategy/googleTokenVerifier';
 
 @Module({
-  imports: [JwtModule.register({}), TypeOrmModule.forFeature([User]), UsersModule],
-  providers: [AuthService, AccessTokenStrategy, RefreshTokenStrategy, JwtService, GoogleStrategy, GoogleTokenVerifier],
+  imports: [
+    JwtModule.register({}),
+    TypeOrmModule.forFeature([User]),
+    UsersModule,
+  ],
+  providers: [
+    AuthService,
+    AccessTokenStrategy,
+    RefreshTokenStrategy,
+    JwtService,
+    GoogleStrategy,
+    GoogleTokenVerifier,
+  ],
   controllers: [AuthController],
-  exports: [AuthModule]
+  exports: [AuthModule],
 })
-export class AuthModule { }
+export class AuthModule {}

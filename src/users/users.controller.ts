@@ -1,6 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, HttpException, HttpStatus, UseGuards, UploadedFile, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  HttpException,
+  HttpStatus,
+  UseGuards,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { GetUser } from 'src/common/jwtMiddlware';
@@ -17,16 +29,19 @@ import { UpdatePasswordDto } from './dto/update-password-dto';
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
-
+  constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  async findAll(@Query('page') page?: number, @Query('pageSize') pageSize?: number, @Query('filter') filter?: string) {
+  async findAll(
+    @Query('page') page?: number,
+    @Query('pageSize') pageSize?: number,
+    @Query('filter') filter?: string,
+  ) {
     try {
       const users = await this.usersService.findAll(page, pageSize, filter);
-      return users
+      return users;
     } catch (error) {
-      new HttpException(error.message, HttpStatus.BAD_REQUEST)
+      new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -34,9 +49,9 @@ export class UsersController {
   async findOne(@Param('id') id: string) {
     try {
       const user = await this.usersService.findOneById(id);
-      return user
+      return user;
     } catch (error) {
-      new HttpException(error.message, HttpStatus.BAD_REQUEST)
+      new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -44,9 +59,15 @@ export class UsersController {
   @HasRoles(Role.ADMIN, Role.USER)
   @Patch('upload-profile-image')
   @UseInterceptors(FileInterceptor('profile'))
-  async uploadImage(@UploadedFile() file: Multer.File, @GetUser() user: User): Promise<string> {
+  async uploadImage(
+    @UploadedFile() file: Multer.File,
+    @GetUser() user: User,
+  ): Promise<string> {
     try {
-      const uploadedImage = await this.usersService.updateProfileImage(user, file);
+      const uploadedImage = await this.usersService.updateProfileImage(
+        user,
+        file,
+      );
 
       return uploadedImage;
     } catch (error) {
@@ -54,62 +75,70 @@ export class UsersController {
     }
   }
 
-
   @Get(':email')
   async findOneByEmail(@Param('email') email: string) {
     try {
       const user = await this.usersService.findOneByEmail(email);
-      return user
+      return user;
     } catch (error) {
-      new HttpException(error.message, HttpStatus.BAD_REQUEST)
+      new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER)
   @Patch('/me')
-  async updateUser(@GetUser() user: User, @Body() updateUserDto: UpdateUserDto) {
+  async updateUser(
+    @GetUser() user: User,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
     try {
-      const updatedUser = await this.usersService.updateUserInfo(user, updateUserDto);
-      return updatedUser
+      const updatedUser = await this.usersService.updateUserInfo(
+        user,
+        updateUserDto,
+      );
+      return updatedUser;
     } catch (error) {
-      new HttpException(error.message, HttpStatus.BAD_REQUEST)
+      new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
 
   //fixed password
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER)
-  @Patch("/me/update-password")
-  async updatePassword(@Body() updateUserDto: UpdatePasswordDto, @GetUser() loggedUser: User): Promise<UpdateResult> {
+  @Patch('/me/update-password')
+  async updatePassword(
+    @Body() updateUserDto: UpdatePasswordDto,
+    @GetUser() loggedUser: User,
+  ): Promise<UpdateResult> {
     try {
-      const user = await this.usersService.updatePassword(loggedUser, updateUserDto);
+      const user = await this.usersService.updatePassword(
+        loggedUser,
+        updateUserDto,
+      );
       return user;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
 
-
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     try {
       const user = await this.usersService.update(id, updateUserDto);
-      return user
+      return user;
     } catch (error) {
-      new HttpException(error.message, HttpStatus.BAD_REQUEST)
+      new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
-
-
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
     try {
       const user = await this.usersService.remove(id);
-      return user
+      return user;
     } catch (error) {
-      new HttpException(error.message, HttpStatus.BAD_REQUEST)
+      new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
 }

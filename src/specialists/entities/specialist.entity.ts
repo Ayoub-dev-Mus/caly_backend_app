@@ -1,33 +1,40 @@
-import { Service } from "src/services/entities/service.entity";
-import { Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Service } from 'src/services/entities/service.entity';
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Store } from 'src/stores/entities/store.entity';
-import { Booking } from "src/bookings/entities/booking.entity";
+import { Booking } from 'src/bookings/entities/booking.entity';
 
 @Entity()
 export class Specialist {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    firstName: string;
+  @Column()
+  firstName: string;
 
+  @Column()
+  lastName: string;
 
-    @Column()
-    lastName: string;
+  @Column()
+  specialty: string;
 
-    @Column()
-    specialty: string;
+  @Column()
+  profilePicture: string;
 
-    @Column()
-    profilePicture: string;
+  @ManyToMany(() => Service, (service) => service.specialists)
+  @JoinTable()
+  services: Service[];
 
-    @ManyToMany(() => Service, service => service.specialists)
-    @JoinTable()
-    services: Service[];
+  @ManyToOne(() => Store, (store) => store.specialists)
+  store: Store;
 
-    @ManyToOne(() => Store, store => store.specialists)
-    store: Store;
-
-    @OneToMany(() => Booking, booking => booking.specialist)
-    bookings: Booking[];
+  @OneToMany(() => Booking, (booking) => booking.specialist)
+  bookings: Booking[];
 }

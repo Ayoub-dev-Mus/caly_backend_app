@@ -7,11 +7,10 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class OffersService {
-
   constructor(
     @InjectRepository(Offer)
     private readonly offerRepository: Repository<Offer>,
-  ) { }
+  ) {}
 
   async create(createOfferDto: CreateOfferDto): Promise<Offer> {
     const newOffer = this.offerRepository.create(createOfferDto);
@@ -19,7 +18,9 @@ export class OffersService {
   }
 
   async findAll(): Promise<Offer[]> {
-    return this.offerRepository.find({ relations: ['store.specialists', 'store.services' , "store"] });
+    return this.offerRepository.find({
+      relations: ['store.specialists', 'store.services', 'store'],
+    });
   }
 
   async findOne(id: number): Promise<Offer> {

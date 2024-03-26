@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  NotFoundException,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
@@ -13,21 +24,23 @@ import { ApiTags } from '@nestjs/swagger';
 @ApiTags('reviews')
 @Controller('reviews')
 export class ReviewsController {
-  constructor(private readonly reviewsService: ReviewsService) { }
+  constructor(private readonly reviewsService: ReviewsService) {}
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER)
   @Post()
-  async create(@Body() createReviewDto: CreateReviewDto, @GetUser() user: User) {
+  async create(
+    @Body() createReviewDto: CreateReviewDto,
+    @GetUser() user: User,
+  ) {
     return await this.reviewsService.create(createReviewDto, user);
   }
-
 
   @Get()
   async findAll(
     @Query('storeId') storeId?: number,
     @Query('limit') limit?: number,
-    @Query('offset') offset?: number
+    @Query('offset') offset?: number,
   ) {
     return await this.reviewsService.findAll(storeId, limit, offset);
   }
@@ -46,9 +59,11 @@ export class ReviewsController {
     return await this.reviewsService.getReviewStatistics(+storeId);
   }
 
-
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateReviewDto: UpdateReviewDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateReviewDto: UpdateReviewDto,
+  ) {
     return await this.reviewsService.update(+id, updateReviewDto);
   }
 

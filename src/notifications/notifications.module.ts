@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { NotificationsController } from './notifications.controller';
-import { MongooseModule } from '@nestjs/mongoose';
 import { Notification } from './entities/notification.entity';
-import { Type } from 'class-transformer';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
@@ -11,4 +9,4 @@ import { TypeOrmModule } from '@nestjs/typeorm';
   controllers: [NotificationsController],
   providers: [NotificationsService],
 })
-export class NotificationsModule { }
+export class NotificationsModule {}

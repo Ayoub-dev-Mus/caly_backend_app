@@ -1,4 +1,11 @@
-import { BadRequestException, ForbiddenException, HttpException, HttpStatus, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { User } from 'src/users/entities/user.entity';
 import { Role } from 'src/users/enums/role';
@@ -6,39 +13,31 @@ import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { SignUpDto } from './dto/signUp.dto';
 import { SignInDto } from './dto/signin.dto';
-import * as otpGenerator from 'otp-generator';
 import * as nodemailer from 'nodemailer';
-import { OAuth2Client } from 'google-auth-library';
-import { GoogleStrategy } from './strategy/google.strategy';
-import { GoogleTokenVerifier } from './strategy/googleTokenVerifier';
 import * as admin from 'firebase-admin';
+import serviceAccount from '../../src/config/mykey.json';
 
 @Injectable()
 export class AuthService {
-
   private otpStore: Map<string, string> = new Map();
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-    private googleTokenVerifier: GoogleTokenVerifier,
-    private readonly googleStrategy: GoogleStrategy
   ) {
-    const path = require('path');
-    const serviceAccountPath = path.join(__dirname, '..', '..', 'src', 'config', 'mykey.json');
-    const serviceAccount = require(serviceAccountPath);
     admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
+      credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
     });
   }
 
-
-
-
-  async signUp(createUserDto: SignUpDto): Promise<{ token: string, refreshToken: string, User: Partial<User> }> {
+  async signUp(
+    createUserDto: SignUpDto,
+  ): Promise<{ token: string; refreshToken: string; User: Partial<User> }> {
     try {
       createUserDto.email = createUserDto.email.toLowerCase();
       Logger.log(createUserDto);
-      const existingUser = await this.usersService.findOneByEmail(createUserDto.email);
+      const existingUser = await this.usersService.findOneByEmail(
+        createUserDto.email,
+      );
       Logger.warn(existingUser);
       const hash = await this.hashData(createUserDto.password);
 
@@ -46,7 +45,7 @@ export class AuthService {
         ...createUserDto,
         password: hash,
         role: Role.USER,
-        profilePicture: null
+        profilePicture: null,
       });
 
       if (!newUser) {
@@ -63,8 +62,7 @@ export class AuthService {
 
         newUser.address,
         newUser.zipCode,
-        newUser.phoneNumber
-
+        newUser.phoneNumber,
       );
 
       // Prepare response object
@@ -105,13 +103,27 @@ export class AuthService {
         throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
       }
 
-      const passwordMatches = await bcrypt.compare(data.password, user.password);
+      const passwordMatches = await bcrypt.compare(
+        data.password,
+        user.password,
+      );
 
       if (!passwordMatches) {
         throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
       }
 
-      const tokens = await this.getTokens(user.id, user.email, user.role, user.firstName, user.lastName, user.state, user.zipCode, user.address, user.phoneNumber, user.profilePicture);
+      const tokens = await this.getTokens(
+        user.id,
+        user.email,
+        user.role,
+        user.firstName,
+        user.lastName,
+        user.state,
+        user.zipCode,
+        user.address,
+        user.phoneNumber,
+        user.profilePicture,
+      );
       await this.updateRefreshToken(user.id, tokens.refreshToken);
 
       const response = {
@@ -129,7 +141,7 @@ export class AuthService {
           state: user.state,
           profilePicture: user.profilePicture,
           role: user.role,
-        }
+        },
       };
 
       return response;
@@ -153,7 +165,18 @@ export class AuthService {
     });
   }
 
-  async getTokens(id: string, email: string, role: string, firstName: string, lastName: string, zipCode: string, state: string, address: string, phoneNumber: string, profilePicture: string = null) {
+  async getTokens(
+    id: string,
+    email: string,
+    role: string,
+    firstName: string,
+    lastName: string,
+    zipCode: string,
+    state: string,
+    address: string,
+    phoneNumber: string,
+    profilePicture: string = null,
+  ) {
     const [token, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         {
@@ -166,7 +189,7 @@ export class AuthService {
           address,
           phoneNumber,
           profilePicture,
-          role
+          role,
         },
         {
           secret: process.env.JWT_SECRET,
@@ -184,7 +207,7 @@ export class AuthService {
           address,
           phoneNumber,
           profilePicture,
-          role
+          role,
         },
         {
           secret: process.env.JWT_SECRET,
@@ -199,10 +222,25 @@ export class AuthService {
     };
   }
 
-  async refreshToken(user: User): Promise<{ token: string, refreshToken: string, expiresIn: number, User: Partial<User> }> {
+  async refreshToken(user: User): Promise<{
+    token: string;
+    refreshToken: string;
+    expiresIn: number;
+    User: Partial<User>;
+  }> {
     const EXPIRE_TIME = 15 * 60 * 1000;
 
-    const tokens = await this.getTokens(user.id, user.email, user.role, user.firstName, user.lastName, user.state, user.zipCode, user.address, user.phoneNumber);
+    const tokens = await this.getTokens(
+      user.id,
+      user.email,
+      user.role,
+      user.firstName,
+      user.lastName,
+      user.state,
+      user.zipCode,
+      user.address,
+      user.phoneNumber,
+    );
 
     await this.updateRefreshToken(user.id, tokens.refreshToken);
 
@@ -220,8 +258,8 @@ export class AuthService {
         zipCode: myuser.zipCode,
         state: myuser.state,
         role: myuser.role,
-      }
-    }
+      },
+    };
 
     return response;
   }
@@ -240,7 +278,6 @@ export class AuthService {
 
       // Store the OTP in the in-memory store
       this.otpStore.set(user.id, otp);
-
     } catch (error) {
       Logger.error('Error during forgot password:', error);
       throw error;
@@ -271,8 +308,11 @@ export class AuthService {
     }
   }
 
-
-  async resetPassword(email: string, otp: string, newPassword: string): Promise<void> {
+  async resetPassword(
+    email: string,
+    otp: string,
+    newPassword: string,
+  ): Promise<void> {
     try {
       const user = await this.usersService.findOneByEmail(email.toLowerCase());
 
@@ -289,7 +329,6 @@ export class AuthService {
       await this.usersService.update(user.id, { password: hashedPassword });
 
       this.otpStore.delete(user.id);
-
     } catch (error) {
       Logger.error('Error resetting password:', error.message);
       throw error;
@@ -303,15 +342,15 @@ export class AuthService {
         service: 'Gmail',
         auth: {
           user: 'ayoub.wahid.28.2000@gmail.com',
-          pass: 'hzjm gmtp sfes pguw'
-        }
+          pass: 'hzjm gmtp sfes pguw',
+        },
       });
 
       const mailOptions = {
         from: 'caly22@gmail.com',
         to: email,
         subject: 'Password Reset OTP - Caly',
-        text: `Your OTP for password reset is : ${otp}`
+        text: `Your OTP for password reset is : ${otp}`,
       };
 
       await transporter.sendMail(mailOptions);
@@ -321,10 +360,10 @@ export class AuthService {
     }
   }
 
-
   async googleLogin(token: string): Promise<any> {
     try {
-      const { email, firstName, lastName, picture } = await this.verifyFirebaseToken(token);
+      const { email, firstName, lastName, picture } =
+        await this.verifyFirebaseToken(token);
       Logger.log({ email, firstName, lastName, picture });
 
       let user = await this.usersService.findOneByEmail(email);
@@ -346,9 +385,19 @@ export class AuthService {
       }
 
       // Generate JWT tokens
-      const tokens = await this.getTokens(user.id, user.email, user.role, user.firstName, user.lastName, user.state, user.zipCode, user.address, user.phoneNumber, user.profilePicture);
+      const tokens = await this.getTokens(
+        user.id,
+        user.email,
+        user.role,
+        user.firstName,
+        user.lastName,
+        user.state,
+        user.zipCode,
+        user.address,
+        user.phoneNumber,
+        user.profilePicture,
+      );
       await this.updateRefreshToken(user.id, tokens.refreshToken);
-
 
       const response = {
         token: tokens.token,
@@ -364,24 +413,22 @@ export class AuthService {
           state: user.state,
           profilePicture: user.profilePicture,
           role: user.role,
-        }
+        },
       };
 
- 
-      return response
+      return response;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
-
-
 
   async verifyFirebaseToken(idToken: string): Promise<any> {
     try {
       const decodedToken = await admin.auth().verifyIdToken(idToken);
       // Assuming decodedToken includes 'name' and 'picture'
       const fullName = decodedToken.name;
-      let firstName = '', lastName = '';
+      let firstName = '',
+        lastName = '';
       if (fullName) {
         const names = fullName.split(' ');
         firstName = names[0];
@@ -395,9 +442,10 @@ export class AuthService {
         picture: decodedToken.picture,
       };
     } catch (error) {
-      throw new HttpException('Failed to verify Firebase ID Token ' + error.message, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Failed to verify Firebase ID Token ' + error.message,
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
-
-
 }

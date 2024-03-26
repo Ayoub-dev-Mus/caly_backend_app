@@ -7,11 +7,10 @@ import { UpdateServiceDto } from './dto/update-service.dto';
 
 @Injectable()
 export class ServicesService {
-
   constructor(
     @InjectRepository(Service)
     private serviceRepository: Repository<Service>,
-  ) { }
+  ) {}
 
   async create(createServiceDto: CreateServiceDto): Promise<Service> {
     const newService = this.serviceRepository.create(createServiceDto);
@@ -30,7 +29,10 @@ export class ServicesService {
     return service;
   }
 
-  async update(id: number, updateServiceDto: UpdateServiceDto): Promise<Service> {
+  async update(
+    id: number,
+    updateServiceDto: UpdateServiceDto,
+  ): Promise<Service> {
     const existingService = await this.findOne(id);
     this.serviceRepository.merge(existingService, updateServiceDto);
     return await this.serviceRepository.save(existingService);

@@ -1,19 +1,17 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Store } from "./store.entity";
-
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Store } from './store.entity';
 
 @Entity()
 export class StoreType {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @PrimaryGeneratedColumn()
-    id: number;
+  @Column()
+  label: string;
 
-    @Column()
-    label: string;
+  @Column()
+  icon: string;
 
-    @Column()
-    icon: string;
-
-    @ManyToOne(() => Store, store => store.type)
-    store: Store[];
+  @ManyToOne(() => Store, (store) => store.type)
+  store: Store[];
 }
