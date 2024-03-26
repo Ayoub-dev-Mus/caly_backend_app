@@ -8,7 +8,7 @@ export class CreateNotificationDto {
     @IsString()
     title: string;
 
-     @ApiProperty()
+    @ApiProperty()
     @IsNotEmpty()
     @IsOptional()
     @IsString()
