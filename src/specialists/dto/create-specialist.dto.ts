@@ -32,6 +32,7 @@ export class CreateSpecialistDto {
   @IsString()
   specialty: string;
 
+  //my comment
   @ApiPropertyOptional()
   @IsOptional()
   @IsUrl()
