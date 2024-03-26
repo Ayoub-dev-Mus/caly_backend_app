@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install --ignore-scripts
+RUN npm install --ignore-scripts  --legacy-peer-deps
 
 COPY . .
 
@@ -23,7 +23,7 @@ COPY package*.json ./
 
 
 #// deploy
-RUN npm install --only=prod --ignore-scripts
+RUN npm install --only=prod --ignore-scripts  --legacy-peer-deps
 
 
 
