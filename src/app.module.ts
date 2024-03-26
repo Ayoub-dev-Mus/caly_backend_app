@@ -97,4 +97,4 @@ import { RedisModule } from './redis/redis.module';
   ],
   controllers: [AppController],
 })
-export class AppModule { }
+export class AppModule {}
