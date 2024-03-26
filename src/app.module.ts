@@ -32,6 +32,7 @@ import { DeviceToken } from './devices-tokens/entities/devices-token.entity';
 import { Notification } from './notifications/entities/notification.entity';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RedisModule } from './redis/redis.module';
+import { SocketModule } from './socket/socket.module';
 
 @Module({
   providers: [
@@ -43,6 +44,7 @@ import { RedisModule } from './redis/redis.module';
   ],
   exports: [],
   imports: [
+    SocketModule,
     ScheduleModule.forRoot(),
     {
       ...JwtModule.register({
@@ -94,6 +96,7 @@ import { RedisModule } from './redis/redis.module';
     DevicesTokensModule,
     DevicesTokensModule,
     RedisModule,
+    SocketModule,
   ],
   controllers: [AppController],
 })

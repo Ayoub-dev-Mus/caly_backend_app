@@ -11,11 +11,21 @@ import {
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { NotificationGateway } from './notification.gateway';
 
 @ApiTags('notifications')
 @Controller('notifications')
 export class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService) {}
+  constructor(private readonly notificationsService: NotificationsService , private readonly notificationGateway:NotificationGateway) {}
+
+
+
+  @Post('push-notification')
+  async createNotification(@Body() notificationData: any) {
+    const notification = this.notificationGateway.emitToClient('notification', notificationData);
+    return notification;
+  }
+
 
   @Post()
   async create(@Body() createNotificationDto: CreateNotificationDto) {
