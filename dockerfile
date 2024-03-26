@@ -16,6 +16,7 @@ ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
 
+#Fixed docker file
 
 WORKDIR /usr/src/app
 
