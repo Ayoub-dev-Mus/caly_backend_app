@@ -29,7 +29,6 @@ import { Offer } from './offers/entities/offer.entity';
 import { Review } from './reviews/entities/review.entity';
 import { DevicesTokensModule } from './devices-tokens/devices-tokens.module';
 import { DeviceToken } from './devices-tokens/entities/devices-token.entity';
-import { MongoModule } from './mongo/mongo.module';
 import { Notification } from './notifications/entities/notification.entity';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RedisModule } from './redis/redis.module';
@@ -42,9 +41,7 @@ import { RedisModule } from './redis/redis.module';
       useClass: RolesGuard,
     },
   ],
-
   exports: [],
-  //Comment
   imports: [
     ScheduleModule.forRoot(),
     {
@@ -62,11 +59,9 @@ import { RedisModule } from './redis/redis.module';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
-
       ssl: {
         rejectUnauthorized: false,
       },
-
       entities: [
         User,
         StoreType,
@@ -94,14 +89,12 @@ import { RedisModule } from './redis/redis.module';
     SpecialistsModule,
     BookingsModule,
     NotificationsModule,
-
     AppointmentsModule,
     OffersModule,
     DevicesTokensModule,
     DevicesTokensModule,
-    MongoModule,
     RedisModule,
   ],
   controllers: [AppController],
 })
-export class AppModule {}
+export class AppModule { }
