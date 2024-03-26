@@ -7,17 +7,19 @@ import { RolesGuard } from 'src/common/guards/role.guard';
 import { HasRoles } from '../common/role.decorator';
 import { GetUser } from 'src/common/jwtMiddlware';
 import { User } from 'src/users/entities/user.entity';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('devices-tokens')
 @Controller('devices-tokens')
 export class DevicesTokensController {
-  constructor(private readonly devicesTokensService: DevicesTokensService) {}
+  constructor(private readonly devicesTokensService: DevicesTokensService) { }
 
 
 
 
   @Post()
-  create(@Body() createDevicesTokenDto: RegisterTokenDto ,) {
-    return this.devicesTokensService.registerToken(createDevicesTokenDto );
+  create(@Body() createDevicesTokenDto: RegisterTokenDto,) {
+    return this.devicesTokensService.registerToken(createDevicesTokenDto);
   }
 
   @Get()

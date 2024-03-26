@@ -3,22 +3,28 @@ import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
 import * as admin from 'firebase-admin';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags ('notifications')
 @Controller('notifications')
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
+
   @Post()
   async create(@Body() createNotificationDto:CreateNotificationDto) {
    try{
     const savedNotification = await this.notificationsService.createNotification(createNotificationDto);
+
+
     const notificationSend = await this.notificationsService.sendNotificationToDevice(createNotificationDto);
+
+    console.log("test")
     const message = {
       savedNotification,
       notificationSend,
     };
     return message;
    }catch(error){
-
      new HttpException('Failed to send notification to device:', error);
    }
   }

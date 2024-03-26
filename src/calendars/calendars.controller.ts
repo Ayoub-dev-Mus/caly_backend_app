@@ -2,7 +2,9 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { CalendarsService } from './calendars.service';
 import { CreateCalendarDto } from './dto/create-calendar.dto';
 import { UpdateCalendarDto } from './dto/update-calendar.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('calendars')
 @Controller('calendars')
 export class CalendarsController {
   constructor(private readonly calendarsService: CalendarsService) {}

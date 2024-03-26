@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
 import { Notification } from './entities/notification.entity';
@@ -17,6 +17,7 @@ export class NotificationsService {
 
   async sendNotificationToDevice(createNotificationDto: CreateNotificationDto) {
     try {
+
       const message = {
         token: createNotificationDto.fcmToken,
         notification: {
@@ -28,16 +29,17 @@ export class NotificationsService {
         },
       };
 
-      try {
+
+      Logger.log('Sending notification to device:', message);
+
+      
         const response = await admin.messaging().send(message);
         console.log('Successfully sent message:', response);
         return response;
-      } catch (error) {
-        console.log('Error sending message:', error);
-        throw error;
-      }
+
+
     } catch (error) {
-      console.error('Failed to send notification to device:', error);
+
       throw error;
 
     }
