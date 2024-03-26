@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   HttpException,
+  Logger,
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
@@ -16,16 +17,21 @@ import { NotificationGateway } from './notification.gateway';
 @ApiTags('notifications')
 @Controller('notifications')
 export class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService , private readonly notificationGateway:NotificationGateway) {}
-
-
+  constructor(
+    private readonly notificationsService: NotificationsService,
+    private readonly notificationGateway: NotificationGateway,
+  ) {}
 
   @Post('push-notification')
   async createNotification(@Body() notificationData: any) {
-    const notification = this.notificationGateway.emitToClient('notification', notificationData);
+    const notification = this.notificationGateway.emitToClient(
+      'notification',
+      notificationData,
+    );
+
+    Logger.log('Sending notification to client:', notification);
     return notification;
   }
-
 
   @Post()
   async create(@Body() createNotificationDto: CreateNotificationDto) {

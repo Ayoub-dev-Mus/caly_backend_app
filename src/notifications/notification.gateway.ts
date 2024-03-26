@@ -11,6 +11,7 @@ export class NotificationGateway {
 
   emitToClient(event: string, data: any) {
     this.socketGateway.emit(event, data);
-  }
 
+    return data;
+  }
 }

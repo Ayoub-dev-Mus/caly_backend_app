@@ -7,8 +7,8 @@ import { SocketModule } from 'src/socket/socket.module';
 import { NotificationGateway } from './notification.gateway';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Notification]) , SocketModule],
+  imports: [TypeOrmModule.forFeature([Notification]), SocketModule],
   controllers: [NotificationsController],
-  providers: [NotificationsService , NotificationGateway],
+  providers: [NotificationsService, NotificationGateway],
 })
 export class NotificationsModule {}
