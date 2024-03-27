@@ -35,9 +35,7 @@ export class NotificationsController {
 
   @Post('push-all-notification')
   async pushAllNotification() {
-    const notification = this.notificationGateway.handleConnection(
-    
-    );
+    const notification = this.notificationGateway.handleConnection();
 
     Logger.log('Sending notification to client:', notification);
     return notification;

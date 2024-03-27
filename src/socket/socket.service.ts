@@ -12,7 +12,5 @@ export class SocketService {
     socket.on('disconnect', () => {
       this.connectedClients.delete(clientId);
     });
-
   }
-
 }

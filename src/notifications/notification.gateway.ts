@@ -8,7 +8,10 @@ import { NotificationsService } from './notifications.service';
 export class NotificationGateway {
   @WebSocketServer() server: Socket;
 
-  constructor(private readonly socketGateway: SocketGateway , private notificationService: NotificationsService) {}
+  constructor(
+    private readonly socketGateway: SocketGateway,
+    private notificationService: NotificationsService,
+  ) {}
 
   emitToClient(event: string, data: any) {
     this.socketGateway.emit(event, data);
@@ -19,6 +22,4 @@ export class NotificationGateway {
     const notifications = await this.notificationService.findAll();
     this.socketGateway.emit('all-notification', notifications);
   }
-
-
 }
