@@ -22,4 +22,5 @@ export class NotificationGateway {
     const notifications = await this.notificationService.findAll();
     this.socketGateway.emit('all-notification', notifications);
   }
+
 }
