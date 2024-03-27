@@ -40,7 +40,6 @@ export class NotificationsController {
     Logger.log('Sending notification to client:', notification);
     return notification;
   }
-  
 
   @Post()
   async create(@Body() createNotificationDto: CreateNotificationDto) {
