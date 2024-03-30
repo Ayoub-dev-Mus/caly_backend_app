@@ -29,7 +29,7 @@ export class StoresService {
   constructor(
     private readonly httpService: HttpService,
     private readonly redisService: RedisService,
-  ) {}
+  ) { }
 
   async drawRoad(from: string, to: string): Promise<any> {
     const response = await this.httpService
@@ -77,6 +77,21 @@ export class StoresService {
     pageSize: number = 10,
     searchTerm: string = '',
   ): Promise<{ stores: Store[]; total: number }> {
+    // Generate a unique cache key based on the function parameters
+    const cacheKey = `stores:all:${page}:${pageSize}:${searchTerm}`;
+
+    try {
+      const cachedResult = await this.redisService.get(cacheKey);
+
+      Logger.log('cachedResult', cachedResult);
+
+      if (cachedResult) {
+        return JSON.parse(cachedResult);
+      }
+    } catch (error) {
+      console.error('Error accessing Redis:', error);
+    }
+
     try {
       const options: FindManyOptions<Store> = {
         relations: ['services', 'specialists'],
@@ -87,11 +102,22 @@ export class StoresService {
 
       const [stores, total] = await this.storeRepository.findAndCount(options);
 
+      try {
+        await this.redisService.set(
+          cacheKey,
+          JSON.stringify({ stores, total }),
+        ); // Adjust expiration as needed
+      } catch (error) {
+        console.error('Error setting cache in Redis:', error);
+        // Handle or ignore cache set error
+      }
+
       return { stores, total };
     } catch (error) {
       throw new Error(error.message);
     }
   }
+
 
   async findAllNearestStores(
     latitude: number,
