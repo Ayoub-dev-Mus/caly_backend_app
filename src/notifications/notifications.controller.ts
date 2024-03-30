@@ -21,7 +21,7 @@ export class NotificationsController {
   constructor(
     private readonly notificationsService: NotificationsService,
     private readonly notificationGateway: NotificationGateway,
-  ) { }
+  ) {}
 
   @Post('push-notification')
   async createNotification(@Body() notificationData: any) {
@@ -36,7 +36,10 @@ export class NotificationsController {
   @Post()
   async create(@Body() createNotificationDto: CreateNotificationDto) {
     try {
-      const savedNotification = await this.notificationsService.createNotification(createNotificationDto);
+      const savedNotification =
+        await this.notificationsService.createNotification(
+          createNotificationDto,
+        );
 
       const notificationPayload = {
         title: createNotificationDto.title,
@@ -44,10 +47,16 @@ export class NotificationsController {
       };
 
       // Emit notification to client
-      await this.notificationGateway.emitToClient('notification', savedNotification);
+      await this.notificationGateway.emitToClient(
+        'notification',
+        savedNotification,
+      );
 
       // Send notification to device
-      const notificationSend = await this.notificationsService.sendNotificationToDevice(createNotificationDto);
+      const notificationSend =
+        await this.notificationsService.sendNotificationToDevice(
+          createNotificationDto,
+        );
 
       const message = {
         notification: notificationPayload,
@@ -58,7 +67,10 @@ export class NotificationsController {
       return message;
     } catch (error) {
       Logger.error('Failed to send notification to device:', error);
-      throw new HttpException('Failed to send notification to device', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'Failed to send notification to device',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 

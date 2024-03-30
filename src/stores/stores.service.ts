@@ -29,7 +29,7 @@ export class StoresService {
   constructor(
     private readonly httpService: HttpService,
     private readonly redisService: RedisService,
-  ) { }
+  ) {}
 
   async drawRoad(from: string, to: string): Promise<any> {
     const response = await this.httpService
@@ -117,7 +117,6 @@ export class StoresService {
       throw new Error(error.message);
     }
   }
-
 
   async findAllNearestStores(
     latitude: number,

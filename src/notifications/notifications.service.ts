@@ -12,10 +12,8 @@ export class NotificationsService {
   constructor(
     @InjectRepository(Notification)
     private notificationRepository: Repository<Notification>,
-
-  ) { }
-  private  notificationGateway: NotificationGateway
-
+  ) {}
+  private notificationGateway: NotificationGateway;
 
   async sendNotificationToDevice(createNotificationDto: CreateNotificationDto) {
     try {
@@ -39,10 +37,16 @@ export class NotificationsService {
       throw error;
     }
   }
-  async createNotification(createNotificationDto: CreateNotificationDto): Promise<Notification> {
+  async createNotification(
+    createNotificationDto: CreateNotificationDto,
+  ): Promise<Notification> {
     try {
-      const savedNotification = await this.notificationRepository.save(createNotificationDto);
-      this.notificationGateway.emitToClient('notificationCountUpdated', { count: await this.getUnreadNotificationCount() });
+      const savedNotification = await this.notificationRepository.save(
+        createNotificationDto,
+      );
+      this.notificationGateway.emitToClient('notificationCountUpdated', {
+        count: await this.getUnreadNotificationCount(),
+      });
       return savedNotification;
     } catch (error) {
       console.error('Failed to create notification:', error);
@@ -53,7 +57,9 @@ export class NotificationsService {
   async markNotificationAsRead(notificationId: number): Promise<void> {
     try {
       await this.notificationRepository.update(notificationId, { read: true });
-      this.notificationGateway.emitToClient('notificationCountUpdated', { count: await this.getUnreadNotificationCount() });
+      this.notificationGateway.emitToClient('notificationCountUpdated', {
+        count: await this.getUnreadNotificationCount(),
+      });
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
       throw error;
@@ -62,7 +68,9 @@ export class NotificationsService {
 
   async getUnreadNotificationCount(): Promise<number> {
     try {
-      return await this.notificationRepository.count({ where: { read: false } });
+      return await this.notificationRepository.count({
+        where: { read: false },
+      });
     } catch (error) {
       console.error('Failed to fetch unread notification count:', error);
       throw error;
