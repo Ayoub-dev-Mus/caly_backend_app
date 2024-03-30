@@ -12,9 +12,11 @@ export class NotificationsService {
   constructor(
     @InjectRepository(Notification)
     private notificationRepository: Repository<Notification>,
-    private readonly notificationGateway: NotificationGateway,
-  ) { }
 
+  ) { }
+  private  notificationGateway: NotificationGateway
+
+  
   async sendNotificationToDevice(createNotificationDto: CreateNotificationDto) {
     try {
       const message = {
