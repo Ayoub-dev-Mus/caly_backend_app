@@ -5,15 +5,16 @@ import { Notification } from './entities/notification.entity';
 import * as admin from 'firebase-admin';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { NotificationGateway } from './notification.gateway';
+import { SocketGateway } from 'src/socket/socket.gateway';
 
 @Injectable()
 export class NotificationsService {
   constructor(
     @InjectRepository(Notification)
     private notificationRepository: Repository<Notification>,
+
+    private socketGateway: SocketGateway,
   ) {}
-  private notificationGateway: NotificationGateway;
 
   async sendNotificationToDevice(createNotificationDto: CreateNotificationDto) {
     try {
@@ -44,9 +45,10 @@ export class NotificationsService {
       const savedNotification = await this.notificationRepository.save(
         createNotificationDto,
       );
-      this.notificationGateway.emitToClient('notificationCountUpdated', {
+      this.socketGateway.emit('notificationCountUpdated', {
         count: await this.getUnreadNotificationCount(),
       });
+      console.log(savedNotification);
       return savedNotification;
     } catch (error) {
       console.error('Failed to create notification:', error);
@@ -57,7 +59,7 @@ export class NotificationsService {
   async markNotificationAsRead(notificationId: number): Promise<void> {
     try {
       await this.notificationRepository.update(notificationId, { read: true });
-      this.notificationGateway.emitToClient('notificationCountUpdated', {
+      this.socketGateway.emit('notificationCountUpdated', {
         count: await this.getUnreadNotificationCount(),
       });
     } catch (error) {
