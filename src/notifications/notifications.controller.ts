@@ -8,6 +8,7 @@ import {
   Delete,
   HttpException,
   Logger,
+  HttpStatus,
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
@@ -32,34 +33,32 @@ export class NotificationsController {
     Logger.log('Sending notification to client:', notification);
     return notification;
   }
-
   @Post()
   async create(@Body() createNotificationDto: CreateNotificationDto) {
     try {
-      const savedNotification =
-        await this.notificationsService.createNotification(
-          createNotificationDto,
-        );
+      const savedNotification = await this.notificationsService.createNotification(createNotificationDto);
 
-      const notification = await this.notificationGateway.emitToClient(
-        'notification',
-        savedNotification,
-      );
-
-      Logger.log('Sending notification to client:', notification);
-      const notificationSend =
-        await this.notificationsService.sendNotificationToDevice(
-          createNotificationDto,
-        );
-
-      console.log('test');
-      const message = {
-        savedNotification,
-        notificationSend,
+      const notificationPayload = {
+        title: createNotificationDto.title,
+        body: createNotificationDto.message,
       };
+
+      // Emit notification to client
+      await this.notificationGateway.emitToClient('notification', savedNotification);
+
+      // Send notification to device
+      const notificationSend = await this.notificationsService.sendNotificationToDevice(createNotificationDto);
+
+      const message = {
+        notification: notificationPayload,
+        notificationSend: notificationSend,
+      };
+
+      // Return the message with the Firebase-like payload
       return message;
     } catch (error) {
-      new HttpException('Failed to send notification to device:', error);
+      Logger.error('Failed to send notification to device:', error);
+      throw new HttpException('Failed to send notification to device', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
