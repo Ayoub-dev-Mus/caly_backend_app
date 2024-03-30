@@ -20,7 +20,7 @@ export class NotificationsController {
   constructor(
     private readonly notificationsService: NotificationsService,
     private readonly notificationGateway: NotificationGateway,
-  ) {}
+  ) { }
 
   @Post('push-notification')
   async createNotification(@Body() notificationData: any) {
@@ -41,6 +41,12 @@ export class NotificationsController {
           createNotificationDto,
         );
 
+      const notification = await this.notificationGateway.emitToClient(
+        'notification',
+        savedNotification,
+      );
+
+      Logger.log('Sending notification to client:', notification);
       const notificationSend =
         await this.notificationsService.sendNotificationToDevice(
           createNotificationDto,
