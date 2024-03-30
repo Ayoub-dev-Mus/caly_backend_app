@@ -5,13 +5,15 @@ import { Notification } from './entities/notification.entity';
 import * as admin from 'firebase-admin';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { NotificationGateway } from './notification.gateway';
 
 @Injectable()
 export class NotificationsService {
   constructor(
     @InjectRepository(Notification)
     private notificationRepository: Repository<Notification>,
-  ) {}
+    private readonly notificationGateway: NotificationGateway,
+  ) { }
 
   async sendNotificationToDevice(createNotificationDto: CreateNotificationDto) {
     try {
@@ -38,18 +40,30 @@ export class NotificationsService {
 
   async createNotification(createNotificationDto: CreateNotificationDto) {
     try {
-      const savedNotification = await this.notificationRepository.save(
-        createNotificationDto,
-      );
+      const savedNotification = await this.notificationRepository.save(createNotificationDto);
+
+      // Emit event to notify clients about new notification
+      this.notificationGateway.emitToClient('notificationCreated', { notification: savedNotification });
+
       return savedNotification;
     } catch (error) {
-      console.error('Failed to send notification to device:', error);
+      console.error('Failed to create notification:', error);
       throw error;
     }
   }
 
   async markNotificationAsRead(notificationId: number): Promise<void> {
-    await this.notificationRepository.update(notificationId, { read: true });
+    // Find the notification by ID
+    const notification = await this.findOne(notificationId);
+    if (!notification) {
+      throw new NotFoundException(`Notification with ID ${notificationId} not found`);
+    }
+
+    notification.read = true;
+    await this.notificationRepository.save(notification);
+
+    const unreadCount = await this.notificationRepository.count({ where: { read: false } });
+    this.notificationGateway.emitToClient('notificationCountUpdated', { count: unreadCount });
   }
 
   @Cron(CronExpression.EVERY_WEEK)
