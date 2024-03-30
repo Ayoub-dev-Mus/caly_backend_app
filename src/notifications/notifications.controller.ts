@@ -33,14 +33,6 @@ export class NotificationsController {
     return notification;
   }
 
-  @Get('push-all-notification')
-  async pushAllNotification() {
-    const notification = this.notificationGateway.handleConnection();
-
-    Logger.log('Sending notification to client:', notification);
-    return notification;
-  }
-
   @Post()
   async create(@Body() createNotificationDto: CreateNotificationDto) {
     try {
