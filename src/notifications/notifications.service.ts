@@ -16,7 +16,7 @@ export class NotificationsService {
   ) { }
   private  notificationGateway: NotificationGateway
 
-  
+
   async sendNotificationToDevice(createNotificationDto: CreateNotificationDto) {
     try {
       const message = {
@@ -39,14 +39,10 @@ export class NotificationsService {
       throw error;
     }
   }
-
-  async createNotification(createNotificationDto: CreateNotificationDto) {
+  async createNotification(createNotificationDto: CreateNotificationDto): Promise<Notification> {
     try {
       const savedNotification = await this.notificationRepository.save(createNotificationDto);
-
-      // Emit event to notify clients about new notification
-      this.notificationGateway.emitToClient('notificationCreated', { notification: savedNotification });
-
+      this.notificationGateway.emitToClient('notificationCountUpdated', { count: await this.getUnreadNotificationCount() });
       return savedNotification;
     } catch (error) {
       console.error('Failed to create notification:', error);
@@ -55,19 +51,23 @@ export class NotificationsService {
   }
 
   async markNotificationAsRead(notificationId: number): Promise<void> {
-    // Find the notification by ID
-    const notification = await this.findOne(notificationId);
-    if (!notification) {
-      throw new NotFoundException(`Notification with ID ${notificationId} not found`);
+    try {
+      await this.notificationRepository.update(notificationId, { read: true });
+      this.notificationGateway.emitToClient('notificationCountUpdated', { count: await this.getUnreadNotificationCount() });
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+      throw error;
     }
-
-    notification.read = true;
-    await this.notificationRepository.save(notification);
-
-    const unreadCount = await this.notificationRepository.count({ where: { read: false } });
-    this.notificationGateway.emitToClient('notificationCountUpdated', { count: unreadCount });
   }
 
+  async getUnreadNotificationCount(): Promise<number> {
+    try {
+      return await this.notificationRepository.count({ where: { read: false } });
+    } catch (error) {
+      console.error('Failed to fetch unread notification count:', error);
+      throw error;
+    }
+  }
   @Cron(CronExpression.EVERY_WEEK)
   async deleteOldNotifications() {
     const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
