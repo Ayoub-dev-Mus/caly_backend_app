@@ -12,9 +12,5 @@ export class SocketService {
     socket.on('disconnect', () => {
       this.connectedClients.delete(clientId);
     });
-
-    // Handle other events and messages from the client
   }
-
-  // Add more methods for handling events, messages, etc.
 }
