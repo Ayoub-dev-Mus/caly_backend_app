@@ -33,7 +33,7 @@ export class ServicesService {
     id: number,
     updateServiceDto: UpdateServiceDto,
   ): Promise<UpdateResult> {
-    return  await this.serviceRepository.update(id,updateServiceDto);
+    return await this.serviceRepository.update(id, updateServiceDto);
   }
 
   async remove(id: number): Promise<void> {
