@@ -364,7 +364,6 @@ export class AuthService {
     try {
       const { email, firstName, lastName, picture } =
         await this.verifyFirebaseToken(token);
-      Logger.log({ email, firstName, lastName, picture });
 
       let user = await this.usersService.findOneByEmail(email);
 
@@ -378,11 +377,11 @@ export class AuthService {
           phoneNumber: '',
           zipCode: '',
           state: '',
-          password: '', // Consider how you handle passwords for OAuth users
-          profilePicture: picture, // Assuming you have a field for profile images
+          password: '',
+          profilePicture: picture,
         });
       } else {
-        // Generate JWT tokens
+
         const tokens = await this.getTokens(
           user.id,
           user.email,
@@ -416,8 +415,6 @@ export class AuthService {
 
         return response;
       }
-
-
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
