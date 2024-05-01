@@ -8,7 +8,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   constructor() {
     this.redisClient = new Redis({
       // Redis connection configuration
-      host: 'redis', // Redis server host
+      host: '127.0.0.1', // Redis server host
       port: 6379, // Redis server port
       // password: 'yourpassword', // Uncomment if your Redis server requires authentication
       // Additional options if needed
@@ -26,12 +26,10 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     this.redisClient.quit();
   }
 
-  // Example method to set a value
   async set(key: string, value: string): Promise<void> {
     await this.redisClient.set(key, value);
   }
 
-  // Example method to get a value
   async get(key: string): Promise<string | null> {
     return await this.redisClient.get(key);
   }

@@ -10,7 +10,7 @@ export class SpecialistsService {
   constructor(
     @InjectRepository(Specialist)
     private specialistRepository: Repository<Specialist>,
-  ) {}
+  ) { }
 
   async create(createSpecialistDto: CreateSpecialistDto): Promise<Specialist> {
     const newSpecialist = this.specialistRepository.create(createSpecialistDto);
@@ -30,6 +30,7 @@ export class SpecialistsService {
     }
     return specialist;
   }
+
 
   async findSpecialistsByStoreId(storeId: number): Promise<Specialist[]> {
     return await this.specialistRepository.find({

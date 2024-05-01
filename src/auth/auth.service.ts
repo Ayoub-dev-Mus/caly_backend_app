@@ -112,39 +112,84 @@ export class AuthService {
         throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
       }
 
-      const tokens = await this.getTokens(
-        user.id,
-        user.email,
-        user.role,
-        user.firstName,
-        user.lastName,
-        user.state,
-        user.zipCode,
-        user.address,
-        user.phoneNumber,
-        user.profilePicture,
-      );
-      await this.updateRefreshToken(user.id, tokens.refreshToken);
+      if (user.role === Role.STORE_OWNER || user.role === Role.STORE_STAFF) {
+        const tokens = await this.getTokens(
+          user.id,
+          user.email,
+          user.role,
+          user.firstName,
+          user.lastName,
+          user.state,
+          user.zipCode,
+          user.address,
+          user.phoneNumber,
+          user.profilePicture,
+          user.store.id,
+        );
 
-      const response = {
-        token: tokens.token,
-        refreshToken: tokens.refreshToken,
-        expiresIn: new Date().setTime(new Date().getTime() + EXPIRE_TIME),
-        User: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          phoneNumber: user.phoneNumber,
-          zipCode: user.zipCode,
-          address: user.address,
-          state: user.state,
-          profilePicture: user.profilePicture,
-          role: user.role,
-        },
-      };
 
-      return response;
+        await this.updateRefreshToken(user.id, tokens.refreshToken);
+
+        const response = {
+          token: tokens.token,
+          refreshToken: tokens.refreshToken,
+          expiresIn: new Date().setTime(new Date().getTime() + EXPIRE_TIME),
+          User: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phoneNumber: user.phoneNumber,
+            zipCode: user.zipCode,
+            address: user.address,
+            state: user.state,
+            profilePicture: user.profilePicture,
+            role: user.role,
+          },
+        };
+        return response;
+      } else if (user.role === Role.USER) {
+        const tokens = await this.getTokens(
+          user.id,
+          user.email,
+          user.role,
+          user.firstName,
+          user.lastName,
+          user.state,
+          user.zipCode,
+          user.address,
+          user.phoneNumber,
+          user.profilePicture,
+
+        );
+
+
+        await this.updateRefreshToken(user.id, tokens.refreshToken);
+
+        const response = {
+          token: tokens.token,
+          refreshToken: tokens.refreshToken,
+          expiresIn: new Date().setTime(new Date().getTime() + EXPIRE_TIME),
+          User: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phoneNumber: user.phoneNumber,
+            zipCode: user.zipCode,
+            address: user.address,
+            state: user.state,
+            profilePicture: user.profilePicture,
+            role: user.role,
+
+
+          },
+        };
+
+        return response;
+      }
+
+
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
@@ -176,6 +221,8 @@ export class AuthService {
     address: string,
     phoneNumber: string,
     profilePicture: string = null,
+    storeId: number = null,
+
   ) {
     const [token, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
@@ -190,6 +237,7 @@ export class AuthService {
           phoneNumber,
           profilePicture,
           role,
+          storeId
         },
         {
           secret: process.env.JWT_SECRET,
@@ -208,6 +256,7 @@ export class AuthService {
           phoneNumber,
           profilePicture,
           role,
+          storeId
         },
         {
           secret: process.env.JWT_SECRET,
@@ -240,6 +289,7 @@ export class AuthService {
       user.zipCode,
       user.address,
       user.phoneNumber,
+
     );
 
     await this.updateRefreshToken(user.id, tokens.refreshToken);

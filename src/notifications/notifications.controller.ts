@@ -46,13 +46,11 @@ export class NotificationsController {
         body: createNotificationDto.message,
       };
 
-      // Emit notification to client
       await this.notificationGateway.emitToClient(
         'notification',
         savedNotification,
       );
 
-      // Send notification to device
       const notificationSend =
         await this.notificationsService.sendNotificationToDevice(
           createNotificationDto,

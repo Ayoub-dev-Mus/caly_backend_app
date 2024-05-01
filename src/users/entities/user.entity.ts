@@ -1,10 +1,11 @@
-import { Entity, OneToMany } from 'typeorm';
+import { Entity, ManyToOne, OneToMany } from 'typeorm';
 
 import { Length, IsString } from 'class-validator';
 
 import { PrimaryGeneratedColumn, Column } from 'typeorm';
 import { Booking } from 'src/bookings/entities/booking.entity';
 import { Review } from 'src/reviews/entities/review.entity';
+import { Store } from 'src/stores/entities/store.entity';
 
 @Entity()
 export class User {
@@ -74,4 +75,7 @@ export class User {
 
   @OneToMany(() => Review, (review) => review.user)
   reviews: Review[];
+
+  @ManyToOne(() => Store, store => store.staff)
+  store: Store;
 }

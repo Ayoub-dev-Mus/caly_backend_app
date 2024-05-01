@@ -4,6 +4,7 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
+  OneToOne,
   UpdateDateColumn,
 } from 'typeorm';
 import { PrimaryGeneratedColumn, Column } from 'typeorm';
@@ -15,6 +16,7 @@ import { TimeSlot } from 'src/appointments/entities/timeslots.entity';
 import { Booking } from 'src/bookings/entities/booking.entity';
 import { Offer } from 'src/offers/entities/offer.entity';
 import { Review } from 'src/reviews/entities/review.entity';
+import { User } from 'src/users/entities/user.entity';
 
 @Entity()
 export class Store {
@@ -98,4 +100,17 @@ export class Store {
 
   @OneToMany(() => Review, (review) => review.store)
   reviews: Review[];
+
+  @OneToOne(() => User)
+  @JoinColumn()
+  owner: User;
+
+  @OneToMany(() => User, user => user.store)
+  staff: User[];
+
+  @Column({ nullable: true })
+  isOwner: boolean;
+
+  @Column({ nullable: true })
+  isStaff: boolean;
 }
