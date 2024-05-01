@@ -78,4 +78,10 @@ export class User {
 
   @ManyToOne(() => Store, store => store.staff)
   store: Store;
+  
+  @Column({ nullable: true })
+  isOwner: boolean;
+
+  @Column({ nullable: true })
+  isStaff: boolean;
 }

@@ -108,9 +108,5 @@ export class Store {
   @OneToMany(() => User, user => user.store)
   staff: User[];
 
-  @Column({ nullable: true })
-  isOwner: boolean;
-
-  @Column({ nullable: true })
-  isStaff: boolean;
+ 
 }

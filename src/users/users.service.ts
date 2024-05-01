@@ -94,6 +94,7 @@ export class UsersService {
     try {
       const user = await this.userRepository.findOne({
         where: { email: email },
+        relations: ['store'],
       });
       Logger.log(user);
       return user;

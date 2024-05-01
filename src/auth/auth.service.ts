@@ -92,21 +92,21 @@ export class AuthService {
     }
   }
 
-  //test test
+
   async signIn(data: SignInDto) {
     try {
       const EXPIRE_TIME = 15 * 60 * 1000;
       const emailLowerCase = data.email.toLowerCase();
       const user = await this.usersService.findOneByEmail(emailLowerCase);
 
-      if (!user) {
-        throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
-      }
+
 
       const passwordMatches = await bcrypt.compare(
         data.password,
         user.password,
       );
+
+
 
       if (!passwordMatches) {
         throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
@@ -127,7 +127,7 @@ export class AuthService {
           user.store.id,
         );
 
-
+       
         await this.updateRefreshToken(user.id, tokens.refreshToken);
 
         const response = {
@@ -145,6 +145,7 @@ export class AuthService {
             state: user.state,
             profilePicture: user.profilePicture,
             role: user.role,
+            storeId: user.store.id,
           },
         };
         return response;
