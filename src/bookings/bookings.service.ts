@@ -11,7 +11,7 @@ export class BookingsService {
   constructor(
     @InjectRepository(Booking)
     private readonly bookingRepository: Repository<Booking>,
-  ) {}
+  ) { }
 
   async create(createBookingDto: CreateBookingDto, user: User) {
     try {
@@ -81,6 +81,20 @@ export class BookingsService {
     }
   }
 
+  async findAllByStoreWithUser(user: User, options?: FindManyOptions<Booking>) {
+    try {
+      const bookings = await this.bookingRepository.createQueryBuilder("booking")
+        .leftJoinAndSelect("booking.user", "user")
+        .where("booking.storeId = :storeId", { storeId: user.store.id })
+        .getMany();
+
+      return bookings;
+    } catch (error) {
+      Logger.error(`Error finding bookings by store with user: ${error.message}`);
+      throw new Error(`Error finding bookings by store with user: ${error.message}`);
+    }
+  }
+
   async findOne(id: number) {
     try {
       return await this.bookingRepository.findOne({ where: { id } });
@@ -113,6 +127,58 @@ export class BookingsService {
     } catch (error) {
       Logger.error(`Error removing booking with ID ${id}: ${error.message}`);
       throw new Error(`Error removing booking with ID ${id}: ${error.message}`);
+    }
+  }
+  async getCompletedBookingSumByStore(user: User): Promise<{ storeId: string, completedBookingSum: number }[]> {
+    try {
+      const bookingSumQuery = await this.bookingRepository.createQueryBuilder("booking")
+        .leftJoin("booking.store", "store")
+        .select("store.id", "storeId")
+        .addSelect("COUNT(booking.id)", "completedBookingSum")
+        .where("booking.userId = :userId", { userId: user.id })
+        .andWhere("booking.status = 'COMPLETED'")
+        .groupBy("store.id")
+        .getRawMany();
+
+      return bookingSumQuery;
+    } catch (error) {
+      Logger.error(`Error getting completed booking sum by store: ${error.message}`);
+      throw new Error(`Error getting completed booking sum by store: ${error.message}`);
+    }
+  }
+
+  async getPendingBookingSumByStore(user: User): Promise<{ storeId: string, pendingBookingSum: number }[]> {
+    try {
+      const bookingSumQuery = await this.bookingRepository.createQueryBuilder("booking")
+        .leftJoin("booking.store", "store")
+        .select("store.id", "storeId")
+        .addSelect("COUNT(booking.id)", "pendingBookingSum")
+        .where("booking.userId = :userId", { userId: user.id })
+        .andWhere("booking.status = 'PENDING'")
+        .groupBy("store.id")
+        .getRawMany();
+
+      return bookingSumQuery;
+    } catch (error) {
+      Logger.error(`Error getting pending booking sum by store: ${error.message}`);
+      throw new Error(`Error getting pending booking sum by store: ${error.message}`);
+    }
+  }
+
+  async getBookingSumByStore(user: User): Promise<{ storeId: string, bookingSum: number }[]> {
+    try {
+      const bookingSumQuery = await this.bookingRepository.createQueryBuilder("booking")
+        .leftJoin("booking.store", "store")
+        .select("store.id", "storeId")
+        .addSelect("COUNT(booking.id)", "bookingSum")
+        .where("booking.userId = :userId", { userId: user.id })
+        .groupBy("store.id")
+        .getRawMany();
+
+      return bookingSumQuery;
+    } catch (error) {
+      Logger.error(`Error getting booking sum by store: ${error.message}`);
+      throw new Error(`Error getting booking sum by store: ${error.message}`);
     }
   }
 }

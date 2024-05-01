@@ -25,7 +25,7 @@ import { Role } from 'src/users/enums/role';
 @ApiTags('bookings')
 @Controller('bookings')
 export class BookingsController {
-  constructor(private readonly bookingsService: BookingsService) {}
+  constructor(private readonly bookingsService: BookingsService) { }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER)
@@ -62,6 +62,27 @@ export class BookingsController {
     }
 
     return this.bookingsService.findAll(user, createdAt, storeName, options);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.STORE_OWNER,Role.STORE_STAFF)
+  @Get('completed-sum')
+  getCompletedBookingSumByStore(@GetUser() user: User): Promise<{ storeId: string, completedBookingSum: number }[]> {
+    return this.bookingsService.getCompletedBookingSumByStore(user);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.STORE_OWNER,Role.STORE_STAFF)
+  @Get('pending-sum')
+  getPendingBookingSumByStore(@GetUser() user: User): Promise<{ storeId: string, pendingBookingSum: number }[]> {
+    return this.bookingsService.getPendingBookingSumByStore(user);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.STORE_OWNER,Role.STORE_STAFF)
+  @Get('by-store')
+  findAllByStoreWithUser(@GetUser() user: User): Promise<Booking[]> {
+    return this.bookingsService.findAllByStoreWithUser(user);
   }
 
   @Get(':id')

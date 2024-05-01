@@ -15,7 +15,7 @@ export class AppointmentsService {
     private appointmentRepository: Repository<Appointment>,
     @InjectRepository(TimeSlot)
     private timeSlotRepository: Repository<TimeSlot>,
-  ) {}
+  ) { }
 
   // Appointments CRUD
 
@@ -27,6 +27,8 @@ export class AppointmentsService {
   async findAllAppointments() {
     return this.appointmentRepository.find();
   }
+
+  async findAppointmentsByDateAndStore(date: Date, storeId: number) { }
 
   async findOneAppointment(id: number) {
     const appointment = await this.appointmentRepository.findOne({
