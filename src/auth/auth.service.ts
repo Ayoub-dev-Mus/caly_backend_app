@@ -414,12 +414,10 @@ export class AuthService {
     try {
       const { email, firstName, lastName, picture } =
         await this.verifyFirebaseToken(token);
-      Logger.log({ email, firstName, lastName, picture });
 
       let user = await this.usersService.findOneByEmail(email);
 
       if (!user) {
-        // When creating a new user, include all information available from Google
         user = await this.usersService.create({
           email,
           firstName,
@@ -429,44 +427,44 @@ export class AuthService {
           phoneNumber: '',
           zipCode: '',
           state: '',
-          password: '', // Consider how you handle passwords for OAuth users
-          profilePicture: picture, // Assuming you have a field for profile images
+          password: '',
+          profilePicture: picture,
         });
+      } else {
+
+        const tokens = await this.getTokens(
+          user.id,
+          user.email,
+          user.role,
+          user.firstName,
+          user.lastName,
+          user.state,
+          user.zipCode,
+          user.address,
+          user.phoneNumber,
+          user.profilePicture,
+        );
+        await this.updateRefreshToken(user.id, tokens.refreshToken);
+
+        const response = {
+          token: tokens.token,
+          refreshToken: tokens.refreshToken,
+          User: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phoneNumber: user.phoneNumber,
+            zipCode: user.zipCode,
+            address: user.address,
+            state: user.state,
+            profilePicture: user.profilePicture,
+            role: user.role,
+          },
+        };
+
+        return response;
       }
-
-      // Generate JWT tokens
-      const tokens = await this.getTokens(
-        user.id,
-        user.email,
-        user.role,
-        user.firstName,
-        user.lastName,
-        user.state,
-        user.zipCode,
-        user.address,
-        user.phoneNumber,
-        user.profilePicture,
-      );
-      await this.updateRefreshToken(user.id, tokens.refreshToken);
-
-      const response = {
-        token: tokens.token,
-        refreshToken: tokens.refreshToken,
-        User: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          phoneNumber: user.phoneNumber,
-          zipCode: user.zipCode,
-          address: user.address,
-          state: user.state,
-          profilePicture: user.profilePicture,
-          role: user.role,
-        },
-      };
-
-      return response;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }

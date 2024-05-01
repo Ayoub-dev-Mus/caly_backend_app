@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import CreateServiceDto from './dto/create-service.dto';
 import { Service } from './entities/service.entity';
 import { UpdateServiceDto } from './dto/update-service.dto';
@@ -32,14 +32,11 @@ export class ServicesService {
   async update(
     id: number,
     updateServiceDto: UpdateServiceDto,
-  ): Promise<Service> {
-    const existingService = await this.findOne(id);
-    this.serviceRepository.merge(existingService, updateServiceDto);
-    return await this.serviceRepository.save(existingService);
+  ): Promise<UpdateResult> {
+    return await this.serviceRepository.update(id, updateServiceDto);
   }
 
   async remove(id: number): Promise<void> {
-    const existingService = await this.findOne(id);
-    await this.serviceRepository.remove(existingService);
+    await this.serviceRepository.delete(id);
   }
 }
