@@ -59,7 +59,6 @@ export class AuthService {
         newUser.firstName,
         newUser.lastName,
         newUser.state,
-
         newUser.address,
         newUser.zipCode,
         newUser.phoneNumber,
@@ -127,7 +126,7 @@ export class AuthService {
           user.store.id,
         );
 
-       
+
         await this.updateRefreshToken(user.id, tokens.refreshToken);
 
         const response = {
@@ -145,7 +144,7 @@ export class AuthService {
             state: user.state,
             profilePicture: user.profilePicture,
             role: user.role,
-            storeId: user.store.id,
+       
           },
         };
         return response;
