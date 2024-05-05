@@ -39,10 +39,10 @@ export class BookingsService {
 
       if (createdAt) {
         const startOfDay = new Date(createdAt);
-        startOfDay.setHours(0, 0, 0, 0); // Set to the start of the day
+        startOfDay.setHours(0, 0, 0, 0);
 
         const endOfDay = new Date(createdAt);
-        endOfDay.setHours(23, 59, 59, 999); // Set to the end of the day
+        endOfDay.setHours(23, 59, 59, 999);
 
         whereClause.createdAt = Between(
           startOfDay.toISOString(),
@@ -86,7 +86,6 @@ export class BookingsService {
     storeName?: string,
     options?: FindManyOptions<Booking>,
   ) {
-    console.log('user', user);
     try {
       const whereClause: any = {
         store: { id: user.store },
@@ -118,17 +117,14 @@ export class BookingsService {
             email: true,
             firstName: true,
             lastName: true,
+            profilePicture: true,
           },
+          // Add other properties you need to select
         },
         where: whereClause,
-        skip: options?.skip || 0,
-        take: options?.take || 10,
       };
 
-      // Merge with user-provided options
-      const finalOptions = { ...paginationOptions, ...options };
-
-      return await this.bookingRepository.find(finalOptions);
+      return await this.bookingRepository.find(paginationOptions);
     } catch (error) {
       Logger.error(`Error finding bookings: ${error.message}`);
       throw new Error(`Error finding bookings: ${error.message}`);
