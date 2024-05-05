@@ -76,9 +76,9 @@ export class User {
   @OneToMany(() => Review, (review) => review.user)
   reviews: Review[];
 
-  @ManyToOne(() => Store, store => store.staff)
+  @ManyToOne(() => Store, (store) => store.staff)
   store: Store;
-  
+
   @Column({ nullable: true })
   isOwner: boolean;
 

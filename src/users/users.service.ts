@@ -15,7 +15,7 @@ export class UsersService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private jwtService: JwtService,
-  ) { }
+  ) {}
 
   async uploadProfileImage(file: Multer.File): Promise<any> {
     try {

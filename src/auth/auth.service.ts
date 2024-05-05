@@ -81,7 +81,6 @@ export class AuthService {
         },
       };
 
-      // Update the refresh token in the database
       await this.updateRefreshToken(newUser.id, tokens.refreshToken);
 
       return response;
@@ -91,21 +90,16 @@ export class AuthService {
     }
   }
 
-
   async signIn(data: SignInDto) {
     try {
       const EXPIRE_TIME = 15 * 60 * 1000;
       const emailLowerCase = data.email.toLowerCase();
       const user = await this.usersService.findOneByEmail(emailLowerCase);
 
-
-
       const passwordMatches = await bcrypt.compare(
         data.password,
         user.password,
       );
-
-
 
       if (!passwordMatches) {
         throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
@@ -126,7 +120,6 @@ export class AuthService {
           user.store.id,
         );
 
-
         await this.updateRefreshToken(user.id, tokens.refreshToken);
 
         const response = {
@@ -144,7 +137,6 @@ export class AuthService {
             state: user.state,
             profilePicture: user.profilePicture,
             role: user.role,
-       
           },
         };
         return response;
@@ -160,9 +152,7 @@ export class AuthService {
           user.address,
           user.phoneNumber,
           user.profilePicture,
-
         );
-
 
         await this.updateRefreshToken(user.id, tokens.refreshToken);
 
@@ -181,15 +171,11 @@ export class AuthService {
             state: user.state,
             profilePicture: user.profilePicture,
             role: user.role,
-
-
           },
         };
 
         return response;
       }
-
-
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
@@ -222,7 +208,6 @@ export class AuthService {
     phoneNumber: string,
     profilePicture: string = null,
     storeId: number = null,
-
   ) {
     const [token, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
@@ -237,7 +222,7 @@ export class AuthService {
           phoneNumber,
           profilePicture,
           role,
-          storeId
+          storeId,
         },
         {
           secret: process.env.JWT_SECRET,
@@ -256,7 +241,7 @@ export class AuthService {
           phoneNumber,
           profilePicture,
           role,
-          storeId
+          storeId,
         },
         {
           secret: process.env.JWT_SECRET,
@@ -289,7 +274,6 @@ export class AuthService {
       user.zipCode,
       user.address,
       user.phoneNumber,
-
     );
 
     await this.updateRefreshToken(user.id, tokens.refreshToken);
@@ -431,7 +415,6 @@ export class AuthService {
           profilePicture: picture,
         });
       } else {
-
         const tokens = await this.getTokens(
           user.id,
           user.email,

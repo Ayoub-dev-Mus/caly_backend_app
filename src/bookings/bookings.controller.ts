@@ -21,11 +21,12 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { HasRoles } from 'src/common/role.decorator';
 import { Role } from 'src/users/enums/role';
+import { Store } from 'src/stores/entities/store.entity';
 
 @ApiTags('bookings')
 @Controller('bookings')
 export class BookingsController {
-  constructor(private readonly bookingsService: BookingsService) { }
+  constructor(private readonly bookingsService: BookingsService) {}
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER)
@@ -65,21 +66,32 @@ export class BookingsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @HasRoles(Role.ADMIN, Role.STORE_OWNER,Role.STORE_STAFF)
+  @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)
   @Get('completed-sum')
-  getCompletedBookingSumByStore(@GetUser() user: User): Promise<{ storeId: string, completedBookingSum: number }[]> {
+  getCompletedBookingSumByStore(
+    @GetUser() user: User,
+  ): Promise<{ storeId: string; completedBookingSum: number }[]> {
     return this.bookingsService.getCompletedBookingSumByStore(user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @HasRoles(Role.ADMIN, Role.STORE_OWNER,Role.STORE_STAFF)
+  @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)
+  @Get('store')
+  getAllBookingsByStore(@GetUser() user: User): Promise<Booking[]> {
+    return this.bookingsService.findAllBookingByStore(user);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)
   @Get('pending-sum')
-  getPendingBookingSumByStore(@GetUser() user: User): Promise<{ storeId: string, pendingBookingSum: number }[]> {
+  getPendingBookingSumByStore(
+    @GetUser() user: User,
+  ): Promise<{ storeId: string; pendingBookingSum: number }[]> {
     return this.bookingsService.getPendingBookingSumByStore(user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @HasRoles(Role.ADMIN, Role.STORE_OWNER,Role.STORE_STAFF)
+  @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)
   @Get('by-store')
   findAllByStoreWithUser(@GetUser() user: User): Promise<Booking[]> {
     return this.bookingsService.findAllByStoreWithUser(user);

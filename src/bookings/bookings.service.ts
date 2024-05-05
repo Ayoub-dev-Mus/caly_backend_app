@@ -11,7 +11,7 @@ export class BookingsService {
   constructor(
     @InjectRepository(Booking)
     private readonly bookingRepository: Repository<Booking>,
-  ) { }
+  ) {}
 
   async create(createBookingDto: CreateBookingDto, user: User) {
     try {
@@ -38,7 +38,6 @@ export class BookingsService {
       };
 
       if (createdAt) {
-        // Adjust to consider the entire day
         const startOfDay = new Date(createdAt);
         startOfDay.setHours(0, 0, 0, 0); // Set to the start of the day
 
@@ -81,17 +80,77 @@ export class BookingsService {
     }
   }
 
+  async findAllBookingByStore(
+    user: User,
+    createdAt?: Date,
+    storeName?: string,
+    options?: FindManyOptions<Booking>,
+  ) {
+    console.log('user', user);
+    try {
+      const whereClause: any = {
+        store: { id: user.store },
+      };
+
+      if (createdAt) {
+        const startOfDay = new Date(createdAt);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date(createdAt);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        whereClause.createdAt = Between(
+          startOfDay.toISOString(),
+          endOfDay.toISOString(),
+        );
+      }
+
+      if (storeName) {
+        whereClause.store = { name: ILike(`%${storeName}%`) };
+      }
+
+      // Pagination options
+      const paginationOptions: FindManyOptions<Booking> = {
+        relations: ['specialist', 'service', 'store', 'timeSlot', 'user'],
+        select: {
+          user: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        where: whereClause,
+        skip: options?.skip || 0,
+        take: options?.take || 10,
+      };
+
+      // Merge with user-provided options
+      const finalOptions = { ...paginationOptions, ...options };
+
+      return await this.bookingRepository.find(finalOptions);
+    } catch (error) {
+      Logger.error(`Error finding bookings: ${error.message}`);
+      throw new Error(`Error finding bookings: ${error.message}`);
+    }
+  }
+
   async findAllByStoreWithUser(user: User, options?: FindManyOptions<Booking>) {
     try {
-      const bookings = await this.bookingRepository.createQueryBuilder("booking")
-        .leftJoinAndSelect("booking.user", "user")
-        .where("booking.storeId = :storeId", { storeId: user.store.id })
+      const bookings = await this.bookingRepository
+        .createQueryBuilder('booking')
+        .leftJoinAndSelect('booking.user', 'user')
+        .where('booking.storeId = :storeId', { storeId: user.store.id })
         .getMany();
 
       return bookings;
     } catch (error) {
-      Logger.error(`Error finding bookings by store with user: ${error.message}`);
-      throw new Error(`Error finding bookings by store with user: ${error.message}`);
+      Logger.error(
+        `Error finding bookings by store with user: ${error.message}`,
+      );
+      throw new Error(
+        `Error finding bookings by store with user: ${error.message}`,
+      );
     }
   }
 
@@ -129,50 +188,67 @@ export class BookingsService {
       throw new Error(`Error removing booking with ID ${id}: ${error.message}`);
     }
   }
-  async getCompletedBookingSumByStore(user: User): Promise<{ storeId: string, completedBookingSum: number }[]> {
+  async getCompletedBookingSumByStore(
+    user: User,
+  ): Promise<{ storeId: string; completedBookingSum: number }[]> {
     try {
-      const bookingSumQuery = await this.bookingRepository.createQueryBuilder("booking")
-        .leftJoin("booking.store", "store")
-        .select("store.id", "storeId")
-        .addSelect("COUNT(booking.id)", "completedBookingSum")
-        .where("booking.userId = :userId", { userId: user.id })
+      const bookingSumQuery = await this.bookingRepository
+        .createQueryBuilder('booking')
+        .leftJoin('booking.store', 'store')
+        .select('store.id', 'storeId')
+        .addSelect('COUNT(booking.id)', 'completedBookingSum')
+        .where('booking.userId = :userId', { userId: user.id })
         .andWhere("booking.status = 'COMPLETED'")
-        .groupBy("store.id")
+        .groupBy('store.id')
         .getRawMany();
 
       return bookingSumQuery;
     } catch (error) {
-      Logger.error(`Error getting completed booking sum by store: ${error.message}`);
-      throw new Error(`Error getting completed booking sum by store: ${error.message}`);
+      Logger.error(
+        `Error getting completed booking sum by store: ${error.message}`,
+      );
+      throw new Error(
+        `Error getting completed booking sum by store: ${error.message}`,
+      );
     }
   }
 
-  async getPendingBookingSumByStore(user: User): Promise<{ storeId: string, pendingBookingSum: number }[]> {
+  async getPendingBookingSumByStore(
+    user: User,
+  ): Promise<{ storeId: string; pendingBookingSum: number }[]> {
     try {
-      const bookingSumQuery = await this.bookingRepository.createQueryBuilder("booking")
-        .leftJoin("booking.store", "store")
-        .select("store.id", "storeId")
-        .addSelect("COUNT(booking.id)", "pendingBookingSum")
-        .where("booking.userId = :userId", { userId: user.id })
+      const bookingSumQuery = await this.bookingRepository
+        .createQueryBuilder('booking')
+        .leftJoin('booking.store', 'store')
+        .select('store.id', 'storeId')
+        .addSelect('COUNT(booking.id)', 'pendingBookingSum')
+        .where('booking.userId = :userId', { userId: user.id })
         .andWhere("booking.status = 'PENDING'")
-        .groupBy("store.id")
+        .groupBy('store.id')
         .getRawMany();
 
       return bookingSumQuery;
     } catch (error) {
-      Logger.error(`Error getting pending booking sum by store: ${error.message}`);
-      throw new Error(`Error getting pending booking sum by store: ${error.message}`);
+      Logger.error(
+        `Error getting pending booking sum by store: ${error.message}`,
+      );
+      throw new Error(
+        `Error getting pending booking sum by store: ${error.message}`,
+      );
     }
   }
 
-  async getBookingSumByStore(user: User): Promise<{ storeId: string, bookingSum: number }[]> {
+  async getBookingSumByStore(
+    user: User,
+  ): Promise<{ storeId: string; bookingSum: number }[]> {
     try {
-      const bookingSumQuery = await this.bookingRepository.createQueryBuilder("booking")
-        .leftJoin("booking.store", "store")
-        .select("store.id", "storeId")
-        .addSelect("COUNT(booking.id)", "bookingSum")
-        .where("booking.userId = :userId", { userId: user.id })
-        .groupBy("store.id")
+      const bookingSumQuery = await this.bookingRepository
+        .createQueryBuilder('booking')
+        .leftJoin('booking.store', 'store')
+        .select('store.id', 'storeId')
+        .addSelect('COUNT(booking.id)', 'bookingSum')
+        .where('booking.userId = :userId', { userId: user.id })
+        .groupBy('store.id')
         .getRawMany();
 
       return bookingSumQuery;
