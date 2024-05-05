@@ -45,6 +45,14 @@ export class ReviewsController {
     return await this.reviewsService.findAll(storeId, limit, offset);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.STORE_OWNER)
+  @Get('store')
+  async findAllReviewByStore(@GetUser() user:User)
+  {
+    return await this.reviewsService.findAllReviewsByStore(user);
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const review = await this.reviewsService.findOne(+id);

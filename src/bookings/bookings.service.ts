@@ -119,7 +119,6 @@ export class BookingsService {
             lastName: true,
             profilePicture: true,
           },
-          // Add other properties you need to select
         },
         where: whereClause,
       };
