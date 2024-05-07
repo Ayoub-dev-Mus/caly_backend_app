@@ -10,33 +10,53 @@ export class ServicesService {
   constructor(
     @InjectRepository(Service)
     private serviceRepository: Repository<Service>,
-  ) {}
+  ) { }
 
   async create(createServiceDto: CreateServiceDto): Promise<Service> {
-    const newService = this.serviceRepository.create(createServiceDto);
-    return await this.serviceRepository.save(newService);
+    try {
+      const newService = this.serviceRepository.create(createServiceDto);
+      return await this.serviceRepository.save(newService);
+    } catch (error) {
+      throw new Error(error.message);
+    }
   }
 
   async findAll(): Promise<Service[]> {
-    return await this.serviceRepository.find();
+    try {
+      return await this.serviceRepository.find();
+    } catch (error) {
+      throw new Error(error.message);
+    }
   }
 
   async findOne(id: number): Promise<Service> {
-    const service = await this.serviceRepository.findOne({ where: { id } });
-    if (!service) {
-      throw new NotFoundException(`Service with ID ${id} not found`);
+    try {
+      const service = await this.serviceRepository.findOne({ where: { id } });
+      if (!service) {
+        throw new NotFoundException(`Service with ID ${id} not found`);
+      }
+      return service;
+    } catch (error) {
+      throw new Error(error.message);
     }
-    return service;
   }
 
   async update(
     id: number,
     updateServiceDto: UpdateServiceDto,
   ): Promise<UpdateResult> {
-    return await this.serviceRepository.update(id, updateServiceDto);
+    try{
+      return await this.serviceRepository.update(id, updateServiceDto);
+    }catch(error){
+      throw new Error(error.message);
+    }
   }
 
   async remove(id: number): Promise<void> {
-    await this.serviceRepository.delete(id);
+   try{
+     await this.serviceRepository.delete(id);
+  }catch(error){
+    throw new Error(error.message);
   }
+}
 }
