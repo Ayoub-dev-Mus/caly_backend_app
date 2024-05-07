@@ -18,17 +18,13 @@ export class ChatsGateway {
   }
 
   @SubscribeMessage('findOneChat')
-  findOne(@MessageBody() id: number) {
+  findOne(@MessageBody() id: string) {
     return this.chatsService.findOne(id);
   }
 
   @SubscribeMessage('updateChat')
-  update(@MessageBody() updateChatDto: UpdateChatDto) {
-    return this.chatsService.update(updateChatDto.id, updateChatDto);
+  update(@MessageBody() updateChatDto: UpdateChatDto , @MessageBody() id: string){
+    return this.chatsService.update(id, updateChatDto);
   }
 
-  @SubscribeMessage('removeChat')
-  remove(@MessageBody() id: number) {
-    return this.chatsService.remove(id);
-  }
 }
