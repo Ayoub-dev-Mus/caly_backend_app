@@ -33,6 +33,7 @@ import { Notification } from './notifications/entities/notification.entity';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RedisModule } from './redis/redis.module';
 import { SocketModule } from './socket/socket.module';
+import { ChatsModule } from './chats/chats.module';
 
 @Module({
   providers: [
@@ -97,6 +98,7 @@ import { SocketModule } from './socket/socket.module';
     DevicesTokensModule,
     RedisModule,
     SocketModule,
+    ChatsModule,
   ],
   controllers: [AppController],
 })
