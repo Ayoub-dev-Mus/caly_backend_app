@@ -36,6 +36,26 @@ class VerifyOtpDto {
   otp: string;
 }
 
+class ResetPasswordDto {
+  @ApiProperty({
+    description: 'Email address associated with the user account',
+    example: 'user@example.com',
+  })
+  email: string;
+
+  @ApiProperty({
+    description: 'One-time password for authentication',
+    example: '123456',
+  })
+  otp: string;
+
+  @ApiProperty({
+    description: 'New password to be set for the user account',
+    example: 'newStrongPassword123!',
+  })
+  newPassword: string;
+}
+
 class ForgotPasswordDto {
   @ApiProperty({
     description: 'Email address associated with the user account',
@@ -76,7 +96,7 @@ export class AuthController {
     }
   }
 
-  
+
   @Post('forgot-password')
   @ApiOperation({ summary: 'Request a password reset link' })
   @ApiBody({ type: ForgotPasswordDto })
@@ -107,17 +127,18 @@ export class AuthController {
 
 
   @Post('reset-password')
-  async resetPassword(
-    @Body('email') email: string,
-    @Body('otp') otp: string,
-    @Body('newPassword') newPassword: string,
-  ): Promise<void> {
+  @ApiOperation({ summary: 'Reset the user password' })
+  @ApiBody({ type: ResetPasswordDto })
+  @ApiResponse({ status: 204, description: 'Password successfully reset' })
+  @ApiResponse({ status: 400, description: 'Bad Request if the inputs are invalid or operation fails' })
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto): Promise<void> {
     try {
-      await this.authService.resetPassword(email, otp, newPassword);
+      await this.authService.resetPassword(resetPasswordDto.email, resetPasswordDto.otp, resetPasswordDto.newPassword);
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
+  
   @Post('/register')
   async signUp(
     @Body() signUpDto: SignUpDto,
