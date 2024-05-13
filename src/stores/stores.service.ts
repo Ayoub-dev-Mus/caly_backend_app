@@ -29,7 +29,7 @@ export class StoresService {
   constructor(
     private readonly httpService: HttpService,
     private readonly redisService: RedisService,
-  ) {}
+  ) { }
 
   async drawRoad(from: string, to: string): Promise<any> {
     const response = await this.httpService
@@ -290,7 +290,7 @@ export class StoresService {
 
   async findOne(id: number): Promise<Store> {
     try {
-      const store = await this.storeRepository.findOne({ where: { id } });
+      const store = await this.storeRepository.findOne({ where: { id }, relations: ['services', 'specialists'] });
       if (!store) {
         throw new NotFoundException('Store not found.');
       }
