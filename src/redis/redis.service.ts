@@ -7,11 +7,10 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   constructor() {
     this.redisClient = new Redis({
-      // Redis connection configuration
-      host: '127.0.0.1', // Redis server host
-      port: 6379, // Redis server port
+      host: 'redis',
+      port: 6379,
       // password: 'yourpassword', // Uncomment if your Redis server requires authentication
-      // Additional options if needed
+  
     });
   }
 

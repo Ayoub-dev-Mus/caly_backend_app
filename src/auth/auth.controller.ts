@@ -16,11 +16,53 @@ import { User } from 'src/users/entities/user.entity';
 import { RefreshTokenGuard } from 'src/common/guards/refreshToken.guard';
 import { AccessTokenGuard } from 'src/common/guards/accessToken.guard';
 import { GetUser } from 'src/common/jwtMiddlware';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SignInDto } from './dto/signin.dto';
 import { SignUpDto } from './dto/signUp.dto';
 import { UsersService } from 'src/users/users.service';
 
+
+class VerifyOtpDto {
+  @ApiProperty({
+    description: 'Email address associated with the user',
+    example: 'user@example.com',
+  })
+  email: string;
+
+  @ApiProperty({
+    description: 'One-time password to verify',
+    example: '123456',
+  })
+  otp: string;
+}
+
+class ResetPasswordDto {
+  @ApiProperty({
+    description: 'Email address associated with the user account',
+    example: 'user@example.com',
+  })
+  email: string;
+
+  @ApiProperty({
+    description: 'One-time password for authentication',
+    example: '123456',
+  })
+  otp: string;
+
+  @ApiProperty({
+    description: 'New password to be set for the user account',
+    example: 'newStrongPassword123!',
+  })
+  newPassword: string;
+}
+
+class ForgotPasswordDto {
+  @ApiProperty({
+    description: 'Email address associated with the user account',
+    example: 'user@example.com',
+  })
+  email: string;
+}
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
@@ -54,39 +96,49 @@ export class AuthController {
     }
   }
 
+
   @Post('forgot-password')
-  async forgotPassword(@Body('email') email: string): Promise<void> {
-    await this.authService.forgotPassword(email).catch((error) => {
+  @ApiOperation({ summary: 'Request a password reset link' })
+  @ApiBody({ type: ForgotPasswordDto })
+  @ApiResponse({ status: 204, description: 'Password reset link sent if email is registered' })
+  @ApiResponse({ status: 400, description: 'Bad Request if the email is not processed' })
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto): Promise<void> {
+    await this.authService.forgotPassword(forgotPasswordDto.email).catch((error) => {
       Logger.error('Error during forgot password process', error);
       throw new BadRequestException(error.message);
     });
   }
 
   @Post('verify-otp')
+  @ApiOperation({ summary: 'Verify one-time password (OTP)' })
+  @ApiBody({ type: VerifyOtpDto })
+  @ApiResponse({ status: 200, description: 'OTP verification result', type: Boolean })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
   async verifyOtp(
-    @Body('email') email: string,
-    @Body('otp') otp: string,
+    @Body() verifyOtpDto: VerifyOtpDto
   ): Promise<{ verified: boolean }> {
     try {
-      const verified = await this.authService.verifyOtp(email, otp);
+      const verified = await this.authService.verifyOtp(verifyOtpDto.email, verifyOtpDto.otp);
       return { verified };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
 
+
   @Post('reset-password')
-  async resetPassword(
-    @Body('email') email: string,
-    @Body('otp') otp: string,
-    @Body('newPassword') newPassword: string,
-  ): Promise<void> {
+  @ApiOperation({ summary: 'Reset the user password' })
+  @ApiBody({ type: ResetPasswordDto })
+  @ApiResponse({ status: 204, description: 'Password successfully reset' })
+  @ApiResponse({ status: 400, description: 'Bad Request if the inputs are invalid or operation fails' })
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto): Promise<void> {
     try {
-      await this.authService.resetPassword(email, otp, newPassword);
+      await this.authService.resetPassword(resetPasswordDto.email, resetPasswordDto.otp, resetPasswordDto.newPassword);
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
+  
   @Post('/register')
   async signUp(
     @Body() signUpDto: SignUpDto,

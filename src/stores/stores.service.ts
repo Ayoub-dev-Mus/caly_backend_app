@@ -32,20 +32,24 @@ export class StoresService {
   ) { }
 
   async drawRoad(from: string, to: string): Promise<any> {
-    const response = await this.httpService
-      .get(`${this.googleMapsBaseUrl}/directions/json`, {
-        params: {
-          origin: from,
-          destination: to,
-          key: 'AIzaSyCxkDMCXkDyX9JpeOdsLUqTJBaLjdsIiBQ',
-        },
-      })
-      .toPromise();
+    try {
+      const response = await this.httpService
+        .get(`${this.googleMapsBaseUrl}/directions/json`, {
+          params: {
+            origin: from,
+            destination: to,
+            key: 'AIzaSyCxkDMCXkDyX9JpeOdsLUqTJBaLjdsIiBQ',
+          },
+        })
+        .toPromise();
 
-    if (response && response.data) {
-      return response.data;
+      if (response && response.data) {
+        return response.data;
+      }
+      return null;
+    } catch (error) {
+      throw new Error(error.message);
     }
-    return null;
   }
 
   async findAllStoreTypes(): Promise<StoreType[]> {
@@ -77,42 +81,45 @@ export class StoresService {
     pageSize: number = 10,
     searchTerm: string = '',
   ): Promise<{ stores: Store[]; total: number }> {
-    // Generate a unique cache key based on the function parameters
-    const cacheKey = `stores:all:${page}:${pageSize}:${searchTerm}`;
-
     try {
-      const cachedResult = await this.redisService.get(cacheKey);
 
-      Logger.log('cachedResult', cachedResult);
-
-      if (cachedResult) {
-        return JSON.parse(cachedResult);
-      }
-    } catch (error) {
-      console.error('Error accessing Redis:', error);
-    }
-
-    try {
-      const options: FindManyOptions<Store> = {
-        relations: ['services', 'specialists'],
-        where: searchTerm ? [{ name: ILike(`%${searchTerm}%`) }] : {},
-        take: pageSize,
-        skip: (page - 1) * pageSize,
-      };
-
-      const [stores, total] = await this.storeRepository.findAndCount(options);
+      const cacheKey = `stores:all:${page}:${pageSize}:${searchTerm}`;
 
       try {
-        await this.redisService.set(
-          cacheKey,
-          JSON.stringify({ stores, total }),
-        ); // Adjust expiration as needed
+        const cachedResult = await this.redisService.get(cacheKey);
+
+        Logger.log('cachedResult', cachedResult);
+
+        if (cachedResult) {
+          return JSON.parse(cachedResult);
+        }
       } catch (error) {
-        console.error('Error setting cache in Redis:', error);
-        // Handle or ignore cache set error
+        console.error('Error accessing Redis:', error);
       }
 
-      return { stores, total };
+      try {
+        const options: FindManyOptions<Store> = {
+          relations: ['services', 'specialists'],
+          where: searchTerm ? [{ name: ILike(`%${searchTerm}%`) }] : {},
+          take: pageSize,
+          skip: (page - 1) * pageSize,
+        };
+
+        const [stores, total] = await this.storeRepository.findAndCount(options);
+
+        try {
+          await this.redisService.set(
+            cacheKey,
+            JSON.stringify({ stores, total }),
+          );
+        } catch (error) {
+          console.error('Error setting cache in Redis:', error);
+        }
+
+        return { stores, total };
+      } catch (error) {
+        throw new Error(error.message);
+      }
     } catch (error) {
       throw new Error(error.message);
     }
@@ -124,7 +131,7 @@ export class StoresService {
     searchTerm: string = '',
     page: number = 1,
     pageSize: number = 10,
-    storeType?: string, // Add storeType parameter
+    storeType?: string, //
   ): Promise<{ stores: Store[]; total: number }> {
     try {
       let queryBuilder = this.storeRepository
@@ -201,7 +208,6 @@ export class StoresService {
     pageSize: number = 10,
     storeType?: string,
   ): Promise<{ stores: Store[]; total: number }> {
-    // Generate a unique cache key based on the function parameters
     const cacheKey = `stores:nearest:${latitude}:${longitude}:${searchTerm}:${page}:${pageSize}:${storeType || 'all'}`;
 
     try {
@@ -244,7 +250,7 @@ export class StoresService {
       ])
       .addSelect(
         'ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography, store.location::geography) / 1000 AS distance',
-      ) // Convert distance to kilometers
+      ) 
       .leftJoin('store.services', 'services')
       .leftJoin('store.specialists', 'specialists')
       .leftJoin('store.type', 'type')
@@ -279,10 +285,10 @@ export class StoresService {
       await this.redisService.set(
         cacheKey,
         JSON.stringify({ stores: result, total: totalCount }),
-      ); // Adjust expiration as needed
+      );
     } catch (error) {
       console.error('Error setting cache in Redis:', error);
-      // Handle or ignore cache set error
+
     }
 
     return { stores: result, total: totalCount };

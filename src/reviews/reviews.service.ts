@@ -59,6 +59,40 @@ export class ReviewsService {
     }
   }
 
+  async findAllReviewsByStore(
+    user:User,
+    limit: number = 10,
+    offset: number = 0,
+  ): Promise<Review[]> {
+    try {
+      const whereConditions: FindOptionsWhere<any> = {
+        store: { id: user.store },
+      };
+
+      const reviews = await this.reviewRepository.find({
+        relations: ['store', 'user'],
+        where: whereConditions,
+        take: limit,
+        skip: offset,
+        select: {
+          user: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profilePicture: true,
+          },
+        },
+      });
+
+      Logger.log('Reviews', reviews);
+
+      return reviews;
+    } catch (error) {
+      throw new Error('Failed to fetch reviews');
+    }
+  }
+
+
   async findOne(id: number): Promise<Review> {
     try {
       const review = await this.reviewRepository.findOne({ where: { id } });

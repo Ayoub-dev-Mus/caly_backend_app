@@ -105,8 +105,6 @@ export class Store {
   @JoinColumn()
   owner: User;
 
-  @OneToMany(() => User, user => user.store)
+  @OneToMany(() => User, (user) => user.store)
   staff: User[];
-
- 
 }

@@ -33,6 +33,8 @@ import { Notification } from './notifications/entities/notification.entity';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RedisModule } from './redis/redis.module';
 import { SocketModule } from './socket/socket.module';
+import { ChatsModule } from './chats/chats.module';
+import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   providers: [
@@ -44,6 +46,7 @@ import { SocketModule } from './socket/socket.module';
   ],
   exports: [],
   imports: [
+    MongooseModule.forRoot('mongodb+srv://ayoubwahid282000:l9ZzxSpsliJu4KTD@cluster0.sj7f7ip.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'),
     SocketModule,
     ScheduleModule.forRoot(),
     {
@@ -97,6 +100,7 @@ import { SocketModule } from './socket/socket.module';
     DevicesTokensModule,
     RedisModule,
     SocketModule,
+    ChatsModule,
   ],
   controllers: [AppController],
 })
