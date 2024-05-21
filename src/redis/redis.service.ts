@@ -10,7 +10,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       host: 'redis',
       port: 6379,
       // password: 'yourpassword', // Uncomment if your Redis server requires authentication
-  
+
     });
   }
 

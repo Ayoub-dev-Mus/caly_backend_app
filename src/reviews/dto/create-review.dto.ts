@@ -17,7 +17,7 @@ export class CreateReviewDto {
   @ApiProperty()
   updatedAt: Date;
 
-  @Optional()
+
   @ApiProperty()
   user: User;
 

@@ -103,6 +103,19 @@ export class UsersService {
     }
   }
 
+  async findOneByEmailJoinedWithStore(  email: string): Promise<User> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { email: email },
+        relations: ['store'],
+      });
+      Logger.log(user);
+      return user;
+    } catch (error) {
+      return error.message;
+    }
+  }
+
   async findOneById(id: string): Promise<User> {
     try {
       const user = await this.userRepository.findOneByOrFail({ id });
