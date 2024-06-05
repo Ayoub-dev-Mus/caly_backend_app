@@ -2,23 +2,33 @@ import {
   WebSocketGateway,
   OnGatewayConnection,
   WebSocketServer,
+  SubscribeMessage,
+  MessageBody,
+  ConnectedSocket,
 } from '@nestjs/websockets';
-import { Socket } from 'socket.io';
-import { SocketService } from './socket.service';
+import { Socket, Server } from 'socket.io';
 
 @WebSocketGateway()
 export class SocketGateway implements OnGatewayConnection {
   @WebSocketServer()
-  private server: Socket;
+  private server: Server;
 
-  constructor(private readonly socketService: SocketService) {}
 
   handleConnection(socket: Socket): void {
-    this.socketService.handleConnection(socket);
+    // Handle new connection
+  }
+
+
+
+  @SubscribeMessage('joinSalon')
+  handleJoinSalon(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() salonId: string
+  ): void {
+    client.join(salonId);
   }
 
   emit(event: string, payload: any): void {
     this.server.emit(event, payload);
   }
-  // Implement other Socket.IO event handlers and message handlers
 }
