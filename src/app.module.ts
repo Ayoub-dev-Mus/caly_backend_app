@@ -99,8 +99,9 @@ import { MongooseModule } from '@nestjs/mongoose';
     DevicesTokensModule,
     RedisModule,
     SocketModule,
-    
+
   ],
+  //test
   controllers: [AppController],
 })
 export class AppModule {}
