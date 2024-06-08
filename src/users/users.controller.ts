@@ -11,6 +11,7 @@ import {
   UseGuards,
   UploadedFile,
   UseInterceptors,
+  Post,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -25,25 +26,28 @@ import { User } from './entities/user.entity';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { UpdateResult } from 'typeorm';
 import { UpdatePasswordDto } from './dto/update-password-dto';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   @Get()
   async findAll(
     @Query('page') page?: number,
     @Query('pageSize') pageSize?: number,
     @Query('filter') filter?: string,
+    @Query('role') role?: string,
   ) {
     try {
-      const users = await this.usersService.findAll(page, pageSize, filter);
+      const users = await this.usersService.findAll(page, pageSize, filter, role);
       return users;
     } catch (error) {
-      new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
+
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
@@ -54,6 +58,8 @@ export class UsersController {
       new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
+
+
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER)
@@ -70,6 +76,32 @@ export class UsersController {
       );
 
       return uploadedImage;
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+  
+  @Post('create-staff')
+  async createStaff(@Body() createUserDto: CreateUserDto) {
+    try {
+      const user = await this.usersService.createStaff(createUserDto);
+      if (!user) {
+        throw new HttpException('Error creating staff', HttpStatus.BAD_REQUEST);
+      }
+      return user;
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Post('create-store-owner')
+  async createStoreOwner(@Body() createUserDto: CreateUserDto) {
+    try {
+      const user = await this.usersService.createStoreOwner(createUserDto);
+      if (!user) {
+        throw new HttpException('Error creating store owner', HttpStatus.BAD_REQUEST);
+      }
+      return user;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }

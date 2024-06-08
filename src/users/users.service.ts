@@ -8,6 +8,8 @@ import { JwtService } from '@nestjs/jwt';
 import { UpdatePasswordDto } from './dto/update-password-dto';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { Multer } from 'multer';
+import * as admin from 'firebase-admin';
+import { Role } from './enums/role';
 
 @Injectable()
 export class UsersService {
@@ -15,7 +17,7 @@ export class UsersService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async uploadProfileImage(file: Multer.File): Promise<any> {
     try {
@@ -74,19 +76,52 @@ export class UsersService {
     page?: number,
     pageSize?: number,
     filter?: string,
+    role?: string,
   ): Promise<User[]> {
     try {
       let queryBuilder = this.userRepository.createQueryBuilder('user');
+
+      // Apply filter if it exists
       if (filter) {
         queryBuilder = this.applyFilter(queryBuilder, filter);
       }
+
+
+      if (role) {
+        queryBuilder = queryBuilder.andWhere('user.role = :role', { role });
+      }
+
+      // Apply pagination
       const users = await queryBuilder
         .skip((page - 1) * pageSize)
         .take(pageSize)
         .getMany();
+
       return users;
     } catch (error) {
       return error.message;
+    }
+  }
+
+  async createStaff(createUserDto: CreateUserDto): Promise<User | null> {
+    try {
+      createUserDto.role = Role.STAFF
+      const user = await this.create(createUserDto);
+      return user;
+    } catch (error) {
+      console.error('Error creating staff:', error);
+      return null;
+    }
+  }
+
+  async createStoreOwner(createUserDto: CreateUserDto): Promise<User | null> {
+    try {
+      createUserDto.role = Role.STORE_OWNER
+      const user = await this.create(createUserDto);
+      return user;
+    } catch (error) {
+      console.error('Error creating store owner:', error);
+      return null;
     }
   }
 
@@ -103,7 +138,7 @@ export class UsersService {
     }
   }
 
-  async findOneByEmailJoinedWithStore(  email: string): Promise<User> {
+  async findOneByEmailJoinedWithStore(email: string): Promise<User> {
     try {
       const user = await this.userRepository.findOne({
         where: { email: email },

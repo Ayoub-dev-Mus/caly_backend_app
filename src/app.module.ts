@@ -34,6 +34,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { RedisModule } from './redis/redis.module';
 import { SocketModule } from './socket/socket.module';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ChatsModule } from './chats/chats.module';
 
 @Module({
   providers: [
@@ -51,7 +52,7 @@ import { MongooseModule } from '@nestjs/mongoose';
     {
       ...JwtModule.register({
         secret: process.env.JWT_SECRET,
-        signOptions: { expiresIn: '15m' },
+        signOptions: { expiresIn: '2d' },
       }),
       global: true,
     },
@@ -99,6 +100,7 @@ import { MongooseModule } from '@nestjs/mongoose';
     DevicesTokensModule,
     RedisModule,
     SocketModule,
+    ChatsModule,
 
   ],
 
