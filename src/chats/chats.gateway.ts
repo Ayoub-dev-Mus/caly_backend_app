@@ -9,7 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 
-@WebSocketGateway()
+@WebSocketGateway({ namespace: '/chats' })
 export class ChatsGateway implements OnGatewayConnection {
   @WebSocketServer()
   private server: Server;
@@ -22,7 +22,9 @@ export class ChatsGateway implements OnGatewayConnection {
     @ConnectedSocket() client: Socket,
     @MessageBody() salonId: string
   ): void {
+
     client.join(salonId);
+
   }
 
   emit(event: string, payload: any): void {
