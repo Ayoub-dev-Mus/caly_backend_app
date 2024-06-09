@@ -15,17 +15,6 @@ export class SocketGateway implements OnGatewayConnection {
 
 
   handleConnection(socket: Socket): void {
-    // Handle new connection
-  }
-
-
-
-  @SubscribeMessage('joinSalon')
-  handleJoinSalon(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() salonId: string
-  ): void {
-    client.join(salonId);
   }
 
   emit(event: string, payload: any): void {

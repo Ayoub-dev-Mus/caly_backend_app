@@ -12,12 +12,12 @@ export class ChatsService {
   constructor(
     @InjectModel(Chat.name) private chatModel: Model<ChatDocument>,
     private readonly chatsGateway: ChatsGateway,
-  ) {}
+  ) { }
 
   async create(createChatDto: CreateChatDto): Promise<Chat> {
     const createdChat = new this.chatModel(createChatDto);
     const chat = await createdChat.save();
-    this.chatsGateway.emitToSalon(chat.store.toString(), 'newMessage', chat);
+    this.chatsGateway.emitToRoom(chat.store.toString(), 'newMessage', chat);
     return chat;
   }
 
