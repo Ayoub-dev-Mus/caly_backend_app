@@ -17,7 +17,6 @@ export class ChatsService {
   async create(createChatDto: CreateChatDto): Promise<Chat> {
     const createdChat = new this.chatModel(createChatDto);
     const chat = await createdChat.save();
-    this.chatsGateway.emitToRoom(chat.store.toString(), 'newMessage', chat);
     return chat;
   }
 
