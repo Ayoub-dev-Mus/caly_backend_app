@@ -11,7 +11,6 @@ import { CreateChatDto } from './dto/create-chat.dto';
 export class ChatsService {
   constructor(
     @InjectModel(Chat.name) private chatModel: Model<ChatDocument>,
-    private readonly chatsGateway: ChatsGateway,
   ) { }
 
   async create(createChatDto: CreateChatDto): Promise<Chat> {
@@ -23,6 +22,14 @@ export class ChatsService {
   async findAllByStore(storeId: Types.ObjectId): Promise<Chat[]> {
     return this.chatModel.find({ store: storeId }).exec();
   }
+
+  async findAllInvolvingUser(storeId: number, userId: Types.ObjectId): Promise<any[]> {
+    return this.chatModel.find({
+      store: storeId,
+      $or: [{ sender: userId }, { receiver: userId }],
+    }).exec();
+  }
+
 
   async findAllBetweenUsers(storeId: Types.ObjectId, user1: Types.ObjectId, user2: Types.ObjectId): Promise<Chat[]> {
     return this.chatModel.find({

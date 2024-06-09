@@ -12,9 +12,8 @@ export class Chat {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   receiver: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Store', required: true })
-  store: Types.ObjectId;
-
+  @Prop({ type: Number, required: true })
+  store: number;
   @Prop({ required: true })
   message: string;
 

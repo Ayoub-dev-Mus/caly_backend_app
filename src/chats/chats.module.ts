@@ -5,12 +5,13 @@ import { ChatsGateway } from './chats.gateway';
 import { Chat, ChatSchema } from './entities/chat.shema';
 import { ChatsController } from './chats.controller';
 
-
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Chat.name, schema: ChatSchema }]),
+
   ],
-  providers: [ChatsGateway, ChatsService],
+  providers: [ChatsService, ChatsGateway],
+  exports: [ChatsService,],
   controllers: [ChatsController],
 })
-export class ChatsModule {}
+export class ChatsModule { }
