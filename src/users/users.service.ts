@@ -71,13 +71,12 @@ export class UsersService {
       return null;
     }
   }
-
   async findAll(
     page?: number,
     pageSize?: number,
     filter?: string,
     role?: string,
-  ): Promise<User[]> {
+  ): Promise<{ users: User[]; totalUser: number }> {
     try {
       let queryBuilder = this.userRepository.createQueryBuilder('user');
 
@@ -86,10 +85,12 @@ export class UsersService {
         queryBuilder = this.applyFilter(queryBuilder, filter);
       }
 
-
       if (role) {
         queryBuilder = queryBuilder.andWhere('user.role = :role', { role });
       }
+
+      // Fetch total count of users
+      const totalUser = await queryBuilder.getCount();
 
       // Apply pagination
       const users = await queryBuilder
@@ -97,11 +98,12 @@ export class UsersService {
         .take(pageSize)
         .getMany();
 
-      return users;
+      return { users, totalUser };
     } catch (error) {
-      return error.message;
+      return { users: [], totalUser: 0 };
     }
   }
+
 
   async createStaff(createUserDto: CreateUserDto): Promise<User | null> {
     try {

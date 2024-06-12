@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, OneToMany } from 'typeorm';
+import { CreateDateColumn, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 import { Length, IsString } from 'class-validator';
 
@@ -61,7 +61,9 @@ export class User {
   @IsString()
   phoneNumber: string;
 
-  //code
+  @CreateDateColumn({ type: 'timestamp', nullable: true })
+  createdAt: Date;
+
   @Column({ nullable: true })
   @IsString()
   refreshToken: string;

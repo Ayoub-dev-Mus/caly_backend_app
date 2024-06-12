@@ -80,6 +80,7 @@ export class BookingsService {
     }
   }
 
+  
   async findAllBookingByStore(
     user: User,
     createdAt?: Date,
