@@ -9,7 +9,9 @@ import {
   PrimaryGeneratedColumn,
   OneToOne,
   ManyToOne,
+  Column,
 } from 'typeorm';
+import { BookingStatus } from '../enum/booking.status';
 
 @Entity()
 export class Booking {
@@ -27,6 +29,9 @@ export class Booking {
 
   @ManyToOne(() => Specialist, (specialist) => specialist.bookings)
   specialist: Specialist;
+
+  @Column({nullable:true})
+  status:BookingStatus
 
   @ManyToOne(() => User, (user) => user.bookings)
   user: User;

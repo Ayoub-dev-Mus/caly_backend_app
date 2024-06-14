@@ -6,6 +6,7 @@ import { ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { User } from 'src/users/entities/user.entity';
+import { BookingStatus } from '../enum/booking.status';
 
 export class CreateBookingDto {
   @ApiProperty()
@@ -17,6 +18,12 @@ export class CreateBookingDto {
   @ValidateNested()
   @Type(() => Store)
   store: Store;
+
+
+  @ApiProperty()
+  status: BookingStatus;
+
+
 
   @ApiProperty()
   @ValidateNested()

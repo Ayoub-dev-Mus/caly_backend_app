@@ -12,7 +12,7 @@ import {
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { GetUser } from '../common/jwtMiddlware';
 import { User } from 'src/users/entities/user.entity';
 import { FindManyOptions } from 'typeorm';
@@ -21,13 +21,13 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { HasRoles } from 'src/common/role.decorator';
 import { Role } from 'src/users/enums/role';
-import { Store } from 'src/stores/entities/store.entity';
 
 @ApiTags('bookings')
 @Controller('bookings')
 export class BookingsController {
-  constructor(private readonly bookingsService: BookingsService) {}
+  constructor(private readonly bookingsService: BookingsService) { }
 
+  @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER)
   @Post()
@@ -35,20 +35,20 @@ export class BookingsController {
     return this.bookingsService.create(createBookingDto, user);
   }
 
+  @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER)
   @Get()
   async findAll(
     @GetUser() user: User,
-    @Query('createdAt') createdAtString: string, // Receive createdAt as string
+    @Query('createdAt') createdAtString: string,
     @Query('storeName') storeName: string,
     @Query() query: any,
   ): Promise<Booking[]> {
-    const { skip, take } = query; // Destructure skip and take from query
+    const { skip, take } = query;
 
     const options: FindManyOptions<Booking> = {};
 
-    // Convert skip and take to numbers if provided
     if (skip !== undefined) {
       options.skip = parseInt(skip, 10);
     }
@@ -56,24 +56,25 @@ export class BookingsController {
       options.take = parseInt(take, 10);
     }
 
-    // This part remains unchanged
     let createdAt: Date | undefined;
     if (createdAtString) {
-      createdAt = new Date(createdAtString); // Parse the string to a Date object
+      createdAt = new Date(createdAtString);
     }
 
     return this.bookingsService.findAll(user, createdAt, storeName, options);
   }
 
+  @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)
   @Get('completed-sum')
   getCompletedBookingSumByStore(
     @GetUser() user: User,
-  ): Promise<{ storeId: string; completedBookingSum: number }[]> {
+  ): Promise<{ total: number }> {
     return this.bookingsService.getCompletedBookingSumByStore(user);
   }
 
+  @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)
   @Get('store')
@@ -81,15 +82,28 @@ export class BookingsController {
     return this.bookingsService.findAllBookingByStore(user);
   }
 
+  @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)
   @Get('pending-sum')
   getPendingBookingSumByStore(
     @GetUser() user: User,
-  ): Promise<{ storeId: string; pendingBookingSum: number }[]> {
+  ): Promise<{ total: number }> {
     return this.bookingsService.getPendingBookingSumByStore(user);
   }
 
+  @ApiBearerAuth('access-token')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)
+  @Get('confirmed-sum')
+  getConfirmedBookingSumByStore(
+    @GetUser() user: User,
+  ): Promise<{ total: number }> {
+    return this.bookingsService.getConfirmedBookingSumByStore(user);
+  }
+
+
+  @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)
   @Get('by-store')
@@ -97,16 +111,25 @@ export class BookingsController {
     return this.bookingsService.findAllByStoreWithUser(user);
   }
 
+  @ApiBearerAuth('access-token')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.USER)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.bookingsService.findOne(+id);
   }
 
+  @ApiBearerAuth('access-token')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.USER)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateBookingDto: UpdateBookingDto) {
     return this.bookingsService.update(+id, updateBookingDto);
   }
 
+  @ApiBearerAuth('access-token')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.USER)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.bookingsService.remove(+id);

@@ -28,6 +28,10 @@ async function bootstrap() {
     .setTitle('Caly')
     .setDescription('DEV API')
     .setVersion('1.0')
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'access-token',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('caly', app, document);

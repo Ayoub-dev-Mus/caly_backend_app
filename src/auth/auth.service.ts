@@ -207,7 +207,7 @@ export class AuthService {
     address: string,
     phoneNumber: string,
     profilePicture: string = null,
-    storeId: number = null,
+    store: number = null,
   ) {
     const [token, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
@@ -222,7 +222,7 @@ export class AuthService {
           phoneNumber,
           profilePicture,
           role,
-          storeId,
+          store,
         },
         {
           secret: process.env.JWT_SECRET,
@@ -241,7 +241,7 @@ export class AuthService {
           phoneNumber,
           profilePicture,
           role,
-          storeId,
+          store,
         },
         {
           secret: process.env.JWT_SECRET,
@@ -309,8 +309,6 @@ export class AuthService {
       const otp = this.generateNumericOTP(6);
 
       await this.sendPasswordResetEmail(user.email, otp);
-
-      // Store the OTP in the in-memory store
       this.otpStore.set(user.id, otp);
     } catch (error) {
       Logger.error('Error during forgot password:', error);

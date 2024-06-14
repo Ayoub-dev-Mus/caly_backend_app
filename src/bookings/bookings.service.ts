@@ -5,17 +5,19 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Between, FindManyOptions, ILike, Repository } from 'typeorm';
 import { Booking } from './entities/booking.entity';
 import { User } from 'src/users/entities/user.entity';
+import { BookingStatus } from './enum/booking.status';
 
 @Injectable()
 export class BookingsService {
   constructor(
     @InjectRepository(Booking)
     private readonly bookingRepository: Repository<Booking>,
-  ) {}
+  ) { }
 
   async create(createBookingDto: CreateBookingDto, user: User) {
     try {
       createBookingDto.user = user;
+      createBookingDto.status = BookingStatus.CONFIRMED
       Logger.log(createBookingDto);
       const newBooking = this.bookingRepository.create(createBookingDto);
       return await this.bookingRepository.save(newBooking);
@@ -80,7 +82,7 @@ export class BookingsService {
     }
   }
 
-  
+
   async findAllBookingByStore(
     user: User,
     createdAt?: Date,
@@ -184,53 +186,55 @@ export class BookingsService {
       throw new Error(`Error removing booking with ID ${id}: ${error.message}`);
     }
   }
-  async getCompletedBookingSumByStore(
-    user: User,
-  ): Promise<{ storeId: string; completedBookingSum: number }[]> {
+  async getCompletedBookingSumByStore(user: User): Promise<{ total: number }> {
     try {
       const bookingSumQuery = await this.bookingRepository
         .createQueryBuilder('booking')
-        .leftJoin('booking.store', 'store')
-        .select('store.id', 'storeId')
-        .addSelect('COUNT(booking.id)', 'completedBookingSum')
-        .where('booking.userId = :userId', { userId: user.id })
-        .andWhere("booking.status = 'COMPLETED'")
-        .groupBy('store.id')
-        .getRawMany();
+        .select('COUNT(booking.id)', 'total')
+        .where('booking.storeId = :storeId', { storeId: user.store })
+        .andWhere('booking.status = :status', { status: 'COMPLETED' })
+        .getRawOne();
 
-      return bookingSumQuery;
+      return { total: parseInt(bookingSumQuery.total, 10) };
     } catch (error) {
-      Logger.error(
-        `Error getting completed booking sum by store: ${error.message}`,
-      );
-      throw new Error(
-        `Error getting completed booking sum by store: ${error.message}`,
-      );
+      Logger.error(`Error getting completed booking sum by store: ${error.message}`);
+      throw new Error(`Error getting completed booking sum by store: ${error.message}`);
     }
   }
 
-  async getPendingBookingSumByStore(
-    user: User,
-  ): Promise<{ storeId: string; pendingBookingSum: number }[]> {
+
+  async getConfirmedBookingSumByStore(user: User): Promise<{ total: number }> {
+    try {
+
+
+      const bookingSumQuery = await this.bookingRepository
+        .createQueryBuilder('booking')
+        .select('COUNT(booking.id)', 'total')
+        .where('booking.storeId = :storeId', { storeId: user.store })
+        .andWhere('booking.status = :status', { status: 'CONFIRMED' })
+        .getRawOne();
+
+      return { total: parseInt(bookingSumQuery.total, 10) };
+    } catch (error) {
+      Logger.error(`Error getting confirmed booking sum by store: ${error.message}`);
+      throw new Error(`Error getting confirmed booking sum by store: ${error.message}`);
+    }
+  }
+
+
+  async getPendingBookingSumByStore(user: User): Promise<{ total: number }> {
     try {
       const bookingSumQuery = await this.bookingRepository
         .createQueryBuilder('booking')
-        .leftJoin('booking.store', 'store')
-        .select('store.id', 'storeId')
-        .addSelect('COUNT(booking.id)', 'pendingBookingSum')
-        .where('booking.userId = :userId', { userId: user.id })
-        .andWhere("booking.status = 'PENDING'")
-        .groupBy('store.id')
-        .getRawMany();
+        .select('COUNT(booking.id)', 'total')
+        .where('booking.storeId = :storeId', { storeId: user.store })
+        .andWhere('booking.status = :status', { status: 'PENDING' })
+        .getRawOne();
 
-      return bookingSumQuery;
+      return { total: parseInt(bookingSumQuery.total, 10) };
     } catch (error) {
-      Logger.error(
-        `Error getting pending booking sum by store: ${error.message}`,
-      );
-      throw new Error(
-        `Error getting pending booking sum by store: ${error.message}`,
-      );
+      Logger.error(`Error getting pending booking sum by store: ${error.message}`);
+      throw new Error(`Error getting pending booking sum by store: ${error.message}`);
     }
   }
 
