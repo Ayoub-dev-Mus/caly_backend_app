@@ -238,6 +238,7 @@ export class BookingsService {
     }
   }
 
+  //to master
   async getBookingSumByStore(
     user: User,
   ): Promise<{ storeId: string; bookingSum: number }[]> {
