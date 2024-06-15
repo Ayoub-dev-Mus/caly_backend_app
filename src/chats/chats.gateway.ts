@@ -48,19 +48,13 @@ export class ChatsGateway implements OnGatewayInit, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('sendMessage')
-  async handleMessage(@MessageBody() data: { storeId: number, senderId: string | Types.ObjectId, receiverId: string | Types.ObjectId, message: string }, @ConnectedSocket() client: Socket) {
+  async handleMessage(@MessageBody() data: { storeId: number, senderId: string, receiverId: string, message: string }, @ConnectedSocket() client: Socket) {
     try {
       let { storeId, senderId, receiverId } = data;
 
 
 
-      if (!(senderId instanceof Types.ObjectId)) {
-        senderId = new Types.ObjectId(senderId);
-      }
 
-      if (!(receiverId instanceof Types.ObjectId)) {
-        receiverId = new Types.ObjectId(receiverId);
-      }
 
       const receiverSocketId = this.users.get(receiverId.toString());
       if (receiverSocketId) {

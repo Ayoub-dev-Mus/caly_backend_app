@@ -4,10 +4,10 @@ import { Types } from 'mongoose';
 
 export class CreateChatDto {
   @IsNotEmpty()
-  sender: Types.ObjectId;
+  sender: string;
 
   @IsNotEmpty()
-  receiver: Types.ObjectId;
+  receiver: string;
 
   @IsNotEmpty()
   store: number;

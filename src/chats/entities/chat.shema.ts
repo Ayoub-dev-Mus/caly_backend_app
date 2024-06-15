@@ -6,11 +6,11 @@ export type ChatDocument = Chat & Document;
 
 @Schema()
 export class Chat {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  sender: Types.ObjectId;
+  @Prop({ type: String, ref: 'User', required: true })
+  sender: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  receiver: Types.ObjectId;
+  @Prop({ type: String, ref: 'User', required: true })
+  receiver: string;
 
   @Prop({ type: Number, required: true })
   store: number;

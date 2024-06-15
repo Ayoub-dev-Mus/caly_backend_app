@@ -18,13 +18,24 @@ export class ChatsController {
   }
 
   @Get('users/test')
-  async findChatUsers(@Body() userId: string): Promise<User[]> {
-    return this.chatsService.findChatUsers(userId);
+  async findChatUsers(@Body() loggedInUser: { userId: string }): Promise<User[]> {
+    return this.chatsService.findChatUsers(loggedInUser);
+  }
+
+
+  @Get('/clear')
+  async clearChats(): Promise<void> {
+    await this.chatsService.clearChats();
+  }
+
+  @Get('/refill')
+  async refillChats(): Promise<void> {
+    await this.chatsService.refillChats();
   }
 
   @Get(':storeId')
   async findAllByStore(@Param('storeId') storeId: string) {
-    return this.chatsService.findAllByStore(new Types.ObjectId(storeId));
+    return this.chatsService.findAllByStore(storeId);
   }
 
   @Get(':storeId/:user1/:user2')
@@ -34,9 +45,9 @@ export class ChatsController {
     @Param('user2') user2: string,
   ) {
     return this.chatsService.findAllBetweenUsers(
-      new Types.ObjectId(storeId),
-      new Types.ObjectId(user1),
-      new Types.ObjectId(user2),
+      storeId,
+      user1,
+      user2,
     );
   }
 }

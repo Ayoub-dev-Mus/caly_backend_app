@@ -89,10 +89,8 @@ export class UsersService {
         queryBuilder = queryBuilder.andWhere('user.role = :role', { role });
       }
 
-      // Fetch total count of users
       let totalUser = await queryBuilder.getCount();
 
-      // Apply pagination if page and pageSize are provided
       let users: User[];
       if (page !== undefined && pageSize !== undefined) {
         users = await queryBuilder
