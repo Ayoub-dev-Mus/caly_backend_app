@@ -1,18 +1,10 @@
-// src/dto/create-chat.dto.ts
-import { IsNotEmpty, IsString } from 'class-validator';
+// src/dto/chat.dto.ts
 import { Types } from 'mongoose';
 
 export class CreateChatDto {
-  @IsNotEmpty()
-  sender: string;
-
-  @IsNotEmpty()
-  receiver: string;
-
-  @IsNotEmpty()
-  store: number;
-
-  @IsNotEmpty()
-  @IsString()
+  senderId: string | Types.ObjectId;
+  receiverId: string | Types.ObjectId;
+  storeId: number;
   message: string;
+  roomId: string;
 }

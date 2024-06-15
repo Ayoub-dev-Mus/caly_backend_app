@@ -2,11 +2,18 @@ import { WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody, Conne
 import { Socket, Server } from 'socket.io';
 import { ChatsService } from './chats.service';
 import { Types } from 'mongoose';
+import { CreateChatDto } from './dto/create-chat.dto';
+
+interface ChatRoom {
+  roomId: string;
+  users: string[]; // User IDs
+}
 
 @WebSocketGateway({ namespace: '/chats' })
 export class ChatsGateway implements OnGatewayInit, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
   private users = new Map<string, string>();
+  private rooms = new Map<string, ChatRoom>(); // Map to store chat rooms
 
   constructor(private readonly chatsService: ChatsService) { }
 
@@ -22,7 +29,6 @@ export class ChatsGateway implements OnGatewayInit, OnGatewayDisconnect {
     });
   }
 
-
   @SubscribeMessage('register')
   async handleRegister(@MessageBody() data: { userId: string | number | Types.ObjectId, storeId: number }, @ConnectedSocket() client: Socket) {
     try {
@@ -30,49 +36,66 @@ export class ChatsGateway implements OnGatewayInit, OnGatewayDisconnect {
       let userId;
 
       storeId = data.storeId;
-      if (typeof data.userId === 'string' || typeof data.userId === 'number') {
-        userId = new Types.ObjectId(data.userId);
-      } else if (data.userId instanceof Types.ObjectId) {
-        userId = data.userId;
-      }
+
+
+      userId = data.userId;
+
 
       this.users.set(userId.toString(), client.id);
       client.emit('registerSuccess', { message: 'Registration successful', userId });
 
-
-      const messages = await this.chatsService.findAllByStore(storeId);
-      client.emit('messageHistory', messages);
+      const rooms = await this.chatsService.findRoomsByUserId(userId); // Fetch existing chat rooms for the user
+      client.emit('rooms', rooms); // Send existing rooms to the client
     } catch (error) {
       client.emit('error', { message: error.message });
     }
   }
 
-  @SubscribeMessage('sendMessage')
-  async handleMessage(@MessageBody() data: { storeId: number, senderId: string, receiverId: string, message: string }, @ConnectedSocket() client: Socket) {
+  @SubscribeMessage('createRoom')
+  async handleCreateRoom(@MessageBody() data: { userId: string, otherUserId: string }, @ConnectedSocket() client: Socket) {
     try {
-      let { storeId, senderId, receiverId } = data;
+      const { userId, otherUserId } = data;
+      const roomId = userId + '-' + otherUserId;
 
-
-
-
-
-      const receiverSocketId = this.users.get(receiverId.toString());
-      if (receiverSocketId) {
-        const chatDto = {
-          store: storeId,
-          sender: senderId,
-          receiver: receiverId,
-          message: data.message,
+      // Check if the room already exists
+      if (!this.rooms.has(roomId)) {
+        // Create a new room
+        const room: ChatRoom = {
+          roomId,
+          users: [userId, otherUserId]
         };
-        await this.chatsService.create(chatDto);
-
-        this.server.to(receiverSocketId).emit('newMessage', { senderId: senderId.toString(), message: data.message });
+        this.rooms.set(roomId, room);
+        client.emit('roomCreated', { roomId });
       } else {
-        client.emit('error', { message: 'User not online' });
+        client.emit('error', { message: 'Room already exists' });
       }
     } catch (error) {
       client.emit('error', { message: error.message });
     }
   }
+  @SubscribeMessage('sendMessage')
+  async handleMessage(@MessageBody() data: CreateChatDto, @ConnectedSocket() client: Socket) {
+    try {
+      const { roomId, senderId, message } = data;
 
+      // Check if the room exists
+      if (this.rooms.has(roomId)) {
+        // Broadcast message to all users in the room
+        const room = this.rooms.get(roomId);
+        room.users.forEach(userId => {
+          const socketId = this.users.get(userId);
+          if (socketId) {
+            this.server.to(socketId).emit('newMessage', { senderId, message });
+          }
+        });
+
+        // Save the chat message to the database
+        await this.chatsService.create(data); // Assuming create method of ChatsService accepts CreateChatDto directly
+      } else {
+        client.emit('error', { message: 'Room does not exist' });
+      }
+    } catch (error) {
+      client.emit('error', { message: error.message });
+    }
+  }
 }

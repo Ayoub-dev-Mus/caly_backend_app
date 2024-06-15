@@ -50,23 +50,29 @@ export class ChatsService {
       throw error;
     }
   }
-
+  async findRoomsByUserId(userId: string): Promise<string[]> {
+    // Assuming you have a model method to find chat rooms based on user ID
+    const rooms = await this.chatModel.find({ $or: [{ senderId: userId }, { receiverId: userId }] }).distinct('roomId').exec();
+    return rooms;
+  }
   private async populateChats(): Promise<void> {
     try {
       // Example: Create and save chats with existing user UUIDs
       // Replace UUIDs with actual UUIDs of existing users
       const chat1 = await this.create({
-        sender: 'aecb394e-6400-4d9a-b9b1-c77cbb5502c8', // UUID of user1
-        receiver: 'a29dc92c-786d-4d71-b9e9-1f5d734f7b23', // UUID of user2
-        store: 1,
+        senderId: 'aecb394e-6400-4d9a-b9b1-c77cbb5502c8', // UUID of user1
+        receiverId: 'a29dc92c-786d-4d71-b9e9-1f5d734f7b23', // UUID of user2
+        storeId: 1,
         message: 'Hello from user1 to user2',
+        roomId:"33333"
       });
 
       const chat2 = await this.create({
-        sender: 'a29dc92c-786d-4d71-b9e9-1f5d734f7b23', // UUID of user2
-        receiver: 'aecb394e-6400-4d9a-b9b1-c77cbb5502c8', // UUID of user1
-        store: 1,
+        senderId: 'a29dc92c-786d-4d71-b9e9-1f5d734f7b23', // UUID of user2
+        receiverId: 'aecb394e-6400-4d9a-b9b1-c77cbb5502c8', // UUID of user1
+        storeId: 1,
         message: 'Hello from user2 to user1',
+        roomId:"444444"
       });
 
       console.log('Chats created successfully:', chat1, chat2);
@@ -89,8 +95,8 @@ export class ChatsService {
 
       const userSet = new Set<string>();
       chats.forEach(chat => {
-        userSet.add(chat.sender.toString());
-        userSet.add(chat.receiver.toString());
+        userSet.add(chat.senderId.toString());
+        userSet.add(chat.receiverId.toString());
       });
 
       // Remove the logged-in user from the set
