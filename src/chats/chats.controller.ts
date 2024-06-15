@@ -1,18 +1,25 @@
 // src/chats/chats.controller.ts
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Req } from '@nestjs/common';
 import { ChatsService } from './chats.service';
 import { Types } from 'mongoose';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
+import { User } from 'src/users/entities/user.entity';
 
 @ApiTags('chats')
 @Controller('chats')
 export class ChatsController {
-  constructor(private readonly chatsService: ChatsService) {}
+  constructor(private readonly chatsService: ChatsService) { }
 
   @Post()
   async create(@Body() createChatDto: CreateChatDto) {
     return this.chatsService.create(createChatDto);
+  }
+
+  @Get('users/test')
+  async findChatUsers(@Body() userId: string): Promise<User[]> {
+    return this.chatsService.findChatUsers(userId);
   }
 
   @Get(':storeId')

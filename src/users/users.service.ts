@@ -71,6 +71,7 @@ export class UsersService {
       return null;
     }
   }
+
   async findAll(
     page?: number,
     pageSize?: number,
@@ -80,7 +81,6 @@ export class UsersService {
     try {
       let queryBuilder = this.userRepository.createQueryBuilder('user');
 
-      // Apply filter if it exists
       if (filter) {
         queryBuilder = this.applyFilter(queryBuilder, filter);
       }
@@ -90,16 +90,23 @@ export class UsersService {
       }
 
       // Fetch total count of users
-      const totalUser = await queryBuilder.getCount();
+      let totalUser = await queryBuilder.getCount();
 
-      // Apply pagination
-      const users = await queryBuilder
-        .skip((page - 1) * pageSize)
-        .take(pageSize)
-        .getMany();
+      // Apply pagination if page and pageSize are provided
+      let users: User[];
+      if (page !== undefined && pageSize !== undefined) {
+        users = await queryBuilder
+          .skip((page - 1) * pageSize)
+          .take(pageSize)
+          .getMany();
+      } else {
+        // If page and pageSize are not provided, fetch all users
+        users = await queryBuilder.getMany();
+      }
 
       return { users, totalUser };
     } catch (error) {
+      console.error('Error fetching users:', error);
       return { users: [], totalUser: 0 };
     }
   }
