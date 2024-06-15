@@ -3,10 +3,11 @@ import { Socket, Server } from 'socket.io';
 import { ChatsService } from './chats.service';
 import { Types } from 'mongoose';
 import { CreateChatDto } from './dto/create-chat.dto';
+import { v4 as uuidv4 } from 'uuid';
 
 interface ChatRoom {
   roomId: string;
-  users: string[]; // User IDs
+  users: string[];
 }
 
 @WebSocketGateway({ namespace: '/chats' })
@@ -55,11 +56,19 @@ export class ChatsGateway implements OnGatewayInit, OnGatewayDisconnect {
   async handleCreateRoom(@MessageBody() data: { userId: string, otherUserId: string }, @ConnectedSocket() client: Socket) {
     try {
       const { userId, otherUserId } = data;
-      const roomId = userId + '-' + otherUserId;
+      let roomId = '';
 
-      // Check if the room already exists
-      if (!this.rooms.has(roomId)) {
-        // Create a new room
+      // Check if there's already a room between these users
+      for (const [key, room] of this.rooms.entries()) {
+        if (room.users.includes(userId) && room.users.includes(otherUserId)) {
+          roomId = key;
+          break;
+        }
+      }
+
+      // If no existing room, create a new one
+      if (!roomId) {
+        roomId = `room_${uuidv4()}`;
         const room: ChatRoom = {
           roomId,
           users: [userId, otherUserId]
@@ -73,6 +82,8 @@ export class ChatsGateway implements OnGatewayInit, OnGatewayDisconnect {
       client.emit('error', { message: error.message });
     }
   }
+
+
   @SubscribeMessage('sendMessage')
   async handleMessage(@MessageBody() data: CreateChatDto, @ConnectedSocket() client: Socket) {
     try {
@@ -89,8 +100,7 @@ export class ChatsGateway implements OnGatewayInit, OnGatewayDisconnect {
           }
         });
 
-        // Save the chat message to the database
-        await this.chatsService.create(data); // Assuming create method of ChatsService accepts CreateChatDto directly
+        await this.chatsService.create(data);
       } else {
         client.emit('error', { message: 'Room does not exist' });
       }
