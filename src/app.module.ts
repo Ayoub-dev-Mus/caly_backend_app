@@ -34,7 +34,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { RedisModule } from './redis/redis.module';
 import { SocketModule } from './socket/socket.module';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ChatsModule } from './chats/chats.module';
+import { ChatModule } from './chats/chats.module';
 
 @Module({
   providers: [
@@ -100,7 +100,7 @@ import { ChatsModule } from './chats/chats.module';
     DevicesTokensModule,
     RedisModule,
     SocketModule,
-    ChatsModule,
+    ChatModule,
 
   ],
 

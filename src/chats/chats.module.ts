@@ -1,19 +1,30 @@
+// src/chat/chat.module.ts
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ChatsService } from './chats.service';
-import { ChatsGateway } from './chats.gateway';
-import { Chat, ChatSchema } from './entities/chat.shema';
-import { ChatsController } from './chats.controller';
-import { UsersModule } from 'src/users/users.module';
+import { Room, RoomSchema } from './entities/room.schema';
+import { Message, MessageSchema } from './entities/chat.shema';
+import { MessagesController } from './chats.controller';
+import { RoomsController } from './room.controller';
+import { ChatGateway } from './chats.gateway';
+import { MessagesService } from './chats.service';
+import { RoomsService } from './room.service';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Chat.name, schema: ChatSchema }]),
-    UsersModule
+
+    MongooseModule.forFeature([{ name: Room.name, schema: RoomSchema }, { name: Message.name, schema: MessageSchema }]),
 
   ],
-  providers: [ChatsService, ChatsGateway , UsersModule],
-  exports: [ChatsService,],
-  controllers: [ChatsController],
+  providers: [
+    RoomsService,
+    MessagesService,
+    ChatGateway,
+  ],
+  controllers: [
+    RoomsController,
+    MessagesController,
+  ],
+  exports: [],
 })
-export class ChatsModule { }
+export class ChatModule {}

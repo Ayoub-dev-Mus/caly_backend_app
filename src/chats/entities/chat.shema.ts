@@ -1,28 +1,23 @@
-// src/schemas/chat.schema.ts
+// src/chat/messages/message.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-
-export type ChatDocument = Chat & Document;
+import { Document, Types } from 'mongoose';
 
 @Schema()
-export class Chat {
-  @Prop({ type: String, required: true }) // Assuming sender and receiver IDs are string type
-  senderId: string;
-
-  @Prop({ type: String, required: true }) // Assuming sender and receiver IDs are string type
-  receiverId: string;
-
-  @Prop({ type: Number, required: true })
-  storeId: number;
+export class Message extends Document {
+  @Prop({ type: Types.ObjectId, ref: 'Room', required: true })
+  roomId: Types.ObjectId;
 
   @Prop({ required: true })
-  message: string;
+  sender: string;
 
-  @Prop({ required: true }) // Assuming room ID is required for each chat
-  roomId: string;
+  @Prop({ required: true })
+  receiverId: string; // New field for receiver ID
+
+  @Prop({ required: true }) // Content is required
+  content: string;
 
   @Prop({ default: Date.now })
-  createdAt: Date;
+  timestamp: Date;
 }
 
-export const ChatSchema = SchemaFactory.createForClass(Chat);
+export const MessageSchema = SchemaFactory.createForClass(Message);
