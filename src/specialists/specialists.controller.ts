@@ -13,11 +13,12 @@ import { SpecialistsService } from './specialists.service';
 import { UpdateSpecialistDto } from './dto/update-specialist.dto';
 import CreateSpecialistDto from './dto/create-specialist.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { Specialist } from './entities/specialist.entity';
 
 @ApiTags('Specialists')
 @Controller('specialists')
 export class SpecialistsController {
-  constructor(private readonly specialistsService: SpecialistsService) {}
+  constructor(private readonly specialistsService: SpecialistsService) { }
 
   @Post()
   async create(@Body() createSpecialistDto: CreateSpecialistDto) {
@@ -38,6 +39,14 @@ export class SpecialistsController {
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
+  }
+
+  @Get('store/:storeId/service/:serviceId')
+  async findSpecialistsByStoreAndServiceId(
+    @Param('storeId') storeId: string,
+    @Param('serviceId') serviceId: string,
+  ): Promise<Specialist[]> {
+    return this.specialistsService.findSpecialistsByStoreAndServiceId(+storeId, +serviceId);
   }
 
   @Get('service/:serviceId')

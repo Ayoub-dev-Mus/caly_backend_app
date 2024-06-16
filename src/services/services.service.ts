@@ -40,23 +40,33 @@ export class ServicesService {
       throw new Error(error.message);
     }
   }
-
+  async findByStoreId(storeId: number): Promise<Service[]> {
+    try {
+      const services = await this.serviceRepository.find({ where: { store: { id: storeId } } });
+      if (services.length === 0) {
+        throw new NotFoundException(`No services found for store with ID ${storeId}`);
+      }
+      return services;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
   async update(
     id: number,
     updateServiceDto: UpdateServiceDto,
   ): Promise<UpdateResult> {
-    try{
+    try {
       return await this.serviceRepository.update(id, updateServiceDto);
-    }catch(error){
+    } catch (error) {
       throw new Error(error.message);
     }
   }
 
   async remove(id: number): Promise<void> {
-   try{
-     await this.serviceRepository.delete(id);
-  }catch(error){
-    throw new Error(error.message);
+    try {
+      await this.serviceRepository.delete(id);
+    } catch (error) {
+      throw new Error(error.message);
+    }
   }
-}
 }

@@ -20,11 +20,12 @@ import { RolesGuard } from 'src/common/guards/role.guard';
 import { Role } from 'src/users/enums/role';
 import { HasRoles } from 'src/common/role.decorator';
 import { ApiTags } from '@nestjs/swagger';
+import { CreateReviewResponseDto } from './dto/create-review-response.dto';
 
 @ApiTags('reviews')
 @Controller('reviews')
 export class ReviewsController {
-  constructor(private readonly reviewsService: ReviewsService) {}
+  constructor(private readonly reviewsService: ReviewsService) { }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER)
@@ -36,6 +37,21 @@ export class ReviewsController {
     return await this.reviewsService.create(createReviewDto, user);
   }
 
+  @Get(':id/responses')
+  getResponses(@Param('id') id: number) {
+    return this.reviewsService.getResponsesForReview(id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.USER)
+  @Post(':id/respond')
+  respondToReview(
+    @Param('id') id: number,
+    @Body() createReviewResponseDto: CreateReviewResponseDto,
+    @GetUser() user: User,
+  ) {
+    return this.reviewsService.respondToReview(id, createReviewResponseDto, user);
+  }
   @Get()
   async findAll(
     @Query('storeId') storeId?: number,
@@ -48,8 +64,7 @@ export class ReviewsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.STORE_OWNER)
   @Get('store')
-  async findAllReviewByStore(@GetUser() user:User)
-  {
+  async findAllReviewByStore(@GetUser() user: User) {
     return await this.reviewsService.findAllReviewsByStore(user);
   }
 

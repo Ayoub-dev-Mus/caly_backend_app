@@ -35,6 +35,7 @@ import { RedisModule } from './redis/redis.module';
 import { SocketModule } from './socket/socket.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ChatModule } from './chats/chats.module';
+import { ReviewResponse } from './reviews/entities/reviewReponse';
 
 @Module({
   providers: [
@@ -80,6 +81,7 @@ import { ChatModule } from './chats/chats.module';
         Review,
         DeviceToken,
         Notification,
+        ReviewResponse
       ],
 
       synchronize: true,

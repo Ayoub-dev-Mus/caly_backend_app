@@ -1,14 +1,17 @@
-import { Store } from 'src/stores/entities/store.entity';
-import { User } from 'src/users/entities/user.entity';
 import {
   BeforeInsert,
   Column,
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Store } from 'src/stores/entities/store.entity';
+import { User } from 'src/users/entities/user.entity';
+import { ReviewResponse } from './reviewReponse';
+
 
 @Entity()
 export class Review {
@@ -32,6 +35,9 @@ export class Review {
 
   @ManyToOne(() => Store, (store) => store.reviews)
   store: Store;
+
+  @OneToMany(() => ReviewResponse, (response) => response.review)
+  responses: ReviewResponse[];
 
   @BeforeInsert()
   async checkRating() {

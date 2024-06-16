@@ -28,6 +28,23 @@ export class BookingsService {
     }
   }
 
+
+  async getAllBookingSumByStore(user: User): Promise<{ total: number }> {
+    try {
+      const bookingSumQuery = await this.bookingRepository
+        .createQueryBuilder('booking')
+        .select('COUNT(booking.id)', 'total')
+        .where('booking.storeId = :storeId', { storeId: user.store })
+        .getRawOne();
+
+      return { total: parseInt(bookingSumQuery.total, 10) };
+    } catch (error) {
+      Logger.error(`Error getting total booking sum by store: ${error.message}`);
+      throw new Error(`Error getting total booking sum by store: ${error.message}`);
+    }
+  }
+
+
   async findAll(
     user: User,
     createdAt?: Date,
@@ -138,7 +155,7 @@ export class BookingsService {
       const bookings = await this.bookingRepository
         .createQueryBuilder('booking')
         .leftJoinAndSelect('booking.user', 'user')
-        .where('booking.storeId = :storeId', { storeId: user.store.id })
+        .where('booking.storeId = :storeId', { storeId: user.store })
         .getMany();
 
       return bookings;

@@ -5,13 +5,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, Repository } from 'typeorm';
 import { Review } from './entities/review.entity';
 import { User } from 'src/users/entities/user.entity';
+import { ReviewResponse } from './entities/reviewReponse';
+import { CreateReviewResponseDto } from './dto/create-review-response.dto';
 
 @Injectable()
 export class ReviewsService {
   constructor(
     @InjectRepository(Review)
     private reviewRepository: Repository<Review>,
-  ) {}
+    @InjectRepository(ReviewResponse)
+    private reviewResponseRepository: Repository<ReviewResponse>,
+  ) { }
 
   async create(createReviewDto: CreateReviewDto, user: User): Promise<Review> {
     try {
@@ -22,6 +26,33 @@ export class ReviewsService {
     } catch (error) {
       throw new Error('Failed to create review' + error.message);
     }
+  }
+
+  async respondToReview(
+    reviewId: number,
+    createReviewResponseDto: CreateReviewResponseDto,
+    user: User,
+  ): Promise<ReviewResponse> {
+    const review = await this.reviewRepository.findOne({ where: { id: reviewId }, relations: ['responses'] });
+    if (!review) {
+      throw new NotFoundException(`Review with id ${reviewId} not found`);
+    }
+
+    const reviewResponse = new ReviewResponse();
+    reviewResponse.response = createReviewResponseDto.response;
+    reviewResponse.user = user;
+    reviewResponse.review = review;
+
+    return this.reviewResponseRepository.save(reviewResponse);
+  }
+
+  async getResponsesForReview(reviewId: number): Promise<ReviewResponse[]> {
+    const review = await this.reviewRepository.findOne({ where: { id: reviewId }, relations: ['responses'] });
+    if (!review) {
+      throw new NotFoundException(`Review with id ${reviewId} not found`);
+    }
+
+    return review.responses;
   }
 
   async findAll(
@@ -60,7 +91,7 @@ export class ReviewsService {
   }
 
   async findAllReviewsByStore(
-    user:User,
+    user: User,
     limit: number = 10,
     offset: number = 0,
   ): Promise<Review[]> {

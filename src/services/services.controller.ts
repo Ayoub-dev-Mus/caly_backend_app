@@ -8,16 +8,21 @@ import {
   Delete,
   HttpException,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { ApiTags } from '@nestjs/swagger';
 import CreateServiceDto from './dto/create-service.dto';
+import { HasRoles } from 'src/common/role.decorator';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/role.guard';
+import { Role } from 'src/users/enums/role';
 
 @ApiTags('Services')
 @Controller('services')
 export class ServicesController {
-  constructor(private readonly servicesService: ServicesService) {}
+  constructor(private readonly servicesService: ServicesService) { }
 
   @Post()
   async create(@Body() createServiceDto: CreateServiceDto) {
@@ -30,6 +35,9 @@ export class ServicesController {
     }
   }
 
+
+
+
   @Get()
   async findAll() {
     try {
@@ -38,6 +46,13 @@ export class ServicesController {
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.USER)
+  @Get('store/:storeId')
+  findByStoreId(@Param('storeId') storeId: number) {
+    return this.servicesService.findByStoreId(storeId);
   }
 
   @Get(':id')

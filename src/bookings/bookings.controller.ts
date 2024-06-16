@@ -85,6 +85,16 @@ export class BookingsController {
   @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)
+  @Get('all-sum')
+  getAllBookingSumByStore(
+    @GetUser() user: User,
+  ): Promise<{ total: number }> {
+    return this.bookingsService.getAllBookingSumByStore(user);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)
   @Get('pending-sum')
   getPendingBookingSumByStore(
     @GetUser() user: User,

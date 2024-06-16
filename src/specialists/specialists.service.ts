@@ -10,7 +10,7 @@ export class SpecialistsService {
   constructor(
     @InjectRepository(Specialist)
     private specialistRepository: Repository<Specialist>,
-  ) {}
+  ) { }
 
   async create(createSpecialistDto: CreateSpecialistDto): Promise<Specialist> {
     const newSpecialist = this.specialistRepository.create(createSpecialistDto);
@@ -42,7 +42,20 @@ export class SpecialistsService {
       where: { services: { id: serviceId } },
     });
   }
-
+  async findSpecialistsByStoreAndServiceId(
+    storeId: number,
+    serviceId: number,
+  ): Promise<Specialist[]> {
+    try {
+      return await this.specialistRepository.find({
+        where: { store: { id: storeId }, services: { id: serviceId } },
+      });
+    } catch (error) {
+      throw new Error(
+        `Failed to find specialists for store ID ${storeId} and service ID ${serviceId}`,
+      );
+    }
+  }
   async update(
     id: number,
     updateSpecialistDto: UpdateSpecialistDto,

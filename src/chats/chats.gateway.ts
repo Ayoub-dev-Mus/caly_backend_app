@@ -17,10 +17,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`Client connected: ${client.id}`);
 
     const token = client.handshake.query.token;
-    if (token) {
+    if (typeof token === 'string') { // Ensure token is a string
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET); // Replace 'your_secret_key' with your actual secret key
-        const user: User = decoded; // Assuming the token payload contains user information
+        const decoded = jwt.verify(token, process.env.JWT_SECRET) as jwt.JwtPayload & User;
+        const user: User = decoded as User;
         this.userSocketMap.set(user.id, { socket: client, user });
         console.log(`User connected: ${user.id}, Socket ID: ${client.id}`);
       } catch (error) {
@@ -32,6 +32,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.disconnect();
     }
   }
+
 
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
