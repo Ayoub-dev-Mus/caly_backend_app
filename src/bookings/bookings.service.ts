@@ -149,7 +149,7 @@ export class BookingsService {
       throw new Error(`Error finding bookings: ${error.message}`);
     }
   }
-
+  //data
   async findAllByStoreWithUser(user: User, options?: FindManyOptions<Booking>) {
     try {
       const bookings = await this.bookingRepository
