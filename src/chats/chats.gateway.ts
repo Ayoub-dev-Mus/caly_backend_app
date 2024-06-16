@@ -2,12 +2,12 @@ import { SubscribeMessage, WebSocketGateway, WebSocketServer, OnGatewayConnectio
 import { Server, Socket } from 'socket.io';
 import { MessagesService } from './chats.service';
 import { User } from 'src/users/entities/user.entity';
+import * as jwt from 'jsonwebtoken';
 import { GetUser } from '../common/jwtMiddlware';
-
 
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  private userSocketMap = new Map<string, Socket>(); // Map to store user/socket pairs
+  private userSocketMap = new Map<string, { socket: Socket, user: User }>(); // Map to store user/socket pairs
 
   constructor(
     private messagesService: MessagesService,
@@ -15,6 +15,22 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleConnection(client: Socket) {
     console.log(`Client connected: ${client.id}`);
+
+    const token = client.handshake.query.token;
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET); // Replace 'your_secret_key' with your actual secret key
+        const user: User = decoded; // Assuming the token payload contains user information
+        this.userSocketMap.set(user.id, { socket: client, user });
+        console.log(`User connected: ${user.id}, Socket ID: ${client.id}`);
+      } catch (error) {
+        console.error('Invalid token:', error);
+        client.disconnect();
+      }
+    } else {
+      console.log('No token provided, disconnecting client');
+      client.disconnect();
+    }
   }
 
   handleDisconnect(client: Socket) {
@@ -27,44 +43,61 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const userId = this.getUserIdFromSocket(socketId);
     if (userId) {
       this.userSocketMap.delete(userId);
+      console.log(`Removed mapping for user: ${userId}, Socket ID: ${socketId}`);
     }
   }
 
   private getUserIdFromSocket(socketId: string): string | undefined {
-    return Array.from(this.userSocketMap.entries())
-      .find(([_, socket]) => socket.id === socketId)?.[0];
+    const userId = Array.from(this.userSocketMap.entries())
+      .find(([_, { socket }]) => socket.id === socketId)?.[0];
+    console.log(`Get user ID from socket: ${socketId}, User ID: ${userId}`);
+    return userId;
   }
 
   @SubscribeMessage('joinRoom')
   async handleJoinRoom(client: Socket, roomId: string) {
+    console.log(`Client ${client.id} joining room: ${roomId}`);
     client.join(roomId);
     const messages = await this.messagesService.findByRoom(roomId);
     client.emit('previousMessages', messages);
+    console.log(`Client ${client.id} joined room: ${roomId}`);
   }
 
   @SubscribeMessage('leaveRoom')
   handleLeaveRoom(client: Socket, roomId: string) {
+    console.log(`Client ${client.id} leaving room: ${roomId}`);
     client.leave(roomId);
+    console.log(`Client ${client.id} left room: ${roomId}`);
   }
 
   @SubscribeMessage('sendMessage')
-  async handleSendMessage(@GetUser() sender: User, @ConnectedSocket() client: Socket, @MessageBody() payload: { roomId: string, receiverId: string, content: string }) {
-    // Check if payload contains the required fields
-    if (!payload.roomId || !payload.receiverId || !payload.content) {
-      throw "error"
+  async handleSendMessage(@ConnectedSocket() client: Socket, @MessageBody() payload: { roomId: string, receiverId: string, content: string }) {
+    console.log(`Received sendMessage from client ${client.id} with payload:`, payload);
+
+    const userId = this.getUserIdFromSocket(client.id);
+    if (!userId) {
+      console.error(`User not authenticated for client ${client.id}`);
+      throw new Error('User not authenticated');
     }
 
-    // Create the message using actual sender and receiver IDs
-    const message = await this.messagesService.create(payload.roomId, "1", payload.receiverId, payload.content);
+    const sender = this.userSocketMap.get(userId).user;
 
-    // Get the receiver's socket based on the receiverId
+    console.log(`Sender: ${sender.id}, Room ID: ${payload.roomId}, Receiver ID: ${payload.receiverId}, Content: ${payload.content}`);
+    if (!payload.roomId || !payload.receiverId || !payload.content) {
+      console.error(`Invalid message payload from client ${client.id}`);
+      throw "error";
+    }
+
+    const message = await this.messagesService.create(payload.roomId, sender.id, payload.receiverId, payload.content);
+    console.log(`Message created: ${message.id}, Content: ${message.content}`);
+
     const receiverSocket = this.userSocketMap.get(payload.receiverId);
     if (receiverSocket) {
-      receiverSocket.emit('message', { sender: "karim", content: message.content });
+      receiverSocket.socket.emit('message', { sender: sender.firstName, content: message.content });
+      console.log(`Message sent to receiver: ${payload.receiverId}, Content: ${message.content}`);
     } else {
-      // If the receiver is not connected, store the message in the database
       await this.messagesService.storeMessage(message);
+      console.log(`Receiver ${payload.receiverId} not connected. Message stored.`);
     }
   }
-
 }
