@@ -48,8 +48,7 @@ export class ServicesController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @HasRoles(Role.ADMIN, Role.USER)
+
   @Get('store/:storeId')
   findByStoreId(@Param('storeId') storeId: number) {
     return this.servicesService.findByStoreId(storeId);
