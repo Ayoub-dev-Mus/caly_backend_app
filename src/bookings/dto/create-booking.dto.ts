@@ -8,6 +8,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { User } from 'src/users/entities/user.entity';
 import { BookingStatus } from '../enum/booking.status';
 
+//Booking Dto
 export class CreateBookingDto {
   @ApiProperty()
   @ValidateNested()
