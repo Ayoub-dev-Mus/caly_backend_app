@@ -43,7 +43,7 @@ export class ReviewsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @HasRoles(Role.ADMIN, Role.USER)
+  @HasRoles(Role.ADMIN, Role.USER , Role.STORE_OWNER , Role.STORE_STAFF)
   @Post(':id/respond')
   respondToReview(
     @Param('id') id: number,
