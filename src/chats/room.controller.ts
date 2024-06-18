@@ -6,10 +6,7 @@ import { RoomsService } from './room.service';
 export class RoomsController {
   constructor(private roomsService: RoomsService) {}
 
-  @Post()
-  create(@Body() body: { name: string }) {
-    return this.roomsService.create(body.name);
-  }
+ 
 
   @Get()
   findAll() {

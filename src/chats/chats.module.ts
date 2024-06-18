@@ -9,17 +9,19 @@ import { RoomsController } from './room.controller';
 import { ChatGateway } from './chats.gateway';
 import { MessagesService } from './chats.service';
 import { RoomsService } from './room.service';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports: [
 
     MongooseModule.forFeature([{ name: Room.name, schema: RoomSchema }, { name: Message.name, schema: MessageSchema }]),
-
+    UsersModule
   ],
   providers: [
     RoomsService,
     MessagesService,
     ChatGateway,
+    
   ],
   controllers: [
     RoomsController,

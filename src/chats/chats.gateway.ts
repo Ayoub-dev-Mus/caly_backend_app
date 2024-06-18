@@ -4,6 +4,7 @@ import { MessagesService } from './chats.service';
 import { User } from 'src/users/entities/user.entity';
 import * as jwt from 'jsonwebtoken';
 import { GetUser } from '../common/jwtMiddlware';
+import { RoomsService } from './room.service';
 
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -11,9 +12,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(
     private messagesService: MessagesService,
+    private roomsService: RoomsService,
   ) { }
 
-  handleConnection(client: Socket) {
+  async handleConnection(client: Socket) {
     console.log(`Client connected: ${client.id}`);
 
     const token = client.handshake.query.token;
@@ -56,8 +58,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('joinRoom')
-  async handleJoinRoom(client: Socket, roomId: string) {
-    console.log(`Client ${client.id} joining room: ${roomId}`);
+  async handleJoinRoom(@ConnectedSocket() client: Socket, @MessageBody() roomParticipants: string[]) {
+    console.log(`Client ${client.id} joining room with participants: ${roomParticipants}`);
+
+    const userId = this.getUserIdFromSocket(client.id);
+    if (!userId) {
+      console.error(`User not authenticated for client ${client.id}`);
+      throw new Error('User not authenticated');
+    }
+
+    const roomId = await this.roomsService.createRoom(roomParticipants);
+
     client.join(roomId);
     const messages = await this.messagesService.findByRoom(roomId);
     client.emit('previousMessages', messages);
@@ -65,7 +76,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('leaveRoom')
-  handleLeaveRoom(client: Socket, roomId: string) {
+  async handleLeaveRoom(@ConnectedSocket() client: Socket, @MessageBody() roomId: string) {
     console.log(`Client ${client.id} leaving room: ${roomId}`);
     client.leave(roomId);
     console.log(`Client ${client.id} left room: ${roomId}`);
@@ -86,7 +97,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`Sender: ${sender.id}, Room ID: ${payload.roomId}, Receiver ID: ${payload.receiverId}, Content: ${payload.content}`);
     if (!payload.roomId || !payload.receiverId || !payload.content) {
       console.error(`Invalid message payload from client ${client.id}`);
-      throw "error";
+      throw new Error('Invalid message payload');
     }
 
     const message = await this.messagesService.create(payload.roomId, sender.id, payload.receiverId, payload.content);

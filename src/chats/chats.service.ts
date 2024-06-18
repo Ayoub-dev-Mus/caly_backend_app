@@ -15,6 +15,10 @@ export class MessagesService {
     return message.save();
   }
 
+  async findLastMessageForRoom(roomId: string): Promise<Message | null> {
+    return this.messageModel.findOne({ roomId }).sort({ createdAt: -1 }).exec();
+  }
+
   async storeMessage(message: Message): Promise<void> {
     // Implement logic to store the message in the database
     await this.messageModel.create(message);

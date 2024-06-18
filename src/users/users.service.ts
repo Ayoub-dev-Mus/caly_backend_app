@@ -45,7 +45,12 @@ export class UsersService {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
-
+  async findUsersByIds(userIds: string[]): Promise<User[]> {
+    return this.userRepository
+      .createQueryBuilder('user')
+      .where('user.id IN (:...userIds)', { userIds })
+      .getMany();
+  }
   async updateProfileImage(user: User, file: Multer.File): Promise<string> {
     try {
       const key = await this.uploadProfileImage(file);
