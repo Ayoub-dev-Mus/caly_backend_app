@@ -27,6 +27,7 @@ import { RolesGuard } from 'src/common/guards/role.guard';
 import { UpdateResult } from 'typeorm';
 import { UpdatePasswordDto } from './dto/update-password-dto';
 import { CreateUserDto } from './dto/create-user.dto';
+import { EOL } from 'os';
 
 @ApiTags('users')
 @Controller('users')
@@ -48,6 +49,22 @@ export class UsersController {
     }
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.USER,Role.STORE_STAFF)
+  @UseGuards(JwtAuthGuard)
+  @Get('by-store')
+  async findUsersByStore(@GetUser() user: User): Promise<any> {
+    try {
+
+      if (!user) {
+        throw new HttpException('Store ID not found in token', HttpStatus.BAD_REQUEST);
+      }
+      const users = await this.usersService.findUsersByStoreId(user);
+      return users;
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {

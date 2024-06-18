@@ -113,7 +113,24 @@ export class UsersService {
       return { users: [], totalUser: 0 };
     }
   }
+  async findUsersByStoreId(user: User): Promise<User[]> {
+    try {
+      const users = await this.userRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.store', 'store')
+        .where('store.id = :storeId', { storeId: user.store })
+        .getMany();
 
+      if (users.length === 0) {
+        throw new HttpException('No users found with the specified storeId', HttpStatus.NOT_FOUND);
+      }
+
+      return users;
+    } catch (error) {
+      Logger.error(`Error finding users by storeId: ${error.message}`);
+      throw new HttpException('Error finding users by storeId', HttpStatus.BAD_REQUEST);
+    }
+  }
 
   async createStaff(createUserDto: CreateUserDto): Promise<User | null> {
     try {
