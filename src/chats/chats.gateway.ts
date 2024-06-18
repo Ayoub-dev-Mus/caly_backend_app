@@ -69,6 +69,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const roomId = await this.roomsService.createRoom(roomParticipants);
 
+   
+
     client.join(roomId);
     const messages = await this.messagesService.findByRoom(roomId);
     client.emit('previousMessages', messages);

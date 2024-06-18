@@ -6,6 +6,7 @@ import { Room } from './entities/room.schema';
 import { v4 as uuidv4 } from 'uuid';
 import { MessagesService } from './chats.service';
 import { UsersService } from 'src/users/users.service';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class RoomsService {
@@ -16,24 +17,31 @@ export class RoomsService {
   ) { }
 
   async createRoom(userIds: string[]): Promise<string> {
-    const roomId = uuidv4(); // Generate a UUID as room ID
+    // Sort user IDs alphabetically
+    const sortedIds = userIds.sort();
+    // Concatenate sorted IDs to generate room ID
+    const roomId = sortedIds.join('_');
+
+    // Check if room already exists
     const existingRoom = await this.roomModel.findOne({ _id: roomId });
 
+    console.log(existingRoom)
+
+
     if (!existingRoom) {
-      // If the room doesn't exist, create it with the generated UUID and user IDs
-      const room = new this.roomModel({ _id: roomId, users: userIds });
+      const room = new this.roomModel({ _id: roomId, users: sortedIds });
+
       await room.save();
     }
-
+    console.log("Room already exist")
     return roomId;
   }
-
   async getRoomsForUser(userId: string): Promise<Room[]> {
     return this.roomModel.find({ users: userId }).exec();
   }
 
-  async getRoomsForUserWithLastMessage(userId: string): Promise<any[]> {
-    const rooms = await this.roomModel.find({ users: userId }).exec();
+  async getRoomsForUserWithLastMessage(user: User): Promise<any[]> {
+    const rooms = await this.roomModel.find({ users:user.id }).exec();
     const roomsWithLastMessage = await Promise.all(rooms.map(async (room) => {
       const users = await this.userService.findUsersByIds(room.users);
       const lastMessage = await this.messagesService.findLastMessageForRoom(room.id);
@@ -46,7 +54,16 @@ export class RoomsService {
     return roomsWithLastMessage;
   }
 
-  findAll(): Promise<Room[]> {
-    return this.roomModel.find().exec();
+
+  async findAll(): Promise<any[]> {
+    const rooms = await this.roomModel.find().exec();
+    const roomsWithUsers = await Promise.all(rooms.map(async (room) => {
+      const users = await this.userService.findUsersByIds(room.users);
+      return {
+        room,
+        users: users.map(user => `${user.firstName} ${user.lastName}`)
+      };
+    }));
+    return roomsWithUsers;
   }
 }

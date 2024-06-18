@@ -3,10 +3,10 @@ import { Document } from 'mongoose';
 
 @Schema()
 export class Room extends Document {
-  @Prop({ required: true })
-  roomId: string;
+  @Prop()
+  _id: string;
 
-  @Prop({ required: true })
+  @Prop()
   users: string[];
 }
 
