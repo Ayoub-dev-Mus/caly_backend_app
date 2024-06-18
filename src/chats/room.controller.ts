@@ -16,7 +16,7 @@ export class RoomsController {
   @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER)
-  @Get('/all/:id')
+  @Get('/all')
   findAllChatWithUser(@GetUser() user:User) {
     return this.roomsService.getRoomsForUserWithLastMessage(user);
   }

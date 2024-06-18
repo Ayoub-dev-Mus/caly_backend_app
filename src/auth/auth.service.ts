@@ -105,7 +105,7 @@ export class AuthService {
         throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
       }
 
-      if (user.role === Role.STORE_OWNER || user.role === Role.STORE_STAFF) {
+      if (user.role === Role.STORE_OWNER || user.role === Role.STORE_STAFF ||user.role === Role.ADMIN || user.role === Role.STAFF) {
         const tokens = await this.getTokens(
           user.id,
           user.email,
