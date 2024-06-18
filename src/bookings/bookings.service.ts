@@ -52,7 +52,7 @@ export class BookingsService {
   ): Promise<Booking[]> {
     try {
       const whereClause: any = {
-        store: { id: user.store.id },
+        store: { id: user.store },
       };
 
       if (createdAt) {
@@ -62,9 +62,14 @@ export class BookingsService {
         const endOfDay = new Date(createdAt);
         endOfDay.setHours(23, 59, 59, 999);
 
-        whereClause.createdAt = Between(startOfDay, endOfDay);
-      }
+        whereClause.createdAt = Between(
+          startOfDay.toISOString(),
+          endOfDay.toISOString(),
+        );
 
+        Logger.log(`Filtering bookings between ${startOfDay.toISOString()} and ${endOfDay.toISOString()}`);
+
+      }
       // Pagination options
       const paginationOptions: FindManyOptions<Booking> = {
         relations: ['specialist', 'service', 'store', 'timeSlot', 'user'],
