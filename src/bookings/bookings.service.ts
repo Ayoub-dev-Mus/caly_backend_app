@@ -45,6 +45,52 @@ export class BookingsService {
   }
 
 
+  async findAllByStore(
+    user: User,
+    createdAt?: Date,
+    options?: FindManyOptions<Booking>,
+  ): Promise<Booking[]> {
+    try {
+      const whereClause: any = {
+        store: { id: user.store.id },
+      };
+
+      if (createdAt) {
+        const startOfDay = new Date(createdAt);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date(createdAt);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        whereClause.createdAt = Between(startOfDay, endOfDay);
+      }
+
+      // Pagination options
+      const paginationOptions: FindManyOptions<Booking> = {
+        relations: ['specialist', 'service', 'store', 'timeSlot', 'user'],
+        select: {
+          user: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        where: whereClause,
+        skip: options?.skip || 0,
+        take: options?.take || 10,
+      };
+
+      // Merge with user-provided options
+      const finalOptions = { ...paginationOptions, ...options };
+
+      return await this.bookingRepository.find(finalOptions);
+    } catch (error) {
+      Logger.error(`Error finding bookings: ${error.message}`);
+      throw new Error(`Error finding bookings: ${error.message}`);
+    }
+  }
+
   async findAll(
     user: User,
     createdAt?: Date,
