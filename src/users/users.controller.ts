@@ -49,6 +49,7 @@ export class UsersController {
     }
   }
 
+  //to master
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER,Role.STORE_STAFF)
   @UseGuards(JwtAuthGuard)
