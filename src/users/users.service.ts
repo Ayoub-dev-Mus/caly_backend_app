@@ -10,6 +10,7 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { Multer } from 'multer';
 import * as admin from 'firebase-admin';
 import { Role } from './enums/role';
+import { Store } from 'src/stores/entities/store.entity';
 
 @Injectable()
 export class UsersService {
@@ -103,7 +104,6 @@ export class UsersService {
           .take(pageSize)
           .getMany();
       } else {
-        // If page and pageSize are not provided, fetch all users
         users = await queryBuilder.getMany();
       }
 
@@ -291,6 +291,17 @@ export class UsersService {
       return { updateResult };
     } catch (error) {
       return error.message;
+    }
+  }
+  async linkUserToStore(userId: string, storeId: Store): Promise<User> {
+    try {
+      const user = await this.userRepository.findOneByOrFail({ id: userId });
+      user.store = storeId;
+      await this.userRepository.save(user);
+      return user;
+    } catch (error) {
+      Logger.error(`Error linking user to store: ${error.message}`);
+      throw new HttpException('Error linking user to store', HttpStatus.BAD_REQUEST);
     }
   }
 

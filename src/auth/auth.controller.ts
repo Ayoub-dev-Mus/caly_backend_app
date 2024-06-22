@@ -138,7 +138,7 @@ export class AuthController {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
-  
+
   @Post('/register')
   async signUp(
     @Body() signUpDto: SignUpDto,
@@ -154,7 +154,7 @@ export class AuthController {
   @UseGuards(RefreshTokenGuard)
   @Post('refresh')
   async refreshToken(
-    @GetUser() user: any,
+    @GetUser() user: User,
   ): Promise<{ token: string; refreshToken: string }> {
     try {
       const newTokens = await this.authService.refreshToken(user);

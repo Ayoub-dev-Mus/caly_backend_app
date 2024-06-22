@@ -199,7 +199,6 @@ export class StoresService {
       throw new Error(error.message);
     }
   }
-
   async findAllNearestStoresCached(
     latitude: number,
     longitude: number,
@@ -212,9 +211,6 @@ export class StoresService {
 
     try {
       const cachedResult = await this.redisService.get(cacheKey);
-
-      Logger.log('cachedResult', cachedResult);
-
       if (cachedResult) {
         return JSON.parse(cachedResult);
       }
@@ -230,7 +226,6 @@ export class StoresService {
         'store.description as description',
         'store.address as address',
         'store.city as city',
-        'store.status as status',
         'store.zipCode as zipCode',
         'store.state as state',
         'store.phone as phone',
@@ -241,16 +236,13 @@ export class StoresService {
         'store.createdAt as createdAt',
         'store.updatedAt as updatedAt',
         'json_agg(store.images) AS images',
-        'store.facebookLink as facebookLink',
-        'store.instagramLink as instagramLink',
-        'store.twitterLink as twitterLink',
         'json_agg(services) AS services',
         'json_agg(specialists) AS specialists',
         `json_build_object('id', type.id, 'label', type.label, 'icon', type.icon) AS type`,
       ])
       .addSelect(
         'ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography, store.location::geography) / 1000 AS distance',
-      ) 
+      )
       .leftJoin('store.services', 'services')
       .leftJoin('store.specialists', 'specialists')
       .leftJoin('store.type', 'type')
@@ -281,18 +273,20 @@ export class StoresService {
       .skip((page - 1) * pageSize)
       .take(pageSize)
       .getRawMany();
+
     try {
       await this.redisService.set(
         cacheKey,
         JSON.stringify({ stores: result, total: totalCount }),
+
       );
     } catch (error) {
       console.error('Error setting cache in Redis:', error);
-
     }
 
     return { stores: result, total: totalCount };
   }
+
 
   async findOne(id: number): Promise<Store> {
     try {
