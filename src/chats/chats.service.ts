@@ -20,7 +20,6 @@ export class MessagesService {
   }
 
   async storeMessage(message: Message): Promise<void> {
-    // Implement logic to store the message in the database
     await this.messageModel.create(message);
   }
 

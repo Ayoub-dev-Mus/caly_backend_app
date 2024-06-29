@@ -12,17 +12,13 @@ import { User } from '../users/entities/user.entity';
 export class RoomsService {
   constructor(
     @InjectModel(Room.name) private roomModel: Model<Room>,
-    private messagesService: MessagesService, // Inject the MessagesService
-    private userService: UsersService // Inject the UserService or your user service
+    private messagesService: MessagesService,
+    private userService: UsersService
   ) { }
 
   async createRoom(userIds: string[]): Promise<string> {
-    // Sort user IDs alphabetically
     const sortedIds = userIds.sort();
-    // Concatenate sorted IDs to generate room ID
     const roomId = sortedIds.join('_');
-
-    // Check if room already exists
     const existingRoom = await this.roomModel.findOne({ _id: roomId });
 
     console.log(existingRoom)
