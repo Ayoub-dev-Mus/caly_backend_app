@@ -63,6 +63,26 @@ export class UsersController {
       throw new HttpException('Error linking user to store', HttpStatus.BAD_REQUEST);
     }
   }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN)
+  @Get('count-by-role')
+  async countUsersByRole(@Query('role') role: string): Promise<number> {
+    if (!role) {
+      throw new HttpException('Role parameter is required', HttpStatus.BAD_REQUEST);
+    }
+    return this.usersService.countUsersByRole(role);
+  }
+  
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN)
+  @Get('engagement')
+  async getUserEngagement(@Query('period') period: 'daily' | 'weekly' | 'monthly'): Promise<number> {
+    if (!['daily', 'weekly', 'monthly'].includes(period)) {
+      throw new HttpException('Invalid period specified', HttpStatus.BAD_REQUEST);
+    }
+    return this.usersService.getUserEngagement(period);
+  }
   //to master
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER, Role.STORE_STAFF)

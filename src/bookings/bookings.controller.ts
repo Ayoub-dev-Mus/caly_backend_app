@@ -127,6 +127,18 @@ export class BookingsController {
   @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)
+  @Get('sales-summary')
+  async getSalesSummary(
+    @GetUser() user:User,
+    @Query('period') period: 'daily' | 'weekly' | 'monthly',
+  ): Promise<{ totalSales: number }> {
+    console.log(user)
+    return await this.bookingsService.getSalesSummary(user, period);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)
   @Get('pending-sum')
   getPendingBookingSumByStore(
     @GetUser() user: User,
@@ -168,6 +180,8 @@ export class BookingsController {
   update(@Param('id') id: string, @Body() updateBookingDto: UpdateBookingDto) {
     return this.bookingsService.update(+id, updateBookingDto);
   }
+
+
 
   @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard, RolesGuard)
