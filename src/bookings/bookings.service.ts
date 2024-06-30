@@ -48,6 +48,7 @@ export class BookingsService {
   async findAllByStore(
     user: User,
     createdAt?: Date,
+    status?: string, // Assuming status is a string, adjust type if necessary
     options?: FindManyOptions<Booking>,
   ): Promise<Booking[]> {
     try {
@@ -68,8 +69,12 @@ export class BookingsService {
         );
 
         Logger.log(`Filtering bookings between ${startOfDay.toISOString()} and ${endOfDay.toISOString()}`);
-
       }
+
+      if (status) {
+        whereClause.status = status; // Assuming 'status' is a field in your Booking entity
+      }
+
       // Pagination options
       const paginationOptions: FindManyOptions<Booking> = {
         relations: ['specialist', 'service', 'store', 'timeSlot', 'user'],
