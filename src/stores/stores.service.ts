@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Store } from './entities/store.entity';
@@ -15,7 +15,8 @@ import { HttpService } from '@nestjs/axios';
 import { StoreType } from './entities/storeType';
 import { CreateStoreTypeDto } from './dto/create-store-type.dto';
 import { RedisService } from 'src/redis/redis.service';
-
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { Multer } from 'multer';
 @Injectable()
 export class StoresService {
   @InjectRepository(Store)
@@ -199,6 +200,28 @@ export class StoresService {
       throw new Error(error.message);
     }
   }
+
+  async updateStoreImages(id: number, files: Multer.File[]): Promise<Store> {
+    try {
+      const store = await this.storeRepository.findOne({ where: { id } });
+
+      if (!store) {
+        throw new NotFoundException('Store not found.');
+      }
+
+      // Call the uploadStoreImages method to upload the new images and get their keys
+      const uploadedKeys = await this.uploadStoreImages(files);
+
+      // Assuming store.images is an array of image keys
+      store.images = [...store.images, ...uploadedKeys];
+      await this.storeRepository.save(store);
+
+      return store;
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
   async findAllNearestStoresCached(
     latitude: number,
     longitude: number,
@@ -285,6 +308,45 @@ export class StoresService {
     }
 
     return { stores: result, total: totalCount };
+  }
+
+  async uploadStoreImages(files: Multer.File[]): Promise<string[]> {
+    try {
+      const s3 = new S3Client({
+        region: 'eu-north-1',
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS,
+          secretAccessKey: process.env.AWS_SECRET,
+        },
+      });
+
+      const uploadPromises = files.map(async (file) => {
+        const key = `${Date.now()}-${file.originalname}`;
+        const uploadParams = {
+          Bucket: 'caly-app-bucker',
+          Key: key,
+          Body: file.buffer,
+        };
+
+        const result = await s3.send(new PutObjectCommand(uploadParams));
+
+        if (!result) {
+          throw new Error('Error uploading file to S3');
+        }
+        // Construct the full URL
+        const fileUrl = `${process.env.AWS_S3_BASE_URL}/${key}`;
+        return fileUrl;
+      });
+
+      // Measure upload time
+      console.time('uploadTime');
+      const uploadedKeys = await Promise.all(uploadPromises);
+      console.timeEnd('uploadTime');
+
+      return uploadedKeys;
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
 

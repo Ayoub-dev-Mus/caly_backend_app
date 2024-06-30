@@ -7,9 +7,10 @@ import {
   Param,
   Delete,
   Query,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import { StoresService } from './stores.service';
-
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { Store } from './entities/store.entity';
 import { DeleteResult, UpdateResult } from 'typeorm';
@@ -17,6 +18,8 @@ import { ApiTags } from '@nestjs/swagger';
 import CreateStoreDto from './dto/create-store.dto';
 import { StoreType } from './entities/storeType';
 import { CreateStoreTypeDto } from './dto/create-store-type.dto';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { Multer } from 'multer';
 
 @ApiTags('Stores')
 @Controller('stores')
@@ -27,6 +30,13 @@ export class StoresController {
   async create(@Body() createStoreDto: CreateStoreDto): Promise<Store> {
     return await this.storesService.create(createStoreDto);
   }
+
+  @Patch(':id/images')
+  @UseInterceptors(FilesInterceptor('files'))
+  async updateImages(@Param('id') id: number, @UploadedFiles() files: Multer.File[]) {
+    return await this.storesService.updateStoreImages(id, files);
+  }
+
 
   @Get('types')
   async findAllStoreTypes(): Promise<StoreType[]> {

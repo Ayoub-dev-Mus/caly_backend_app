@@ -8,12 +8,16 @@ import {
   Delete,
   HttpStatus,
   HttpException,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { SpecialistsService } from './specialists.service';
 import { UpdateSpecialistDto } from './dto/update-specialist.dto';
 import CreateSpecialistDto from './dto/create-specialist.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { Specialist } from './entities/specialist.entity';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {Multer} from 'multer'
 
 @ApiTags('Specialists')
 @Controller('specialists')
@@ -21,15 +25,17 @@ export class SpecialistsController {
   constructor(private readonly specialistsService: SpecialistsService) { }
 
   @Post()
-  async create(@Body() createSpecialistDto: CreateSpecialistDto) {
-    try {
-      const createdSpecialist =
-        await this.specialistsService.create(createSpecialistDto);
-      return { success: true, data: createdSpecialist };
-    } catch (error) {
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+  @UseInterceptors(FileInterceptor('profileImage'))
+  async create(@Body() createSpecialistDto: CreateSpecialistDto, @UploadedFile() profileImage?: Multer.File): Promise<Specialist> {
+    return await this.specialistsService.create(createSpecialistDto, profileImage);
   }
+
+  @Patch(':id/profile-image')
+  @UseInterceptors(FileInterceptor('profileImage'))
+  async updateProfileImage(@Param('id') id: number, @UploadedFile() profileImage: Multer.File): Promise<Specialist> {
+    return await this.specialistsService.updateSpecialistImageProfile(id, profileImage);
+  }
+
   @Get('store/:storeId')
   async findSpecialistsByStoreId(@Param('storeId') storeId: string) {
     try {
