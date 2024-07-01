@@ -25,6 +25,4 @@ export class SignUpDto {
   @ApiProperty()
   password: string;
 
-  @ApiProperty()
-  role: string;
 }

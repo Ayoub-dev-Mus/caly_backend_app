@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Store } from './entities/store.entity';
@@ -15,7 +15,8 @@ import { HttpService } from '@nestjs/axios';
 import { StoreType } from './entities/storeType';
 import { CreateStoreTypeDto } from './dto/create-store-type.dto';
 import { RedisService } from 'src/redis/redis.service';
-
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { Multer } from 'multer';
 @Injectable()
 export class StoresService {
   @InjectRepository(Store)
@@ -200,6 +201,27 @@ export class StoresService {
     }
   }
 
+  async updateStoreImages(id: number, files: Multer.File[]): Promise<Store> {
+    try {
+      const store = await this.storeRepository.findOne({ where: { id } });
+
+      if (!store) {
+        throw new NotFoundException('Store not found.');
+      }
+
+      // Call the uploadStoreImages method to upload the new images and get their keys
+      const uploadedKeys = await this.uploadStoreImages(files);
+
+      // Assuming store.images is an array of image keys
+      store.images = [...store.images, ...uploadedKeys];
+      await this.storeRepository.save(store);
+
+      return store;
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
   async findAllNearestStoresCached(
     latitude: number,
     longitude: number,
@@ -212,9 +234,6 @@ export class StoresService {
 
     try {
       const cachedResult = await this.redisService.get(cacheKey);
-
-      Logger.log('cachedResult', cachedResult);
-
       if (cachedResult) {
         return JSON.parse(cachedResult);
       }
@@ -230,7 +249,6 @@ export class StoresService {
         'store.description as description',
         'store.address as address',
         'store.city as city',
-        'store.status as status',
         'store.zipCode as zipCode',
         'store.state as state',
         'store.phone as phone',
@@ -241,16 +259,13 @@ export class StoresService {
         'store.createdAt as createdAt',
         'store.updatedAt as updatedAt',
         'json_agg(store.images) AS images',
-        'store.facebookLink as facebookLink',
-        'store.instagramLink as instagramLink',
-        'store.twitterLink as twitterLink',
         'json_agg(services) AS services',
         'json_agg(specialists) AS specialists',
         `json_build_object('id', type.id, 'label', type.label, 'icon', type.icon) AS type`,
       ])
       .addSelect(
         'ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography, store.location::geography) / 1000 AS distance',
-      ) 
+      )
       .leftJoin('store.services', 'services')
       .leftJoin('store.specialists', 'specialists')
       .leftJoin('store.type', 'type')
@@ -281,18 +296,59 @@ export class StoresService {
       .skip((page - 1) * pageSize)
       .take(pageSize)
       .getRawMany();
+
     try {
       await this.redisService.set(
         cacheKey,
         JSON.stringify({ stores: result, total: totalCount }),
+
       );
     } catch (error) {
       console.error('Error setting cache in Redis:', error);
-
     }
 
     return { stores: result, total: totalCount };
   }
+
+  async uploadStoreImages(files: Multer.File[]): Promise<string[]> {
+    try {
+      const s3 = new S3Client({
+        region: 'eu-north-1',
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS,
+          secretAccessKey: process.env.AWS_SECRET,
+        },
+      });
+
+      const uploadPromises = files.map(async (file) => {
+        const key = `${Date.now()}-${file.originalname}`;
+        const uploadParams = {
+          Bucket: 'caly-app-bucker',
+          Key: key,
+          Body: file.buffer,
+        };
+
+        const result = await s3.send(new PutObjectCommand(uploadParams));
+
+        if (!result) {
+          throw new Error('Error uploading file to S3');
+        }
+        // Construct the full URL
+        const fileUrl = `${process.env.AWS_S3_BASE_URL}/${key}`;
+        return fileUrl;
+      });
+
+      // Measure upload time
+      console.time('uploadTime');
+      const uploadedKeys = await Promise.all(uploadPromises);
+      console.timeEnd('uploadTime');
+
+      return uploadedKeys;
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
 
   async findOne(id: number): Promise<Store> {
     try {

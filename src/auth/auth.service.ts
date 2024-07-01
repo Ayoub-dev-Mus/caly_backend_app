@@ -463,7 +463,6 @@ export class AuthService {
         firstName = names[0];
         lastName = names.slice(1).join(' ');
       }
-      // Return all needed details including email, first name, last name, and picture if available
       return {
         email: decodedToken.email,
         firstName,

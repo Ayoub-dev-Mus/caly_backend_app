@@ -19,7 +19,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`Client connected: ${client.id}`);
 
     const token = client.handshake.query.token;
-    if (typeof token === 'string') { // Ensure token is a string
+    if (typeof token === 'string') {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET) as jwt.JwtPayload & User;
         const user: User = decoded as User;
@@ -38,13 +38,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
-    // Remove user/socket mapping when a user disconnects
     this.removeUserSocketMapping(client.id);
   }
 
   private removeUserSocketMapping(socketId: string) {
     const userId = this.getUserIdFromSocket(socketId);
     if (userId) {
+
       this.userSocketMap.delete(userId);
       console.log(`Removed mapping for user: ${userId}, Socket ID: ${socketId}`);
     }
@@ -70,6 +70,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const roomId = await this.roomsService.createRoom(roomParticipants);
 
+<<<<<<< HEAD
+=======
+    console.log("my room is " + roomId)
+
+>>>>>>> b5cee03639da5f99467a320a98200eff20c62b87
 
     console.log(roomId)
     client.join(roomId);

@@ -16,6 +16,7 @@ export class RoomsService {
   ) { }
 
   async createRoom(userIds: string[]): Promise<string> {
+<<<<<<< HEAD
     // Sort user IDs alphabetically
     const sortedIds = [...userIds].sort();
     console.log('Sorted User IDs:', sortedIds);
@@ -23,6 +24,11 @@ export class RoomsService {
     // Concatenate sorted IDs to generate a unique key for searching
     const sortedIdsKey = sortedIds.join('_');
     console.log('Generated usersKey:', sortedIdsKey);
+=======
+    const sortedIds = userIds.sort();
+    const roomId = sortedIds.join('_');
+    const existingRoom = await this.roomModel.findOne({ _id: roomId });
+>>>>>>> b5cee03639da5f99467a320a98200eff20c62b87
 
     // Ensure that the room creation is an atomic operation
     const session = await this.roomModel.db.startSession();

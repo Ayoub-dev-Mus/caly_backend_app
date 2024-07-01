@@ -48,6 +48,7 @@ export class BookingsService {
   async findAllByStore(
     user: User,
     createdAt?: Date,
+    status?: string, // Assuming status is a string, adjust type if necessary
     options?: FindManyOptions<Booking>,
   ): Promise<Booking[]> {
     try {
@@ -68,8 +69,12 @@ export class BookingsService {
         );
 
         Logger.log(`Filtering bookings between ${startOfDay.toISOString()} and ${endOfDay.toISOString()}`);
-
       }
+
+      if (status) {
+        whereClause.status = status; // Assuming 'status' is a field in your Booking entity
+      }
+
       // Pagination options
       const paginationOptions: FindManyOptions<Booking> = {
         relations: ['specialist', 'service', 'store', 'timeSlot', 'user'],
@@ -95,6 +100,59 @@ export class BookingsService {
       throw new Error(`Error finding bookings: ${error.message}`);
     }
   }
+
+
+  async getSalesSummary(
+    user: User,
+    period: 'daily' | 'weekly' | 'monthly',
+  ): Promise<{ totalSales: number }> {
+    try {
+
+      console.log(user)
+      const now = new Date();
+      let startDate: Date;
+
+      switch (period) {
+        case 'daily':
+          startDate = new Date(now);
+          startDate.setHours(0, 0, 0, 0);
+          break;
+        case 'weekly':
+          startDate = new Date(now);
+          startDate.setDate(now.getDate() - now.getDay());
+          startDate.setHours(0, 0, 0, 0);
+          break;
+        case 'monthly':
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        default:
+          throw new Error('Invalid period specified');
+      }
+
+      const endDate = new Date(now);
+      endDate.setHours(23, 59, 59, 999);
+
+      const totalSalesQuery = await this.bookingRepository
+        .createQueryBuilder('booking')
+        .leftJoin('booking.service', 'service')
+        .select('SUM(service.price)', 'totalSales')
+        .where('booking.store = :storeId', { storeId: user.store })
+        .andWhere('booking.createdAt BETWEEN :startDate AND :endDate', {
+          startDate,
+          endDate,
+        })
+        .getRawOne();
+
+      let totalSales = parseFloat(totalSalesQuery.totalSales || '0');
+
+      return { totalSales };
+    } catch (error) {
+      Logger.error(`Error getting sales summary: ${error.message}`);
+      throw new Error(`Error getting sales summary: ${error.message}`);
+    }
+  }
+
+
 
   async findAll(
     user: User,

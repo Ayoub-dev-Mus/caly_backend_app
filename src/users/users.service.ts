@@ -10,6 +10,7 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { Multer } from 'multer';
 import * as admin from 'firebase-admin';
 import { Role } from './enums/role';
+import { Store } from 'src/stores/entities/store.entity';
 
 @Injectable()
 export class UsersService {
@@ -18,6 +19,48 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
     private jwtService: JwtService,
   ) { }
+
+
+  async getUserEngagement(period: 'daily' | 'weekly' | 'monthly'): Promise<number> {
+    const now = new Date();
+    let startDate: Date;
+
+    switch (period) {
+      case 'daily':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        break;
+      case 'weekly':
+        const dayOfWeek = now.getDay(); // 0 (Sunday) to 6 (Saturday)
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
+        break;
+      case 'monthly':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      default:
+        throw new HttpException('Invalid period specified', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      const count = await this.userRepository.createQueryBuilder('user')
+        .where('user.lastLogin >= :startDate', { startDate })
+        .getCount();
+
+      return count;
+    } catch (error) {
+      Logger.error(`Error fetching user engagement for ${period}:`, error);
+      throw new HttpException(`Error fetching user engagement for ${period}`, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async countUsersByRole(role: string): Promise<number> {
+    try {
+      const count = await this.userRepository.count({ where: { role } });
+      return count;
+    } catch (error) {
+      Logger.error('Error counting users by role:', error);
+      throw new HttpException('Error counting users by role', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 
   async uploadProfileImage(file: Multer.File): Promise<any> {
     try {
@@ -103,7 +146,6 @@ export class UsersService {
           .take(pageSize)
           .getMany();
       } else {
-        // If page and pageSize are not provided, fetch all users
         users = await queryBuilder.getMany();
       }
 
@@ -291,6 +333,17 @@ export class UsersService {
       return { updateResult };
     } catch (error) {
       return error.message;
+    }
+  }
+  async linkUserToStore(userId: string, storeId: Store): Promise<User> {
+    try {
+      const user = await this.userRepository.findOneByOrFail({ id: userId });
+      user.store = storeId;
+      await this.userRepository.save(user);
+      return user;
+    } catch (error) {
+      Logger.error(`Error linking user to store: ${error.message}`);
+      throw new HttpException('Error linking user to store', HttpStatus.BAD_REQUEST);
     }
   }
 
