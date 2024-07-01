@@ -37,22 +37,25 @@ export class BookingsController {
     return this.bookingsService.create(createBookingDto, user);
   }
 
-
+  @ApiBearerAuth('access-token')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN , Role.STORE_OWNER,Role.STORE_STAFF)
   @Get('logged/bookings')
   async findAllByStore(
     @GetUser() user: User,
     @Query('createdAt') createdAtString: string,
-    @Query('status') status: string, // Add status query parameter
+    @Query('status') status: string,
     @Query('skip') skip = '0',
     @Query('take') take = '10',
   ): Promise<Booking[]> {
     try {
+
       const date = createdAtString ? new Date(createdAtString) : undefined;
       const options = {
         skip: parseInt(skip, 10),
         take: parseInt(take, 10),
       };
-      return await this.bookingsService.findAllByStore(user, date, status, options); // Pass status to service method
+      return await this.bookingsService.findAllByStore(user, date, status, options);
     } catch (error) {
       throw new HttpException(`Error finding bookings: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
     }

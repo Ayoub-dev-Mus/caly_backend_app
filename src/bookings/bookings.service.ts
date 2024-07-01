@@ -52,8 +52,13 @@ export class BookingsService {
     options?: FindManyOptions<Booking>,
   ): Promise<Booking[]> {
     try {
+
+
+      console.log(user.store)
+
+
       const whereClause: any = {
-        store: { id: user.store },
+        store: user.store ,
       };
 
       if (createdAt) {
@@ -67,15 +72,12 @@ export class BookingsService {
           startOfDay.toISOString(),
           endOfDay.toISOString(),
         );
-
-        Logger.log(`Filtering bookings between ${startOfDay.toISOString()} and ${endOfDay.toISOString()}`);
       }
 
       if (status) {
-        whereClause.status = status; // Assuming 'status' is a field in your Booking entity
+        whereClause.status = status;
       }
 
-      // Pagination options
       const paginationOptions: FindManyOptions<Booking> = {
         relations: ['specialist', 'service', 'store', 'timeSlot', 'user'],
         select: {
@@ -91,7 +93,6 @@ export class BookingsService {
         take: options?.take || 10,
       };
 
-      // Merge with user-provided options
       const finalOptions = { ...paginationOptions, ...options };
 
       return await this.bookingRepository.find(finalOptions);

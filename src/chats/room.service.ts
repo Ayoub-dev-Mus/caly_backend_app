@@ -16,26 +16,16 @@ export class RoomsService {
   ) { }
 
   async createRoom(userIds: string[]): Promise<string> {
-<<<<<<< HEAD
-    // Sort user IDs alphabetically
-    const sortedIds = [...userIds].sort();
-    console.log('Sorted User IDs:', sortedIds);
-
-    // Concatenate sorted IDs to generate a unique key for searching
-    const sortedIdsKey = sortedIds.join('_');
-    console.log('Generated usersKey:', sortedIdsKey);
-=======
     const sortedIds = userIds.sort();
     const roomId = sortedIds.join('_');
     const existingRoom = await this.roomModel.findOne({ _id: roomId });
->>>>>>> b5cee03639da5f99467a320a98200eff20c62b87
 
     // Ensure that the room creation is an atomic operation
     const session = await this.roomModel.db.startSession();
     session.startTransaction();
     try {
       // Check if a room with the same users already exists
-      const existingRoom = await this.roomModel.findOne({ usersKey: sortedIdsKey }).session(session);
+      const existingRoom = await this.roomModel.findOne({ usersKey: sortedIds }).session(session);
       if (existingRoom) {
         console.log('Room already exists:', existingRoom);
         await session.commitTransaction();
@@ -48,7 +38,7 @@ export class RoomsService {
       const roomId = uuidv4();
 
       // Create and save the new room
-      const room = new this.roomModel({ _id: roomId, users: sortedIds, usersKey: sortedIdsKey });
+      const room = new this.roomModel({ _id: roomId, users: sortedIds, usersKey: sortedIds });
       await room.save({ session });
 
       await session.commitTransaction();

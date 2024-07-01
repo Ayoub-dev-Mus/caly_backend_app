@@ -59,7 +59,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('joinRoom')
   async handleJoinRoom(@ConnectedSocket() client: Socket, @MessageBody() roomParticipants: string[]) {
-    
+
     console.log(`Client ${client.id} joining room with participants: ${roomParticipants}`);
 
     const userId = this.getUserIdFromSocket(client.id);
@@ -70,11 +70,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const roomId = await this.roomsService.createRoom(roomParticipants);
 
-<<<<<<< HEAD
-=======
     console.log("my room is " + roomId)
 
->>>>>>> b5cee03639da5f99467a320a98200eff20c62b87
 
     console.log(roomId)
     client.join(roomId);
