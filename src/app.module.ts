@@ -108,4 +108,4 @@ import { ReviewResponse } from './reviews/entities/reviewReponse';
 
   controllers: [AppController],
 })
-export class AppModule {}
+export class AppModule { }

@@ -59,6 +59,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('joinRoom')
   async handleJoinRoom(@ConnectedSocket() client: Socket, @MessageBody() roomParticipants: string[]) {
+    
     console.log(`Client ${client.id} joining room with participants: ${roomParticipants}`);
 
     const userId = this.getUserIdFromSocket(client.id);
@@ -69,10 +70,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const roomId = await this.roomsService.createRoom(roomParticipants);
 
-   
 
+    console.log(roomId)
     client.join(roomId);
     const messages = await this.messagesService.findByRoom(roomId);
+
     client.emit('previousMessages', messages);
     console.log(`Client ${client.id} joined room: ${roomId}`);
   }
@@ -85,7 +87,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('sendMessage')
-  async handleSendMessage(@ConnectedSocket() client: Socket, @MessageBody() payload: { roomId: string, receiverId: string, content: string }) {
+  async handleSendMessage(@ConnectedSocket() client: Socket, @MessageBody() payload: { receiverId: string, content: string }) {
     console.log(`Received sendMessage from client ${client.id} with payload:`, payload);
 
     const userId = this.getUserIdFromSocket(client.id);
@@ -96,13 +98,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const sender = this.userSocketMap.get(userId).user;
 
-    console.log(`Sender: ${sender.id}, Room ID: ${payload.roomId}, Receiver ID: ${payload.receiverId}, Content: ${payload.content}`);
-    if (!payload.roomId || !payload.receiverId || !payload.content) {
+    if (!payload.receiverId || !payload.content) {
       console.error(`Invalid message payload from client ${client.id}`);
       throw new Error('Invalid message payload');
     }
 
-    const message = await this.messagesService.create(payload.roomId, sender.id, payload.receiverId, payload.content);
+    // Assuming the room for these participants already exists or will be created
+    const roomId = await this.roomsService.createRoom([userId, payload.receiverId]);
+
+    // Check if the sender is already joined to the room
+    if (!client.rooms.has(roomId)) {
+      console.log(`Client ${client.id} is not in room ${roomId}. Joining the room...`);
+      client.join(roomId);
+    }
+
+    const message = await this.messagesService.create(roomId, sender.id, payload.receiverId, payload.content);
     console.log(`Message created: ${message.id}, Content: ${message.content}`);
 
     const receiverSocket = this.userSocketMap.get(payload.receiverId);
@@ -114,4 +124,5 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       console.log(`Receiver ${payload.receiverId} not connected. Message stored.`);
     }
   }
+
 }

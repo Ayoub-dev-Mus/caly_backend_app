@@ -51,7 +51,7 @@ export class UsersController {
 
   //to master
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @HasRoles(Role.ADMIN, Role.USER,Role.STORE_STAFF)
+  @HasRoles(Role.ADMIN, Role.USER, Role.STORE_STAFF, Role.STORE_OWNER)
   @UseGuards(JwtAuthGuard)
   @Get('by-store')
   async findUsersByStore(@GetUser() user: User): Promise<any> {

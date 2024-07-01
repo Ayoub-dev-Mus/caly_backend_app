@@ -8,6 +8,9 @@ export class Room extends Document {
 
   @Prop()
   users: string[];
+
+ @Prop({unique:true})
+  usersKey: string;
 }
 
 export const RoomSchema = SchemaFactory.createForClass(Room);
