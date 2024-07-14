@@ -64,6 +64,18 @@ export class UsersController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('count-client-users')
+  async countClientUsers() {
+    return this.usersService.countUsersByRole('CLIENT');
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('engagement-kpi')
+  async getUserEngagementKPI(@Query('period') period: 'daily' | 'weekly' | 'monthly') {
+    return this.usersService.getUserEngagementKPI(period);
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN)
   @Get('count-by-role')
@@ -85,7 +97,7 @@ export class UsersController {
   }
   //to master
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @HasRoles(Role.ADMIN, Role.USER,  Role.STORE_STAFF, Role.STORE_OWNER)
+  @HasRoles(Role.ADMIN, Role.USER, Role.STORE_STAFF, Role.STORE_OWNER)
   @UseGuards(JwtAuthGuard)
   @Get('by-store')
   async findUsersByStore(@GetUser() user: User): Promise<any> {

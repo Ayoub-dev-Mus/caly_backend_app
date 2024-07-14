@@ -21,36 +21,6 @@ export class UsersService {
   ) { }
 
 
-  async getUserEngagement(period: 'daily' | 'weekly' | 'monthly'): Promise<number> {
-    const now = new Date();
-    let startDate: Date;
-
-    switch (period) {
-      case 'daily':
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        break;
-      case 'weekly':
-        const dayOfWeek = now.getDay(); // 0 (Sunday) to 6 (Saturday)
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
-        break;
-      case 'monthly':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        break;
-      default:
-        throw new HttpException('Invalid period specified', HttpStatus.BAD_REQUEST);
-    }
-
-    try {
-      const count = await this.userRepository.createQueryBuilder('user')
-        .where('user.lastLogin >= :startDate', { startDate })
-        .getCount();
-
-      return count;
-    } catch (error) {
-      Logger.error(`Error fetching user engagement for ${period}:`, error);
-      throw new HttpException(`Error fetching user engagement for ${period}`, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
 
   async countUsersByRole(role: string): Promise<number> {
     try {
@@ -344,6 +314,66 @@ export class UsersService {
     } catch (error) {
       Logger.error(`Error linking user to store: ${error.message}`);
       throw new HttpException('Error linking user to store', HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  async getUserEngagement(period: 'daily' | 'weekly' | 'monthly'): Promise<number> {
+    const now = new Date();
+    let startDate: Date;
+
+    switch (period) {
+      case 'daily':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        break;
+      case 'weekly':
+        const dayOfWeek = now.getDay(); // 0 (Sunday) to 6 (Saturday)
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
+        break;
+      case 'monthly':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      default:
+        throw new HttpException('Invalid period specified', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      const count = await this.userRepository.createQueryBuilder('user')
+        .where('user.lastLogin >= :startDate', { startDate })
+        .getCount();
+
+      return count;
+    } catch (error) {
+      Logger.error(`Error fetching user engagement for ${period}:`, error);
+      throw new HttpException(`Error fetching user engagement for ${period}`, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+
+  async countUsersByClientRole(): Promise<number> {
+    try {
+      const count = await this.userRepository.count({ where: { role: Role.USER } });
+      return count;
+    } catch (error) {
+      Logger.error('Error counting users with role CLIENT:', error);
+      throw new HttpException('Error counting users with role CLIENT', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+  async getUserEngagementKPI(period: 'daily' | 'weekly' | 'monthly'): Promise<any> {
+    try {
+      const engagementCount = await this.getUserEngagement(period);
+      const totalUsers = await this.userRepository.count();
+
+      const kpi = (engagementCount / totalUsers) * 100;
+
+      return {
+        period,
+        engagementCount,
+        totalUsers,
+        kpi: kpi.toFixed(2) + '%',
+      };
+    } catch (error) {
+      Logger.error('Error calculating user engagement KPI:', error);
+      throw new HttpException('Error calculating user engagement KPI', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

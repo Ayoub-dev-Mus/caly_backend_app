@@ -58,7 +58,7 @@ export class BookingsService {
 
 
       const whereClause: any = {
-        store: user.store ,
+        store: user.store,
       };
 
       if (createdAt) {
@@ -102,7 +102,48 @@ export class BookingsService {
     }
   }
 
+  async getBookingStatisticsByMonth(user: User): Promise<any> {
+    try {
+      const bookingStatistics = [];
+      const months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
 
+      for (let i = 0; i < 12; i++) {
+        const startDate = new Date(new Date().getFullYear(), i, 1);
+        const endDate = new Date(new Date().getFullYear(), i + 1, 0);
+
+        const [completed, cancelled] = await Promise.all([
+          this.bookingRepository.count({
+            where: {
+              store: user.store,
+              status: BookingStatus.COMPLETED,
+              createdAt: Between(startDate, endDate)
+            }
+          }),
+          this.bookingRepository.count({
+            where: {
+              store: user.store,
+              status: BookingStatus.CANCELLED,
+              createdAt: Between(startDate, endDate)
+            }
+          })
+        ]);
+
+        bookingStatistics.push({
+          month: months[i],
+          completed,
+          cancelled
+        });
+      }
+
+      return bookingStatistics;
+    } catch (error) {
+      Logger.error(`Error getting booking statistics by month: ${error.message}`);
+      throw new Error(`Error getting booking statistics by month: ${error.message}`);
+    }
+  }
   async getSalesSummary(
     user: User,
     period: 'daily' | 'weekly' | 'monthly',
@@ -137,8 +178,7 @@ export class BookingsService {
         .createQueryBuilder('booking')
         .leftJoin('booking.service', 'service')
         .select('SUM(service.price)', 'totalSales')
-        .where('booking.store = :storeId', { storeId: user.store })
-        .andWhere('booking.createdAt BETWEEN :startDate AND :endDate', {
+        .where('booking.createdAt BETWEEN :startDate AND :endDate', {
           startDate,
           endDate,
         })
@@ -365,7 +405,6 @@ export class BookingsService {
     }
   }
 
-  //to master
   async getBookingSumByStore(
     user: User,
   ): Promise<{ storeId: string; bookingSum: number }[]> {
@@ -373,9 +412,7 @@ export class BookingsService {
       const bookingSumQuery = await this.bookingRepository
         .createQueryBuilder('booking')
         .leftJoin('booking.store', 'store')
-        .select('store.id', 'storeId')
         .addSelect('COUNT(booking.id)', 'bookingSum')
-        .where('booking.userId = :userId', { userId: user.id })
         .groupBy('store.id')
         .getRawMany();
 

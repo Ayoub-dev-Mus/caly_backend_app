@@ -57,6 +57,9 @@ export class User {
   @IsString()
   profilePicture: string;
 
+  @Column({ type: 'timestamp', nullable: true })
+  lastLogin: Date;
+
   @Column({ nullable: true })
   @IsString()
   phoneNumber: string;

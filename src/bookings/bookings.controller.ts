@@ -130,6 +130,22 @@ export class BookingsController {
     return await this.bookingsService.getSalesSummary(user, period);
   }
 
+  
+
+  @UseGuards(JwtAuthGuard) // Example guard usage, modify as needed
+  @Get('statistics/monthly')
+  async getBookingStatisticsByMonth(
+    @GetUser() user: User,
+  ) {
+    try {
+      const statistics = await this.bookingsService.getBookingStatisticsByMonth(
+       user
+      );
+      return statistics;
+    } catch (error) {
+      throw new Error(`Error fetching booking statistics: ${error.message}`);
+    }
+  }
   @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)
