@@ -80,7 +80,19 @@ export class AuthService {
           role: newUser.role,
         },
       };
+      // Create Firebase user
+      try {
+        const firebaseUser = await admin.auth().createUser({
+          email: createUserDto.email,
+          password: createUserDto.password,
+          displayName: `${createUserDto.firstName} ${createUserDto.lastName}`,
+        });
 
+        Logger.log(`Firebase user created with UID: ${firebaseUser.uid}`);
+      } catch (error) {
+
+        throw new Error(`Firebase user creation failed: ${error.message}`);
+      }
       await this.updateRefreshToken(newUser.id, tokens.refreshToken);
 
       return response;
@@ -156,7 +168,7 @@ export class AuthService {
 
         await this.updateRefreshToken(user.id, tokens.refreshToken);
         user.lastLogin = new Date();
-        await this.usersService.update(user.id,{lastLogin:user.lastLogin});
+        await this.usersService.update(user.id, { lastLogin: user.lastLogin });
         const response = {
           token: tokens.token,
           refreshToken: tokens.refreshToken,
