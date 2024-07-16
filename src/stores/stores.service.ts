@@ -182,7 +182,7 @@ export class StoresService {
           storeTypeId: storeType,
         });
       }
-
+      //test
       const totalCount = await queryBuilder
         .groupBy('store.id, type.id, type.label, type.icon')
         .setParameter('longitude', longitude)
