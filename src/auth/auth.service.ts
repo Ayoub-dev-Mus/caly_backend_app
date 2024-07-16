@@ -16,6 +16,7 @@ import { SignInDto } from './dto/signin.dto';
 import * as nodemailer from 'nodemailer';
 import * as admin from 'firebase-admin';
 import serviceAccount from '../../src/config/mykey.json';
+import { Firestore } from '@google-cloud/firestore';
 
 @Injectable()
 export class AuthService {
@@ -80,18 +81,23 @@ export class AuthService {
           role: newUser.role,
         },
       };
-      // Create Firebase user
       try {
-        const firebaseUser = await admin.auth().createUser({
+        const userRef = admin.firestore().collection('users').doc(newUser.id);
+        await userRef.set({
           email: createUserDto.email,
-          password: createUserDto.password,
-          displayName: `${createUserDto.firstName} ${createUserDto.lastName}`,
+          firstName: createUserDto.firstName,
+          lastName: createUserDto.lastName,
+          zipCode: createUserDto.zipCode,
+          state: createUserDto.state,
+          address: createUserDto.address,
+          phone: createUserDto.phoneNumber,
+          role: Role.STORE_STAFF,
+          profilePicture: null,
         });
 
-        Logger.log(`Firebase user created with UID: ${firebaseUser.uid}`);
+        Logger.log(`Firestore user document created with ID: ${newUser.id}`);
       } catch (error) {
-
-        throw new Error(`Firebase user creation failed: ${error.message}`);
+        throw new Error(`Firestore user document creation failed: ${error.message}`);
       }
       await this.updateRefreshToken(newUser.id, tokens.refreshToken);
 
@@ -193,6 +199,8 @@ export class AuthService {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
+
+ 
 
   async logout(id: string) {
     return this.usersService.update(id, { refreshToken: null });
