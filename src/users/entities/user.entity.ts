@@ -64,6 +64,10 @@ export class User {
   @IsString()
   phoneNumber: string;
 
+  @Column({ nullable: true })
+  @IsString()
+  fcmToken: string; 
+
   @CreateDateColumn({ type: 'timestamp', nullable: true })
   createdAt: Date;
 
