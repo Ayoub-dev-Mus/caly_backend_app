@@ -63,7 +63,7 @@ export class SpecialistsService {
 
       const key = `${Date.now()}-${file.originalname}`;
       const uploadParams = {
-        Bucket: 'caly-app-bucker', // Update with your S3 bucket name
+        Bucket: 'caly-app-bucker', 
         Key: key,
         Body: file.buffer,
       };

@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -102,48 +102,173 @@ export class BookingsService {
     }
   }
 
-  async getBookingStatisticsByMonth(user: User): Promise<any> {
+  async getKPIData(user: User, period: 'monthly' | 'weekly' | 'yearly'): Promise<{ period: string, paid: number, rejected: number }[]> {
     try {
-      const bookingStatistics = [];
-      const months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-      ];
+      const kpiData = [];
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+      const periods: string[] = [];
 
-      for (let i = 0; i < 12; i++) {
-        const startDate = new Date(new Date().getFullYear(), i, 1);
-        const endDate = new Date(new Date().getFullYear(), i + 1, 0);
+      switch (period) {
+        case 'monthly':
+          for (let i = 0; i < 12; i++) {
+            const startDate = new Date(currentYear, i, 1);
+            const endDate = new Date(currentYear, i + 1, 0);
 
-        const [completed, cancelled] = await Promise.all([
-          this.bookingRepository.count({
-            where: {
-              store: user.store,
-              status: BookingStatus.COMPLETED,
-              createdAt: Between(startDate, endDate)
-            }
-          }),
-          this.bookingRepository.count({
-            where: {
-              store: user.store,
-              status: BookingStatus.CANCELLED,
-              createdAt: Between(startDate, endDate)
-            }
-          })
-        ]);
+            const [paidCount, rejectedCount] = await Promise.all([
+              this.bookingRepository.count({
+                where: {
+                  store: user.store,
+                  status: BookingStatus.CONFIRMED,
+                  createdAt: Between(startDate, endDate),
+                }
+              }),
+              this.bookingRepository.count({
+                where: {
+                  store: user.store,
+                  status: BookingStatus.REJECTED,
+                  createdAt: Between(startDate, endDate),
+                }
+              })
+            ]);
 
-        bookingStatistics.push({
-          month: months[i],
-          completed,
-          cancelled
-        });
+            periods.push(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i]);
+            kpiData.push({
+              period: periods[i],
+              paid: paidCount,
+              rejected: rejectedCount
+            });
+          }
+          break;
+
+        case 'weekly':
+          const startOfYear = new Date(currentYear, 0, 1);
+          const endOfYear = new Date(currentYear + 1, 0, 1);
+          const oneWeek = 7 * 24 * 60 * 60 * 1000; // milliseconds in a week
+
+          for (let i = 0; startOfYear < endOfYear; i++) {
+            const startDate = new Date(startOfYear.getTime() + i * oneWeek);
+            const endDate = new Date(startDate.getTime() + oneWeek - 1);
+
+            const [paidCount, rejectedCount] = await Promise.all([
+              this.bookingRepository.count({
+                where: {
+                  store: user.store,
+                  status: BookingStatus.CONFIRMED,
+                  createdAt: Between(startDate, endDate),
+                }
+              }),
+              this.bookingRepository.count({
+                where: {
+                  store: user.store,
+                  status: BookingStatus.REJECTED,
+                  createdAt: Between(startDate, endDate),
+                }
+              })
+            ]);
+
+            kpiData.push({
+              period: `Week ${i + 1}`,
+              paid: paidCount,
+              rejected: rejectedCount
+            });
+          }
+          break;
+
+        case 'yearly':
+          const startYear = currentYear - 5; // Last 5 years including current year
+          for (let i = 0; i <= 5; i++) {
+            const startDate = new Date(startYear + i, 0, 1);
+            const endDate = new Date(startYear + i + 1, 0, 1);
+
+            const [paidCount, rejectedCount] = await Promise.all([
+              this.bookingRepository.count({
+                where: {
+                  store: user.store,
+                  status: BookingStatus.CONFIRMED,
+                  createdAt: Between(startDate, endDate),
+                }
+              }),
+              this.bookingRepository.count({
+                where: {
+                  store: user.store,
+                  status: BookingStatus.REJECTED,
+                  createdAt: Between(startDate, endDate),
+                }
+              })
+            ]);
+
+            kpiData.push({
+              period: (startYear + i).toString(),
+              paid: paidCount,
+              rejected: rejectedCount
+            });
+          }
+          break;
+
+        default:
+          throw new BadRequestException('Invalid period specified');
       }
 
-      return bookingStatistics;
+      return kpiData;
     } catch (error) {
-      Logger.error(`Error getting booking statistics by month: ${error.message}`);
-      throw new Error(`Error getting booking statistics by month: ${error.message}`);
+      Logger.error(`Error getting KPI data: ${error.message}`);
+      throw new Error(`Error getting KPI data: ${error.message}`);
     }
   }
+
+
+  async getTotalSalesRevenue(user: User, period: 'daily' | 'weekly' | 'monthly' | 'yearly'): Promise<{ totalRevenue: number }> {
+    try {
+      const now = new Date();
+      let startDate: Date;
+      let endDate: Date;
+
+      switch (period) {
+        case 'daily':
+          startDate = new Date(now);
+          startDate.setHours(0, 0, 0, 0);
+          endDate = new Date(now);
+          endDate.setHours(23, 59, 59, 999);
+          break;
+        case 'weekly':
+          startDate = new Date(now);
+          startDate.setDate(now.getDate() - now.getDay());
+          startDate.setHours(0, 0, 0, 0);
+          endDate = new Date(now);
+          endDate.setDate(now.getDate() - now.getDay() + 6);
+          endDate.setHours(23, 59, 59, 999);
+          break;
+        case 'monthly':
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+          break;
+        case 'yearly':
+          startDate = new Date(now.getFullYear(), 0, 1);
+          endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+          break;
+        default:
+          throw new Error('Invalid period specified');
+      }
+
+      const totalRevenueQuery = await this.bookingRepository
+        .createQueryBuilder('booking')
+        .leftJoin('booking.service', 'service')
+        .select('SUM(service.price)', 'totalRevenue')
+        .where('booking.createdAt BETWEEN :startDate AND :endDate', { startDate, endDate })
+        .andWhere('booking.storeId = :storeId', { storeId: user.store })
+        .getRawOne();
+
+      let totalRevenue = parseFloat(totalRevenueQuery.totalRevenue || '0');
+
+      return { totalRevenue };
+    } catch (error) {
+      Logger.error(`Error getting total sales revenue: ${error.message}`);
+      throw new Error(`Error getting total sales revenue: ${error.message}`);
+    }
+  }
+
   async getSalesSummary(
     user: User,
     period: 'daily' | 'weekly' | 'monthly',

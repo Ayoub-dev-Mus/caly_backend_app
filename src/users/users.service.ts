@@ -11,14 +11,22 @@ import { Multer } from 'multer';
 import * as admin from 'firebase-admin';
 import { Role } from './enums/role';
 import { Store } from 'src/stores/entities/store.entity';
+import serviceAccount from '../../src/config/mykey.json';
 
 @Injectable()
 export class UsersService {
+
+
+
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private jwtService: JwtService,
-  ) { }
+  ) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+    },'user');
+  }
 
 
 
@@ -356,6 +364,17 @@ export class UsersService {
     } catch (error) {
       Logger.error('Error counting users with role CLIENT:', error);
       throw new HttpException('Error counting users with role CLIENT', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async updateUserInFirebase(id: string, updateUserDto: Partial<User>): Promise<void> {
+    try {
+      const userRef =  admin.firestore().collection('users').doc(id);
+      await userRef.update(updateUserDto);
+      Logger.log(`Firestore user document updated with ID: ${id}`);
+    } catch (error) {
+      Logger.error(`Failed to update Firestore user document: ${error.message}`);
+      throw new Error(`Failed to update Firestore user document: ${error.message}`);
     }
   }
   async getUserEngagementKPI(period: 'daily' | 'weekly' | 'monthly'): Promise<any> {

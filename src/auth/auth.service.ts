@@ -27,7 +27,7 @@ export class AuthService {
   ) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-    });
+    },'auth');
   }
 
   async signUp(
@@ -200,7 +200,7 @@ export class AuthService {
     }
   }
 
- 
+
 
   async logout(id: string) {
     return this.usersService.update(id, { refreshToken: null });
