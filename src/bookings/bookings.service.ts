@@ -318,7 +318,54 @@ export class BookingsService {
     }
   }
 
+  async getSalesSummaryByLoggedUser(
+    user: User,
+    period: 'daily' | 'weekly' | 'monthly',
+  ): Promise<{ totalSales: number }> {
+    try {
+      console.log(user);
+      const now = new Date();
+      let startDate: Date;
 
+      switch (period) {
+        case 'daily':
+          startDate = new Date(now);
+          startDate.setHours(0, 0, 0, 0);
+          break;
+        case 'weekly':
+          startDate = new Date(now);
+          startDate.setDate(now.getDate() - now.getDay());
+          startDate.setHours(0, 0, 0, 0);
+          break;
+        case 'monthly':
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        default:
+          throw new Error('Invalid period specified');
+      }
+
+      const endDate = new Date(now);
+      endDate.setHours(23, 59, 59, 999);
+
+      const totalSalesQuery = await this.bookingRepository
+        .createQueryBuilder('booking')
+        .leftJoin('booking.service', 'service')
+        .select('SUM(service.price)', 'totalSales')
+        .where('booking.user = :user', { user: user }) // Filter by user ID
+        .andWhere('booking.createdAt BETWEEN :startDate AND :endDate', {
+          startDate,
+          endDate,
+        })
+        .getRawOne();
+
+      let totalSales = parseFloat(totalSalesQuery.totalSales || '0');
+
+      return { totalSales };
+    } catch (error) {
+      Logger.error(`Error getting sales summary for user ${user.id}: ${error.message}`);
+      throw new Error(`Error getting sales summary: ${error.message}`);
+    }
+  }
 
   async findAll(
     user: User,
