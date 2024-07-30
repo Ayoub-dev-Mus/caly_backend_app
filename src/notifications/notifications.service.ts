@@ -16,42 +16,60 @@ export class NotificationsService {
     private socketGateway: SocketGateway,
   ) {}
 
-  async sendNotificationToDevice(createNotificationDto: CreateNotificationDto) {
+  async sendNotificationToDevices(notificationId: number , fcmTokens:string[]) {
     try {
+      const notification = await this.notificationRepository.findOne({
+        where: { id: notificationId },
+      });
+
+      if (!notification) {
+        throw new NotFoundException(`Notification with ID ${notificationId} not found`);
+      }
+
       const message = {
-        token: createNotificationDto.fcmToken,
         notification: {
-          title: createNotificationDto.title,
+          title: notification.title,
         },
         data: {
-          title: createNotificationDto.title,
-          message: createNotificationDto.message,
+          title: notification.title,
+          message: notification.message,
         },
       };
 
-      Logger.log('Sending notification to device:', message);
+      // Split the tokens into chunks if needed (to avoid payload size limits)
+      const tokens = fcmTokens
+      const chunkSize = 1000; // Firebase allows up to 1000 tokens per request
+      const tokenChunks = [];
 
-      const response = await admin.messaging().send(message);
-      console.log('Successfully sent message:', response);
-      return response;
+      for (let i = 0; i < tokens.length; i += chunkSize) {
+        tokenChunks.push(tokens.slice(i, i + chunkSize));
+      }
+
+      const responses = [];
+
+      for (const chunk of tokenChunks) {
+        const response = await admin.messaging().sendToDevice(chunk, message);
+        responses.push(response);
+        console.log('Successfully sent message to devices:', response);
+      }
+
+      // Combine and return all responses
+      return responses;
     } catch (error) {
+      console.error('Failed to send messages:', error);
       throw error;
     }
   }
+
   async createNotification(
     createNotificationDto: CreateNotificationDto,
   ): Promise<Notification> {
     try {
-      const savedNotification = await this.notificationRepository.save(
-        createNotificationDto,
-      );
-      this.socketGateway.emit('notificationCountUpdated', {
-        count: await this.getUnreadNotificationCount(),
-      });
-      console.log(savedNotification);
+      const savedNotification = await this.notificationRepository.save(createNotificationDto);
+      console.log('Notification saved and sent successfully:', savedNotification);
       return savedNotification;
     } catch (error) {
-      console.error('Failed to create notification:', error);
+      console.error('Failed to create and send notification:', error);
       throw error;
     }
   }
@@ -78,6 +96,7 @@ export class NotificationsService {
       throw error;
     }
   }
+
   @Cron(CronExpression.EVERY_WEEK)
   async deleteOldNotifications() {
     const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);

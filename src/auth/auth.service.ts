@@ -27,7 +27,7 @@ export class AuthService {
   ) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-    });
+    }, 'auth');
   }
 
   async signUp(
@@ -48,6 +48,8 @@ export class AuthService {
         role: Role.USER,
         profilePicture: null,
       });
+
+
 
       if (!newUser) {
         throw new Error('User creation failed.');
@@ -110,17 +112,19 @@ export class AuthService {
 
   async signIn(data: SignInDto) {
     try {
-      const EXPIRE_TIME = 15 * 60 * 1000;
+      const EXPIRE_TIME = 15 * 60 * 1000; // Token expiration time
       const emailLowerCase = data.email.toLowerCase();
       const user = await this.usersService.findOneByEmail(emailLowerCase);
 
-      const passwordMatches = await bcrypt.compare(
-        data.password,
-        user.password,
-      );
+      const passwordMatches = await bcrypt.compare(data.password, user.password);
 
       if (!passwordMatches) {
         throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+      }
+
+      if (data.fcmToken && (!user.fcmToken || user.fcmToken !== data.fcmToken)) {
+        user.fcmToken = data.fcmToken;
+        await this.usersService.update(user.id, { fcmToken: user.fcmToken });
       }
 
       if (user.role === Role.STORE_OWNER || user.role === Role.STORE_STAFF || user.role === Role.ADMIN || user.role === Role.STAFF) {
@@ -175,6 +179,7 @@ export class AuthService {
         await this.updateRefreshToken(user.id, tokens.refreshToken);
         user.lastLogin = new Date();
         await this.usersService.update(user.id, { lastLogin: user.lastLogin });
+
         const response = {
           token: tokens.token,
           refreshToken: tokens.refreshToken,
@@ -200,7 +205,6 @@ export class AuthService {
     }
   }
 
- 
 
   async logout(id: string) {
     return this.usersService.update(id, { refreshToken: null });
@@ -415,12 +419,14 @@ export class AuthService {
 
   async googleLogin(token: string): Promise<any> {
     try {
-      const { email, firstName, lastName, picture } =
-        await this.verifyFirebaseToken(token);
+      // Verify Firebase token and get user details
+      const { email, firstName, lastName, picture } = await this.verifyFirebaseToken(token);
 
+      // Check if user already exists
       let user = await this.usersService.findOneByEmail(email);
 
       if (!user) {
+        // Create a new user if not found
         user = await this.usersService.create({
           email,
           firstName,
@@ -430,47 +436,58 @@ export class AuthService {
           phoneNumber: '',
           zipCode: '',
           state: '',
-          password: '',
+          password: '', // No password needed for external auth users
           profilePicture: picture,
         });
       } else {
-        const tokens = await this.getTokens(
-          user.id,
-          user.email,
-          user.role,
-          user.firstName,
-          user.lastName,
-          user.state,
-          user.zipCode,
-          user.address,
-          user.phoneNumber,
-          user.profilePicture,
-        );
-        await this.updateRefreshToken(user.id, tokens.refreshToken);
-
-        const response = {
-          token: tokens.token,
-          refreshToken: tokens.refreshToken,
-          User: {
-            id: user.id,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            phoneNumber: user.phoneNumber,
-            zipCode: user.zipCode,
-            address: user.address,
-            state: user.state,
-            profilePicture: user.profilePicture,
-            role: user.role,
-          },
-        };
-
-        return response;
+        // Update user profile picture if changed
+        if (user.profilePicture !== picture) {
+          user.profilePicture = picture;
+          await this.usersService.update(user.id, { profilePicture: picture });
+        }
       }
+
+      // Generate tokens for the user
+      const tokens = await this.getTokens(
+        user.id,
+        user.email,
+        user.role,
+        user.firstName,
+        user.lastName,
+        user.state,
+        user.zipCode,
+        user.address,
+        user.phoneNumber,
+        user.profilePicture,
+      );
+
+      // Update the refresh token
+      await this.updateRefreshToken(user.id, tokens.refreshToken);
+
+      // Prepare response
+      const response = {
+        token: tokens.token,
+        refreshToken: tokens.refreshToken,
+        User: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          phoneNumber: user.phoneNumber,
+          zipCode: user.zipCode,
+          address: user.address,
+          state: user.state,
+          profilePicture: user.profilePicture,
+          role: user.role,
+        },
+      };
+
+      return response;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
+
 
   async verifyFirebaseToken(idToken: string): Promise<any> {
     try {

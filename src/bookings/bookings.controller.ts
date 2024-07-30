@@ -10,6 +10,7 @@ import {
   UseGuards,
   HttpException,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
@@ -39,7 +40,7 @@ export class BookingsController {
 
   @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @HasRoles(Role.ADMIN , Role.STORE_OWNER,Role.STORE_STAFF)
+  @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)
   @Get('logged/bookings')
   async findAllByStore(
     @GetUser() user: User,
@@ -100,6 +101,45 @@ export class BookingsController {
     return this.bookingsService.getCompletedBookingSumByStore(user);
   }
 
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)
+  @Get('kpi/bar')
+  async getKpiData(
+    @GetUser('user') user: User, // Assuming user is identified by userId
+    @Query('period') period: 'monthly' | 'weekly' | 'yearly'
+  ): Promise<{ period: string, paid: number, rejected: number }[]> {
+    try {
+      if (!['monthly', 'weekly', 'yearly'].includes(period)) {
+        throw new BadRequestException('Invalid period specified');
+      }
+
+      return this.bookingsService.getKPIData(user, period);
+    } catch (error) {
+      throw new BadRequestException(`Error fetching KPI data: ${error.message}`);
+    }
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)
+  @Get('kpi/line')
+  async getTotalSalesRevenue(
+    @GetUser('user') user: User, // Assuming user is identified by userId
+    @Query('period') period: 'daily' | 'weekly' | 'monthly' | 'yearly'
+  ): Promise<{ totalRevenue: number }> {
+    try {
+      if (!['daily', 'weekly', 'monthly', 'yearly'].includes(period)) {
+        throw new BadRequestException('Invalid period specified');
+      }
+
+      return this.bookingsService.getTotalSalesRevenue(user, period);
+    } catch (error) {
+      throw new BadRequestException(`Error fetching total sales revenue: ${error.message}`);
+    }
+  }
+
   @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)
@@ -130,22 +170,22 @@ export class BookingsController {
     return await this.bookingsService.getSalesSummary(user, period);
   }
 
-  
-
-  @UseGuards(JwtAuthGuard) // Example guard usage, modify as needed
-  @Get('statistics/monthly')
-  async getBookingStatisticsByMonth(
+  @ApiBearerAuth('access-token')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)
+  @Get('sales-summary')
+  async getSalesSummaryByloggedUser(
     @GetUser() user: User,
-  ) {
-    try {
-      const statistics = await this.bookingsService.getBookingStatisticsByMonth(
-       user
-      );
-      return statistics;
-    } catch (error) {
-      throw new Error(`Error fetching booking statistics: ${error.message}`);
-    }
+    @Query('period') period: 'daily' | 'weekly' | 'monthly',
+  ): Promise<{ totalSales: number }> {
+    console.log(user)
+    return await this.bookingsService.getSalesSummaryByLoggedUser(user, period);
   }
+
+
+
+
+
   @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.STORE_OWNER, Role.STORE_STAFF)

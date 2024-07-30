@@ -1,9 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-
+import { IsOptional, IsString } from 'class-validator';
 export class SignInDto {
-  @ApiProperty()
+  @IsString()
   email: string;
 
-  @ApiProperty()
+  @IsString()
   password: string;
+
+  @IsOptional()
+  @IsString()
+  fcmToken?: string; // Optional field for FCM token
 }
