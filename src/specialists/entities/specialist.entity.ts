@@ -25,7 +25,7 @@ export class Specialist {
   @Column()
   specialty: string;
 
-  @Column()
+  @Column({nullable:true})
   profilePicture: string;
 
   @ManyToMany(() => Service, (service) => service.specialists)
