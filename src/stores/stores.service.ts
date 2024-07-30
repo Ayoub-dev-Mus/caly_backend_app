@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Store } from './entities/store.entity';
@@ -17,6 +17,7 @@ import { CreateStoreTypeDto } from './dto/create-store-type.dto';
 import { RedisService } from 'src/redis/redis.service';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Multer } from 'multer';
+
 @Injectable()
 export class StoresService {
   @InjectRepository(Store)
@@ -47,9 +48,9 @@ export class StoresService {
       if (response && response.data) {
         return response.data;
       }
-      return null;
+      throw new InternalServerErrorException('No data returned from Google Maps API.');
     } catch (error) {
-      throw new Error(error.message);
+      throw new InternalServerErrorException('Failed to draw road: ' + error.message);
     }
   }
 
@@ -57,7 +58,7 @@ export class StoresService {
     try {
       return await this.storeTypeRepository.find();
     } catch (error) {
-      throw new Error(error.message);
+      throw new InternalServerErrorException('Failed to retrieve store types: ' + error.message);
     }
   }
 
@@ -65,7 +66,7 @@ export class StoresService {
     try {
       return await this.storeTypeRepository.save(storeType);
     } catch (error) {
-      throw new Error(error.message);
+      throw new InternalServerErrorException('Failed to create store type: ' + error.message);
     }
   }
 
@@ -73,7 +74,7 @@ export class StoresService {
     try {
       return await this.storeRepository.save(createStoreDto);
     } catch (error) {
-      throw new Error(error.message);
+      throw new InternalServerErrorException('Failed to create store: ' + error.message);
     }
   }
 
@@ -83,13 +84,10 @@ export class StoresService {
     searchTerm: string = '',
   ): Promise<{ stores: Store[]; total: number }> {
     try {
-
       const cacheKey = `stores:all:${page}:${pageSize}:${searchTerm}`;
 
       try {
         const cachedResult = await this.redisService.get(cacheKey);
-
-        Logger.log('cachedResult', cachedResult);
 
         if (cachedResult) {
           return JSON.parse(cachedResult);
@@ -119,10 +117,10 @@ export class StoresService {
 
         return { stores, total };
       } catch (error) {
-        throw new Error(error.message);
+        throw new InternalServerErrorException('Failed to retrieve stores: ' + error.message);
       }
     } catch (error) {
-      throw new Error(error.message);
+      throw new InternalServerErrorException('Failed to retrieve stores: ' + error.message);
     }
   }
 
@@ -132,7 +130,7 @@ export class StoresService {
     searchTerm: string = '',
     page: number = 1,
     pageSize: number = 10,
-    storeType?: string, //
+    storeType?: string,
   ): Promise<{ stores: Store[]; total: number }> {
     try {
       let queryBuilder = this.storeRepository
@@ -163,7 +161,7 @@ export class StoresService {
         ])
         .addSelect(
           'ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography, store.location::geography) / 1000 AS distance',
-        ) // Convert distance to kilometers
+        )
         .leftJoin('store.services', 'services')
         .leftJoin('store.specialists', 'specialists')
         .leftJoin('store.type', 'type')
@@ -182,7 +180,7 @@ export class StoresService {
           storeTypeId: storeType,
         });
       }
-      //test
+
       const totalCount = await queryBuilder
         .groupBy('store.id, type.id, type.label, type.icon')
         .setParameter('longitude', longitude)
@@ -197,7 +195,7 @@ export class StoresService {
 
       return { stores: result, total: totalCount };
     } catch (error) {
-      throw new Error(error.message);
+      throw new InternalServerErrorException('Failed to retrieve nearest stores: ' + error.message);
     }
   }
 
@@ -209,16 +207,14 @@ export class StoresService {
         throw new NotFoundException('Store not found.');
       }
 
-      // Call the uploadStoreImages method to upload the new images and get their keys
       const uploadedKeys = await this.uploadStoreImages(files);
 
-      // Assuming store.images is an array of image keys
       store.images = [...store.images, ...uploadedKeys];
       await this.storeRepository.save(store);
 
       return store;
     } catch (error) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      throw new InternalServerErrorException('Failed to update store images: ' + error.message);
     }
   }
 
@@ -285,99 +281,100 @@ export class StoresService {
       });
     }
 
-    const totalCount = await queryBuilder
-      .groupBy('store.id, type.id, type.label, type.icon')
-      .setParameter('longitude', longitude)
-      .setParameter('latitude', latitude)
-      .getCount();
-
-    const result = await queryBuilder
-      .orderBy('distance')
-      .skip((page - 1) * pageSize)
-      .take(pageSize)
-      .getRawMany();
-
     try {
-      await this.redisService.set(
-        cacheKey,
-        JSON.stringify({ stores: result, total: totalCount }),
+      const totalCount = await queryBuilder
+        .groupBy('store.id, type.id, type.label, type.icon')
+        .setParameter('longitude', longitude)
+        .setParameter('latitude', latitude)
+        .getCount();
 
-      );
+      const result = await queryBuilder
+        .orderBy('distance')
+        .skip((page - 1) * pageSize)
+        .take(pageSize)
+        .getRawMany();
+
+      try {
+        await this.redisService.set(
+          cacheKey,
+          JSON.stringify({ stores: result, total: totalCount }),
+        );
+      } catch (error) {
+        console.error('Error setting cache in Redis:', error);
+      }
+
+      return { stores: result, total: totalCount };
     } catch (error) {
-      console.error('Error setting cache in Redis:', error);
-    }
-
-    return { stores: result, total: totalCount };
-  }
-
-  async uploadStoreImages(files: Multer.File[]): Promise<string[]> {
-    try {
-      const s3 = new S3Client({
-        region: 'eu-north-1',
-        credentials: {
-          accessKeyId: process.env.AWS_ACCESS,
-          secretAccessKey: process.env.AWS_SECRET,
-        },
-      });
-
-      const uploadPromises = files.map(async (file) => {
-        const key = `${Date.now()}-${file.originalname}`;
-        const uploadParams = {
-          Bucket: 'caly-app-bucker',
-          Key: key,
-          Body: file.buffer,
-        };
-
-        const result = await s3.send(new PutObjectCommand(uploadParams));
-
-        if (!result) {
-          throw new Error('Error uploading file to S3');
-        }
-        // Construct the full URL
-        const fileUrl = `${process.env.AWS_S3_BASE_URL}/${key}`;
-        return fileUrl;
-      });
-
-      // Measure upload time
-      console.time('uploadTime');
-      const uploadedKeys = await Promise.all(uploadPromises);
-      console.timeEnd('uploadTime');
-
-      return uploadedKeys;
-    } catch (error) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      throw new InternalServerErrorException('Failed to retrieve nearest stores: ' + error.message);
     }
   }
 
+  private async uploadStoreImages(files: Multer.File[]): Promise<string[]> {
+    const s3 = new S3Client({ region: 'us-east-1' });
+    const uploadedKeys: string[] = [];
+
+    for (const file of files) {
+      const params = {
+        Bucket: 'my-store-images-bucket',
+        Key: `stores/${file.filename}`,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+      };
+
+      try {
+        await s3.send(new PutObjectCommand(params));
+        uploadedKeys.push(file.filename);
+      } catch (error) {
+        throw new InternalServerErrorException('Failed to upload image to S3: ' + error.message);
+      }
+    }
+
+    return uploadedKeys;
+  }
 
   async findOne(id: number): Promise<Store> {
     try {
-      const store = await this.storeRepository.findOne({ where: { id }, relations: ['services', 'specialists'] });
+      const store = await this.storeRepository.findOne({
+        where: { id },
+        relations: ['services', 'specialists', 'images'],
+      });
+
       if (!store) {
         throw new NotFoundException('Store not found.');
       }
+
       return store;
     } catch (error) {
-      throw new Error('Failed to retrieve store.');
+      throw new InternalServerErrorException('Failed to retrieve store: ' + error.message);
     }
   }
 
-  async update(
-    id: number,
-    updateStoreDto: UpdateStoreDto,
-  ): Promise<UpdateResult> {
+  async update(id: number, updateStoreDto: UpdateStoreDto): Promise<Store> {
     try {
-      return await this.storeRepository.update({ id }, updateStoreDto);
+      const store = await this.storeRepository.preload({
+        id,
+        ...updateStoreDto,
+      });
+
+      if (!store) {
+        throw new NotFoundException('Store not found.');
+      }
+
+      return await this.storeRepository.save(store);
     } catch (error) {
-      throw new Error('Failed to update store.');
+      throw new InternalServerErrorException('Failed to update store: ' + error.message);
     }
   }
 
-  async remove(id: number): Promise<DeleteResult> {
+  async remove(id: number): Promise<void> {
     try {
-      return await this.storeRepository.delete({ id });
+      const deleteResult = await this.storeRepository.delete(id);
+
+      if (deleteResult.affected === 0) {
+        throw new NotFoundException('Store not found.');
+      }
     } catch (error) {
-      throw new Error('Failed to delete store.');
+      throw new InternalServerErrorException('Failed to delete store: ' + error.message);
     }
   }
 }
