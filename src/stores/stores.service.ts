@@ -336,7 +336,7 @@ export class StoresService {
     try {
       const store = await this.storeRepository.findOne({
         where: { id },
-        relations: ['services', 'specialists', 'images'],
+        relations: ['services', 'specialists'],
       });
 
       if (!store) {
