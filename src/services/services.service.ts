@@ -4,6 +4,7 @@ import { Repository, UpdateResult } from 'typeorm';
 import CreateServiceDto from './dto/create-service.dto';
 import { Service } from './entities/service.entity';
 import { UpdateServiceDto } from './dto/update-service.dto';
+import { Status } from './enum/status';
 
 @Injectable()
 export class ServicesService {
@@ -14,6 +15,7 @@ export class ServicesService {
 
   async create(createServiceDto: CreateServiceDto): Promise<Service> {
     try {
+      createServiceDto.status = Status.AVAILABLE
       const newService = this.serviceRepository.create(createServiceDto);
       return await this.serviceRepository.save(newService);
     } catch (error) {

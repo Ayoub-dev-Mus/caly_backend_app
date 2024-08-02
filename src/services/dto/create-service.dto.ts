@@ -9,6 +9,7 @@ import {
 import { Type } from 'class-transformer';
 import { Store } from 'src/stores/entities/store.entity';
 import { Specialist } from 'src/specialists/entities/specialist.entity';
+import { Status } from '../enum/status';
 
 @ApiExtraModels(Store, Specialist)
 export class CreateServiceDto {
@@ -31,6 +32,10 @@ export class CreateServiceDto {
   @IsNotEmpty()
   @IsString()
   icon: string;
+
+  @IsNotEmpty()
+  @IsString()
+  status: Status;
 
   @ApiProperty({ type: Store })
   @IsNotEmpty()

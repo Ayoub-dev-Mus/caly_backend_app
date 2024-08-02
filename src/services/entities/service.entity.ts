@@ -12,6 +12,7 @@ import {
   ManyToOne,
   OneToMany,
 } from 'typeorm';
+import { Status } from '../enum/status';
 
 @Entity()
 export class Service {
@@ -29,6 +30,9 @@ export class Service {
 
   @Column()
   icon: string;
+
+  @Column({nullable:true})
+  status:Status
 
   @ManyToOne(() => Store, (store) => store.services)
   @JoinColumn({ name: 'storeId' })

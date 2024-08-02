@@ -1,0 +1,4 @@
+export enum Status{
+    AVAILABLE="AVAILABLE",
+    NOTAVAILABLE="NOTAVAILABLE"
+}
