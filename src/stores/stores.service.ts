@@ -309,27 +309,41 @@ export class StoresService {
     }
   }
 
-  private async uploadStoreImages(files: Multer.File[]): Promise<string[]> {
-    const s3 = new S3Client({ region: 'us-east-1' });
-    const uploadedKeys: string[] = [];
+  async uploadStoreImages(files: Multer.File[]): Promise<string[]> {
+    try {
+      const s3 = new S3Client({
+        region: 'eu-north-1',
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS,
+          secretAccessKey: process.env.AWS_SECRET,
+        },
+      });
 
-    for (const file of files) {
-      const params = {
-        Bucket: 'my-store-images-bucket',
-        Key: `stores/${file.filename}`,
-        Body: file.buffer,
-        ContentType: file.mimetype,
-      };
+      const uploadPromises = files.map(async (file) => {
+        const key = `${Date.now()}-${file.originalname}`;
+        const uploadParams = {
+          Bucket: 'caly-app-bucker',
+          Key: key,
+          Body: file.buffer,
+        };
 
-      try {
-        await s3.send(new PutObjectCommand(params));
-        uploadedKeys.push(file.filename);
-      } catch (error) {
-        throw new InternalServerErrorException('Failed to upload image to S3: ' + error.message);
-      }
+        const result = await s3.send(new PutObjectCommand(uploadParams));
+
+        if (!result) {
+          throw new Error('Error uploading file to S3');
+        }
+        const fileUrl = `${process.env.AWS_S3_BASE_URL}/${key}`;
+        return fileUrl;
+      });
+
+      console.time('uploadTime');
+      const uploadedKeys = await Promise.all(uploadPromises);
+      console.timeEnd('uploadTime');
+
+      return uploadedKeys;
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
-
-    return uploadedKeys;
   }
 
   async findOne(id: number): Promise<Store> {
