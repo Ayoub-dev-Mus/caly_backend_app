@@ -9,6 +9,7 @@ import {
   Req,
   BadRequestException,
   Logger,
+  ForbiddenException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { User } from 'src/users/entities/user.entity';
@@ -16,10 +17,14 @@ import { User } from 'src/users/entities/user.entity';
 import { RefreshTokenGuard } from 'src/common/guards/refreshToken.guard';
 import { AccessTokenGuard } from 'src/common/guards/accessToken.guard';
 import { GetUser } from 'src/common/jwtMiddlware';
-import { ApiBody, ApiOperation, ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SignInDto } from './dto/signin.dto';
 import { SignUpDto } from './dto/signUp.dto';
 import { UsersService } from 'src/users/users.service';
+import { Role } from 'src/users/enums/role';
+import { HasRoles } from 'src/common/role.decorator';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/role.guard';
 
 
 class VerifyOtpDto {
@@ -107,6 +112,25 @@ export class AuthController {
       Logger.error('Error during forgot password process', error);
       throw new BadRequestException(error.message);
     });
+  }
+
+  @Post('create-user-with-role')
+  @ApiBearerAuth('access-token')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.STAFF)
+  async createUserWithRole(
+    @Body() createUserDto: SignUpDto,
+    @Body('role') role: Role,
+  ): Promise<any> {
+    if (![Role.USER, Role.STORE_OWNER, Role.STORE_STAFF, Role.ADMIN, Role.STAFF].includes(role)) {
+      throw new ForbiddenException('Invalid role specified.');
+    }
+    try {
+      const response = await this.authService.createUserWithRole(createUserDto, role);
+      return response;
+    } catch (error) {
+      throw error;
+    }
   }
 
   @Post('verify-otp')

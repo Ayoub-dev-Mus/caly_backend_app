@@ -205,6 +205,90 @@ export class AuthService {
     }
   }
 
+  async createUserWithRole(
+    createUserDto: SignUpDto,
+    role: Role
+  ): Promise<{ token: string; refreshToken: string; User: Partial<User> }> {
+
+    try {
+      createUserDto.email = createUserDto.email.toLowerCase();
+      Logger.log(createUserDto);
+      const existingUser = await this.usersService.findOneByEmail(createUserDto.email);
+      Logger.warn(existingUser);
+
+      if (![Role.USER, Role.STORE_OWNER, Role.STORE_STAFF, Role.ADMIN, Role.STAFF].includes(role)) {
+        throw new BadRequestException('Invalid role specified.');
+      }
+
+      const hash = await this.hashData(createUserDto.password);
+
+      const newUser = await this.usersService.create({
+        ...createUserDto,
+        password: hash,
+        role: role,
+        profilePicture: null,
+      });
+
+      if (!newUser) {
+        throw new Error('User creation failed.');
+      }
+
+      const tokens = await this.getTokens(
+        newUser.id,
+        newUser.email,
+        newUser.role,
+        newUser.firstName,
+        newUser.lastName,
+        newUser.state,
+        newUser.address,
+        newUser.zipCode,
+        newUser.phoneNumber,
+      );
+
+      // Prepare response object
+      const response = {
+        token: tokens.token,
+        refreshToken: tokens.refreshToken,
+        User: {
+          id: newUser.id,
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          zipCode: newUser.zipCode,
+          state: newUser.state,
+          address: newUser.address,
+          phone: newUser.phoneNumber,
+          role: newUser.role,
+        },
+      };
+
+      try {
+        const userRef = admin.firestore().collection('users').doc(newUser.id);
+        await userRef.set({
+          email: createUserDto.email,
+          firstName: createUserDto.firstName,
+          lastName: createUserDto.lastName,
+          zipCode: createUserDto.zipCode,
+          state: createUserDto.state,
+          address: createUserDto.address,
+          phone: createUserDto.phoneNumber,
+          role: role,
+          profilePicture: null,
+        });
+
+        Logger.log(`Firestore user document created with ID: ${newUser.id}`);
+      } catch (error) {
+        throw new Error(`Firestore user document creation failed: ${error.message}`);
+      }
+
+      await this.updateRefreshToken(newUser.id, tokens.refreshToken);
+
+      return response;
+    } catch (error) {
+      console.error('Error during user creation with role:', error);
+      throw error;
+    }
+  }
 
   async logout(id: string) {
     return this.usersService.update(id, { refreshToken: null });
