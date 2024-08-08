@@ -154,7 +154,7 @@ export class StoresController {
   ): Promise<any> {
     try {
       const result = await this.storesService.findAll(page, pageSize, searchTerm);
-      return result; // Keep the same return format
+      return result; 
     } catch (error) {
       this.logger.error('Failed to retrieve stores', error.stack);
       throw new HttpException({

@@ -79,14 +79,14 @@ export class SpecialistsService {
       const s3 = new S3Client({
         region: 'eu-north-1',
         credentials: {
-          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+          accessKeyId: process.env.AWS_ACCESS,
+          secretAccessKey: process.env.AWS_SECRET,
         },
       });
 
       const key = `${Date.now()}-${file.originalname}`;
       const uploadParams = {
-        Bucket: 'caly-app-bucker', 
+        Bucket: 'caly-app-bucker',
         Key: key,
         Body: file.buffer,
       };
@@ -97,7 +97,7 @@ export class SpecialistsService {
         throw new InternalServerErrorException('Error uploading file to S3');
       }
 
-      const fileUrl = `${process.env.AWS_S3_BASE_URL}/${key}`; // Construct the full URL
+      const fileUrl = `${process.env.AWS_S3_BASE_URL}/${key}`;
       return fileUrl;
     } catch (error) {
       throw new InternalServerErrorException('Failed to upload profile image to S3: ' + error.message);
