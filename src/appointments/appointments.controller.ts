@@ -15,11 +15,13 @@ import { CreateTimeSlotDto } from './dto/create-timeslot.dto';
 import { UpdateTimeSlotDto } from './dto/update-timeslot.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { TimeSlot } from './entities/timeslots.entity';
+import { GetUser } from 'src/common/jwtMiddlware';
+import { User } from 'src/users/entities/user.entity';
 
 @ApiTags('appointments')
 @Controller('appointments')
 export class AppointmentsController {
-  constructor(private readonly appointmentsService: AppointmentsService) {}
+  constructor(private readonly appointmentsService: AppointmentsService) { }
 
   @Post()
   createAppointment(@Body() createAppointmentDto: CreateAppointmentDto) {
@@ -66,8 +68,8 @@ export class AppointmentsController {
   }
 
   @Get('/timeslots')
-  findAllTimeSlots() {
-    return this.appointmentsService.findAllTimeSlots();
+  findAllTimeSlots(@GetUser()user:User) {
+    return this.appointmentsService.findAllTimeSlots(user);
   }
 
   @Get('/timeslots/:id')
@@ -80,7 +82,11 @@ export class AppointmentsController {
     @Param('id') id: string,
     @Body() updateTimeSlotDto: UpdateTimeSlotDto,
   ) {
-    return this.appointmentsService.updateTimeSlot(+id, updateTimeSlotDto);
+    try {
+      return this.appointmentsService.updateTimeSlot(+id, updateTimeSlotDto);
+    } catch (e) {
+      return e.message
+    }
   }
 
   @Delete('/timeslots/:id')

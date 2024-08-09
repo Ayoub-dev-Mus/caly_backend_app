@@ -7,6 +7,7 @@ import { TimeSlot } from './entities/timeslots.entity';
 import { Repository } from 'typeorm';
 import { CreateTimeSlotDto } from './dto/create-timeslot.dto';
 import { UpdateTimeSlotDto } from './dto/update-timeslot.dto';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class AppointmentsService {
@@ -15,7 +16,7 @@ export class AppointmentsService {
     private appointmentRepository: Repository<Appointment>,
     @InjectRepository(TimeSlot)
     private timeSlotRepository: Repository<TimeSlot>,
-  ) {}
+  ) { }
 
   // Appointments CRUD
 
@@ -28,7 +29,7 @@ export class AppointmentsService {
     return this.appointmentRepository.find();
   }
 
-  async findAppointmentsByDateAndStore(date: Date, storeId: number) {}
+  async findAppointmentsByDateAndStore(date: Date, storeId: number) { }
 
   async findOneAppointment(id: number) {
     const appointment = await this.appointmentRepository.findOne({
@@ -58,14 +59,21 @@ export class AppointmentsService {
   // TimeSlots CRUD
 
   async createTimeSlot(createTimeSlotDto: CreateTimeSlotDto) {
-    const timeSlot = this.timeSlotRepository.create(createTimeSlotDto);
-    return this.timeSlotRepository.save(timeSlot);
+    try {
+      const timeSlot = this.timeSlotRepository.create(createTimeSlotDto);
+      return this.timeSlotRepository.save(timeSlot);
+    } catch (e) {
+      throw new Error(`Error in creating: ${e.message}`);
+    }
   }
 
-  async findAllTimeSlots() {
-    return this.timeSlotRepository.find();
-  }
-
+  async findAllTimeSlots(user: User) {
+    return this.timeSlotRepository.find({
+        where: {
+            store: user.store
+        }
+    });
+}
   async findTimeSlotsByDateAndStore(
     date: Date,
     storeId: number,
@@ -88,9 +96,13 @@ export class AppointmentsService {
   }
 
   async updateTimeSlot(id: number, updateTimeSlotDto: UpdateTimeSlotDto) {
-    const existingTimeSlot = await this.findOneTimeSlot(id);
-    this.timeSlotRepository.merge(existingTimeSlot, updateTimeSlotDto);
-    return this.timeSlotRepository.save(existingTimeSlot);
+    try {
+      const existingTimeSlot = await this.findOneTimeSlot(id);
+      this.timeSlotRepository.merge(existingTimeSlot, updateTimeSlotDto);
+      return this.timeSlotRepository.save(existingTimeSlot);
+    } catch (e) {
+      throw new Error(`Error in updating: ${e.message}`);
+    }
   }
 
   async removeTimeSlot(id: number) {

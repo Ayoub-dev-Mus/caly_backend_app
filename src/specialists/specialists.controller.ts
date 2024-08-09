@@ -25,7 +25,7 @@ export class SpecialistsController {
   constructor(private readonly specialistsService: SpecialistsService) {}
 
   @Post()
-  @UseInterceptors(FileInterceptor('profileImage'))
+  @UseInterceptors(FileInterceptor('profilePicture'))
   async create(
     @Body() createSpecialistDto: CreateSpecialistDto,
     @UploadedFile() profileImage?: Multer.File

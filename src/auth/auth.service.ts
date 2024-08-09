@@ -503,14 +503,11 @@ export class AuthService {
 
   async googleLogin(token: string): Promise<any> {
     try {
-      // Verify Firebase token and get user details
       const { email, firstName, lastName, picture } = await this.verifyFirebaseToken(token);
 
-      // Check if user already exists
       let user = await this.usersService.findOneByEmail(email);
 
       if (!user) {
-        // Create a new user if not found
         user = await this.usersService.create({
           email,
           firstName,
@@ -520,18 +517,15 @@ export class AuthService {
           phoneNumber: '',
           zipCode: '',
           state: '',
-          password: '', // No password needed for external auth users
+          password: '',
           profilePicture: picture,
         });
       } else {
-        // Update user profile picture if changed
         if (user.profilePicture !== picture) {
           user.profilePicture = picture;
           await this.usersService.update(user.id, { profilePicture: picture });
         }
       }
-
-      // Generate tokens for the user
       const tokens = await this.getTokens(
         user.id,
         user.email,
@@ -545,10 +539,8 @@ export class AuthService {
         user.profilePicture,
       );
 
-      // Update the refresh token
       await this.updateRefreshToken(user.id, tokens.refreshToken);
 
-      // Prepare response
       const response = {
         token: tokens.token,
         refreshToken: tokens.refreshToken,
@@ -575,8 +567,11 @@ export class AuthService {
 
   async verifyFirebaseToken(idToken: string): Promise<any> {
     try {
+
+
       const decodedToken = await admin.auth().verifyIdToken(idToken);
-      // Assuming decodedToken includes 'name' and 'picture'
+      
+      console.log(decodedToken)
       const fullName = decodedToken.name;
       let firstName = '',
         lastName = '';
