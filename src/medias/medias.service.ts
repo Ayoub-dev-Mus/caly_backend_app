@@ -58,9 +58,19 @@ export class MediasService {
       if (icon) {
         newIcon.path = await this.uploadProfileImage(icon);
       }
+
+      await this.iconRepository.save(newIcon)
       return newIcon
     } catch (e) {
       throw new InternalServerErrorException('failed to create icon ' + e.message);
+    }
+  }
+
+  async findAllIcons(){
+    try{
+      return this.iconRepository.find()
+    }catch(e){
+      return e.message
     }
   }
 

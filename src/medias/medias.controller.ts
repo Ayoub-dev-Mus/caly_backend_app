@@ -27,6 +27,15 @@ export class MediasController {
     }
   }
 
+  @Get('icons')
+  async getIcons(){
+    try{
+      return this.mediasService.findAllIcons()
+    }catch(e){
+      return e.message
+    }
+  }
+
   @Get()
   findAll() {
     return this.mediasService.findAll();
