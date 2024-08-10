@@ -36,6 +36,9 @@ import { SocketModule } from './socket/socket.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ChatModule } from './chats/chats.module';
 import { ReviewResponse } from './reviews/entities/reviewReponse';
+import { MediasModule } from './medias/medias.module';
+import { Icon } from './medias/entities/icon';
+import { Media } from './medias/entities/media.entity';
 
 @Module({
   providers: [
@@ -81,7 +84,9 @@ import { ReviewResponse } from './reviews/entities/reviewReponse';
         Review,
         DeviceToken,
         Notification,
-        ReviewResponse
+        ReviewResponse,
+        Media,
+        Icon
       ],
 
       synchronize: true,
@@ -103,6 +108,7 @@ import { ReviewResponse } from './reviews/entities/reviewReponse';
     RedisModule,
     SocketModule,
     ChatModule,
+    MediasModule,
 
   ],
 
