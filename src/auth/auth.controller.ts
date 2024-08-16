@@ -182,7 +182,6 @@ export class AuthController {
   ): Promise<{ token: string; refreshToken: string }> {
     try {
       const newTokens = await this.authService.refreshToken(user);
-      console.log(newTokens);
       return newTokens;
     } catch (error) {
       throw new HttpException(

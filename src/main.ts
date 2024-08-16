@@ -16,12 +16,14 @@ async function bootstrap() {
 
   app.useGlobalFilters(new TokenExpiredFilter());
 
+  /**
   admin.initializeApp(
     {
       credential: admin.credential.cert('src/config/mykey.json'),
     },
     'caly',
   );
+  **/
 
   // app.useWebSocketAdapter(new WsAdapter(app));
   const config = new DocumentBuilder()

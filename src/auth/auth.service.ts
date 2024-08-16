@@ -25,9 +25,11 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
   ) {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-    }, 'auth');
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+      });
+    }
   }
 
   async signUp(
@@ -570,7 +572,7 @@ export class AuthService {
 
 
       const decodedToken = await admin.auth().verifyIdToken(idToken);
-      
+
       console.log(decodedToken)
       const fullName = decodedToken.name;
       let firstName = '',

@@ -25,7 +25,7 @@ export class UsersService {
   ) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-    },'user');
+    },);
   }
 
 
