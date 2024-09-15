@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -7,6 +7,7 @@ import { Review } from './entities/review.entity';
 import { User } from 'src/users/entities/user.entity';
 import { ReviewResponse } from './entities/reviewReponse';
 import { CreateReviewResponseDto } from './dto/create-review-response.dto';
+import { UpdateReviewResponseDto } from './dto/updareReviewResponseDto';
 
 @Injectable()
 export class ReviewsService {
@@ -27,7 +28,28 @@ export class ReviewsService {
       throw new Error('Failed to create review' + error.message);
     }
   }
+  async patchReviewResponse(
+    reviewResponseId: number,
+    updateReviewResponseDto: UpdateReviewResponseDto,
+    user: User,
+  ): Promise<ReviewResponse> {
+    const reviewResponse = await this.reviewResponseRepository.findOne({
+      where: { id: reviewResponseId },
+      relations: ['user'],
+    });
 
+    if (!reviewResponse) {
+      throw new NotFoundException(`Review response with id ${reviewResponseId} not found`);
+    }
+
+    if (reviewResponse.user.id !== user.id) {
+      throw new UnauthorizedException('You are not authorized to update this response');
+    }
+
+    Object.assign(reviewResponse, updateReviewResponseDto);
+
+    return await this.reviewResponseRepository.save(reviewResponse);
+  }
   async respondToReview(
     reviewId: number,
     createReviewResponseDto: CreateReviewResponseDto,

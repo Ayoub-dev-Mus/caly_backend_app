@@ -21,6 +21,8 @@ import { Role } from 'src/users/enums/role';
 import { HasRoles } from 'src/common/role.decorator';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateReviewResponseDto } from './dto/create-review-response.dto';
+import { UpdateReviewResponseDto } from './dto/updareReviewResponseDto';
+import { ReviewResponse } from './entities/reviewReponse';
 
 @ApiTags('reviews')
 @Controller('reviews')
@@ -43,7 +45,17 @@ export class ReviewsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @HasRoles(Role.ADMIN, Role.USER , Role.STORE_OWNER , Role.STORE_STAFF)
+  @HasRoles(Role.ADMIN, Role.USER, Role.STORE_OWNER, Role.STORE_STAFF)
+  @Patch(':reviewId/respond/:responseId')
+  async patchReviewResponse(
+    @Param('id') reviewResponseId: number,
+    @Body() updateReviewResponseDto: UpdateReviewResponseDto,
+    @GetUser() user: User,
+  ): Promise<ReviewResponse> {
+    return this.reviewsService.patchReviewResponse(reviewResponseId, updateReviewResponseDto, user);
+  }
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HasRoles(Role.ADMIN, Role.USER, Role.STORE_OWNER, Role.STORE_STAFF)
   @Post(':id/respond')
   respondToReview(
     @Param('id') id: number,
