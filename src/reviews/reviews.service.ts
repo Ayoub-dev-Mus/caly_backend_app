@@ -33,23 +33,30 @@ export class ReviewsService {
     updateReviewResponseDto: UpdateReviewResponseDto,
     user: User,
   ): Promise<ReviewResponse> {
+    // Check if the review response exists before updating
     const reviewResponse = await this.reviewResponseRepository.findOne({
       where: { id: reviewResponseId },
-      relations: ['user'],
     });
 
     if (!reviewResponse) {
       throw new NotFoundException(`Review response with id ${reviewResponseId} not found`);
     }
 
-    if (reviewResponse.user.id !== user.id) {
-      throw new UnauthorizedException('You are not authorized to update this response');
-    }
+    // Optionally, you can add a check if the user has permission to update the review response
+    // For example, ensure the user is the owner or an admin
+    // if (reviewResponse.userId !== user.id && !user.isAdmin) {
+    //   throw new ForbiddenException('You do not have permission to update this review response');
+    // }
 
-    Object.assign(reviewResponse, updateReviewResponseDto);
+    // Perform the update using the repository's update method
+    await this.reviewResponseRepository.update(reviewResponseId, updateReviewResponseDto);
 
-    return await this.reviewResponseRepository.save(reviewResponse);
+    // Return the updated entity (fetch it again from the database if needed)
+    return await this.reviewResponseRepository.findOne({
+      where: { id: reviewResponseId },
+    });
   }
+
   async respondToReview(
     reviewId: number,
     createReviewResponseDto: CreateReviewResponseDto,

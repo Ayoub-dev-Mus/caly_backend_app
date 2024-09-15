@@ -9,6 +9,7 @@ import {
   NotFoundException,
   UseGuards,
   Query,
+  Req,
 } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
@@ -19,7 +20,7 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { Role } from 'src/users/enums/role';
 import { HasRoles } from 'src/common/role.decorator';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreateReviewResponseDto } from './dto/create-review-response.dto';
 import { UpdateReviewResponseDto } from './dto/updareReviewResponseDto';
 import { ReviewResponse } from './entities/reviewReponse';
@@ -44,16 +45,29 @@ export class ReviewsController {
     return this.reviewsService.getResponsesForReview(id);
   }
 
+  @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER, Role.STORE_OWNER, Role.STORE_STAFF)
-  @Patch(':reviewId/respond/:responseId')
+  @Patch('/response/:id')
   async patchReviewResponse(
     @Param('id') reviewResponseId: number,
     @Body() updateReviewResponseDto: UpdateReviewResponseDto,
     @GetUser() user: User,
-  ): Promise<ReviewResponse> {
-    return this.reviewsService.patchReviewResponse(reviewResponseId, updateReviewResponseDto, user);
+  ) {
+
+    const updatedReviewResponse = await this.reviewsService.patchReviewResponse(
+      reviewResponseId,
+      updateReviewResponseDto,
+      user,
+    );
+
+    if (!updatedReviewResponse) {
+      throw new NotFoundException(`Review response with id ${reviewResponseId} not found`);
+    }
+
+    return updatedReviewResponse;
   }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER, Role.STORE_OWNER, Role.STORE_STAFF)
   @Post(':id/respond')
