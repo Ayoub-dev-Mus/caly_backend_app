@@ -44,7 +44,6 @@ export class BookingsService {
     }
   }
 
-  // find all bookings by store
   async findAllByStore(
     user: User,
     createdAt?: Date,
