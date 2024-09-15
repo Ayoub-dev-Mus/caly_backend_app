@@ -53,7 +53,7 @@ export class BookingsService {
     try {
 
 
-      console.log(user.store)
+
 
 
       const whereClause: any = {
