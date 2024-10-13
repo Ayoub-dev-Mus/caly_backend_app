@@ -8,15 +8,15 @@ services:
     environment:
       - NODE_ENV
     depends_on:
-      - redis # This ensures that Redis starts before your app
+      - redis
 
   redis:
-    image: "redis:alpine" # Using the Alpine version for a smaller image size
+    image: "redis:alpine"
     ports:
-      - "6379:6379" # Optional: Expose Redis on port 6379 on the host
-    command: redis-server --appendonly yes # Optional: Enables AOF persistence
+      - "6379:6379"
+    command: redis-server --appendonly yes
     volumes:
-      - redis-data:/data # Persistent Redis data
+      - redis-data:/data 
 
 volumes:
-  redis-data: # Defines a volume for persisting Redis data
+  redis-data:
