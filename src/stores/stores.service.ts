@@ -84,41 +84,16 @@ export class StoresService {
     searchTerm: string = '',
   ): Promise<{ stores: Store[]; total: number }> {
     try {
-      const cacheKey = `stores:all:${page}:${pageSize}:${searchTerm}`;
+      const options: FindManyOptions<Store> = {
+        relations: ['services', 'specialists'],
+        where: searchTerm ? [{ name: ILike(`%${searchTerm}%`) }] : {},
+        take: pageSize,
+        skip: (page - 1) * pageSize,
+      };
 
-      try {
-        const cachedResult = await this.redisService.get(cacheKey);
+      const [stores, total] = await this.storeRepository.findAndCount(options);
 
-        if (cachedResult) {
-          return JSON.parse(cachedResult);
-        }
-      } catch (error) {
-        console.error('Error accessing Redis:', error);
-      }
-
-      try {
-        const options: FindManyOptions<Store> = {
-          relations: ['services', 'specialists'],
-          where: searchTerm ? [{ name: ILike(`%${searchTerm}%`) }] : {},
-          take: pageSize,
-          skip: (page - 1) * pageSize,
-        };
-
-        const [stores, total] = await this.storeRepository.findAndCount(options);
-
-        try {
-          await this.redisService.set(
-            cacheKey,
-            JSON.stringify({ stores, total }),
-          );
-        } catch (error) {
-          console.error('Error setting cache in Redis:', error);
-        }
-
-        return { stores, total };
-      } catch (error) {
-        throw new InternalServerErrorException('Failed to retrieve stores: ' + error.message);
-      }
+      return { stores, total };
     } catch (error) {
       throw new InternalServerErrorException('Failed to retrieve stores: ' + error.message);
     }
@@ -218,7 +193,7 @@ export class StoresService {
     }
   }
 
-  async findAllNearestStoresCached(
+  async findAllNearestStore(
     latitude: number,
     longitude: number,
     searchTerm: string = '',
@@ -226,16 +201,6 @@ export class StoresService {
     pageSize: number = 10,
     storeType?: string,
   ): Promise<{ stores: Store[]; total: number }> {
-    const cacheKey = `stores:nearest:${latitude}:${longitude}:${searchTerm}:${page}:${pageSize}:${storeType || 'all'}`;
-
-    try {
-      const cachedResult = await this.redisService.get(cacheKey);
-      if (cachedResult) {
-        return JSON.parse(cachedResult);
-      }
-    } catch (error) {
-      console.error('Error accessing Redis:', error);
-    }
 
     let queryBuilder = this.storeRepository
       .createQueryBuilder('store')
@@ -294,20 +259,12 @@ export class StoresService {
         .take(pageSize)
         .getRawMany();
 
-      try {
-        await this.redisService.set(
-          cacheKey,
-          JSON.stringify({ stores: result, total: totalCount }),
-        );
-      } catch (error) {
-        console.error('Error setting cache in Redis:', error);
-      }
-
       return { stores: result, total: totalCount };
     } catch (error) {
       throw new InternalServerErrorException('Failed to retrieve nearest stores: ' + error.message);
     }
   }
+
 
   async uploadStoreImages(files: Multer.File[]): Promise<string[]> {
     try {

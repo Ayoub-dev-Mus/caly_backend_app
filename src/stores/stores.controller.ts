@@ -111,7 +111,7 @@ export class StoresController {
     @Query('storeType') storeType?: string,
   ): Promise<any> {
     try {
-      const result = await this.storesService.findAllNearestStoresCached(
+      const result = await this.storesService.findAllNearestStore(
         latitude,
         longitude,
         searchTerm,
@@ -154,7 +154,7 @@ export class StoresController {
   ): Promise<any> {
     try {
       const result = await this.storesService.findAll(page, pageSize, searchTerm);
-      return result; 
+      return result;
     } catch (error) {
       this.logger.error('Failed to retrieve stores', error.stack);
       throw new HttpException({
