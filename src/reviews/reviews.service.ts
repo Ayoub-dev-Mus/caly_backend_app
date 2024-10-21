@@ -84,6 +84,28 @@ export class ReviewsService {
     return review.responses;
   }
 
+  async getStoreRating(storeId: number): Promise<any> {
+    try {
+      // Fetch all reviews for the store
+      const reviews = await this.reviewRepository.find({
+        where: { store: { id: storeId } },
+      });
+
+      // Calculate total reviews and total rating
+      const totalReviews = reviews.length;
+
+      const totalRatings = reviews.reduce((acc, review) => acc + review.rating, 0);
+      const averageRating = totalReviews > 0 ? totalRatings / totalReviews : 0;
+
+      return {
+        totalReviews,
+        averageRating: parseFloat(averageRating.toFixed(2)), // Format to 2 decimal places
+      };
+    } catch (error) {
+      throw new Error(`Failed to retrieve rating for store ${storeId}: ${error.message}`);
+    }
+  }
+
   async findAll(
     storeId?: number,
     limit: number = 10,
@@ -161,7 +183,6 @@ export class ReviewsService {
       }
       return review;
     } catch (error) {
-      // Handle error appropriately
       throw new Error(`Failed to fetch review with id ${id}`);
     }
   }

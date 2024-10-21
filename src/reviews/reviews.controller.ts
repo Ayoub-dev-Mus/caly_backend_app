@@ -68,6 +68,11 @@ export class ReviewsController {
     return updatedReviewResponse;
   }
 
+  @Get('store/:storeId/rating')
+  async getStoreRating(@Param('storeId') storeId: number) {
+    return this.reviewsService.getStoreRating(storeId);
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER, Role.STORE_OWNER, Role.STORE_STAFF)
   @Post(':id/respond')
