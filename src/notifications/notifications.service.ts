@@ -9,6 +9,8 @@ import { SocketGateway } from 'src/socket/socket.gateway';
 
 @Injectable()
 export class NotificationsService {
+  private readonly logger = new Logger(NotificationsService.name);
+
   constructor(
     @InjectRepository(Notification)
     private notificationRepository: Repository<Notification>,
@@ -16,7 +18,7 @@ export class NotificationsService {
     private socketGateway: SocketGateway,
   ) {}
 
-  async sendNotificationToDevices(notificationId: number , fcmTokens:string[]) {
+  async sendNotificationToDevices(notificationId: number, fcmTokens: string[]) {
     try {
       const notification = await this.notificationRepository.findOne({
         where: { id: notificationId },
@@ -36,13 +38,12 @@ export class NotificationsService {
         },
       };
 
-      // Split the tokens into chunks if needed (to avoid payload size limits)
-      const tokens = fcmTokens
+      // Split the tokens into chunks if needed
       const chunkSize = 1000; // Firebase allows up to 1000 tokens per request
       const tokenChunks = [];
 
-      for (let i = 0; i < tokens.length; i += chunkSize) {
-        tokenChunks.push(tokens.slice(i, i + chunkSize));
+      for (let i = 0; i < fcmTokens.length; i += chunkSize) {
+        tokenChunks.push(fcmTokens.slice(i, i + chunkSize));
       }
 
       const responses = [];
@@ -50,13 +51,12 @@ export class NotificationsService {
       for (const chunk of tokenChunks) {
         const response = await admin.messaging().sendToDevice(chunk, message);
         responses.push(response);
-        console.log('Successfully sent message to devices:', response);
+        this.logger.log('Successfully sent message to devices:', response);
       }
 
-      // Combine and return all responses
       return responses;
     } catch (error) {
-      console.error('Failed to send messages:', error);
+      this.logger.error('Failed to send messages:', error);
       throw error;
     }
   }
@@ -66,10 +66,38 @@ export class NotificationsService {
   ): Promise<Notification> {
     try {
       const savedNotification = await this.notificationRepository.save(createNotificationDto);
-      console.log('Notification saved and sent successfully:', savedNotification);
+      this.logger.log('Notification saved successfully:', savedNotification);
+
+      // Send the notification to Firebase
+      await this.sendNotificationToFirebase(savedNotification);
+
+    
+
       return savedNotification;
     } catch (error) {
-      console.error('Failed to create and send notification:', error);
+      this.logger.error('Failed to create and send notification:', error);
+      throw error;
+    }
+  }
+
+  private async sendNotificationToFirebase(notification: Notification): Promise<void> {
+    const message = {
+      notification: {
+        title: notification.title,
+        body: notification.message,
+      },
+      data: {
+        title: notification.title,
+        message: notification.message,
+        notificationId: notification.id.toString(), // Include the notification ID for later retrieval
+      },
+    };
+
+    try {
+      await admin.messaging().sendToTopic('notifications', message); // Assuming you want to send to a topic
+      this.logger.log('Notification sent to Firebase successfully');
+    } catch (error) {
+      this.logger.error('Failed to send notification to Firebase:', error);
       throw error;
     }
   }
@@ -81,7 +109,7 @@ export class NotificationsService {
         count: await this.getUnreadNotificationCount(),
       });
     } catch (error) {
-      console.error('Failed to mark notification as read:', error);
+      this.logger.error('Failed to mark notification as read:', error);
       throw error;
     }
   }
@@ -92,7 +120,7 @@ export class NotificationsService {
         where: { read: false },
       });
     } catch (error) {
-      console.error('Failed to fetch unread notification count:', error);
+      this.logger.error('Failed to fetch unread notification count:', error);
       throw error;
     }
   }
