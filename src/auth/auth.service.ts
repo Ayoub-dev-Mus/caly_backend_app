@@ -16,7 +16,6 @@ import { SignInDto } from './dto/signin.dto';
 import * as nodemailer from 'nodemailer';
 import * as admin from 'firebase-admin';
 import serviceAccount from '../../src/config/mykey.json';
-import { Firestore } from '@google-cloud/firestore';
 
 @Injectable()
 export class AuthService {

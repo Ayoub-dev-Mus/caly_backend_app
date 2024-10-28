@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { NotificationGateway } from './notification.gateway';
 
 @ApiTags('notifications')
@@ -24,6 +24,40 @@ export class NotificationsController {
   ) { }
 
   @Post('send/:id')
+  @ApiOperation({ summary: 'Send notification to devices' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the notification to be sent',
+    required: true,
+    type: Number,
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        fcmTokens: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Array of FCM tokens to send the notification to',
+        },
+      },
+      required: ['fcmTokens'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'The notification was sent successfully.',
+    schema: {
+      example: {
+        status: 'success',
+        responses: [],
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid request data.',
+  })
   async sendNotification(
     @Param('id') notificationId: number,
     @Body('fcmTokens') fcmTokens: string[],
