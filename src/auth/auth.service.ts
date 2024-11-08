@@ -506,6 +506,8 @@ export class AuthService {
     try {
       const { email, firstName, lastName, picture } = await this.verifyFirebaseToken(token);
 
+      console.log(email,firstName,lastName,picture)
+
       let user = await this.usersService.findOneByEmail(email);
 
       if (!user) {
@@ -574,6 +576,7 @@ export class AuthService {
 
       console.log(decodedToken)
       const fullName = decodedToken.name;
+      console.log(fullName)
       let firstName = '',
         lastName = '';
       if (fullName) {

@@ -36,7 +36,11 @@ export class ServicesController {
   }
 
 
-
+  @Get('store/:storeId/count')
+  async countByStore(@Param('storeId') storeId: number): Promise<{ count: number }> {
+    const count = await this.servicesService.countServicesByStore(storeId);
+    return { count };
+  }
 
   @Get()
   async findAll() {

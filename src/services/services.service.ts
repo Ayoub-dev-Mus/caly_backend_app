@@ -31,6 +31,14 @@ export class ServicesService {
     }
   }
 
+  async countServicesByStore(storeId: number): Promise<number> {
+    try {
+      return await this.serviceRepository.count({ where: { store: { id: storeId } } });
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
+
   async findOne(id: number): Promise<Service> {
     try {
       const service = await this.serviceRepository.findOne({ where: { id } });

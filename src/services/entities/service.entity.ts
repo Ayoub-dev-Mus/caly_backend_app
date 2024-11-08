@@ -31,10 +31,10 @@ export class Service {
   @Column()
   icon: string;
 
-  @Column({nullable:true})
-  status:Status
+  @Column({ nullable: true })
+  status: Status;
 
-  @ManyToOne(() => Store, (store) => store.services)
+  @ManyToOne(() => Store, (store) => store.services, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'storeId' })
   store: Store;
 
@@ -42,9 +42,9 @@ export class Service {
   @JoinTable()
   specialists: Specialist[];
 
-  @OneToMany(() => Booking, (booking) => booking.service)
+  @OneToMany(() => Booking, (booking) => booking.service, { onDelete: 'CASCADE' })
   bookings: Booking[];
 
-  @OneToMany(() => Offer, (offer) => offer.service)
+  @OneToMany(() => Offer, (offer) => offer.service, { onDelete: 'CASCADE' })
   offers: Offer[];
 }

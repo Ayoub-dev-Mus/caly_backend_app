@@ -77,14 +77,17 @@ export class Store {
   @Column('simple-array', { nullable: true })
   images: string[];
 
-  @Column()
+  @Column({ nullable: true })
   facebookLink: string;
 
-  @Column()
+  @Column({ nullable: true })
   instagramLink: string;
 
-  @Column()
+  @Column({ nullable: true })
   twitterLink: string;
+
+  @Column({ nullable: true })
+  tiktokLink: string;
 
   @OneToMany(() => Specialist, (specialist) => specialist.store)
   specialists: Specialist[];
