@@ -62,7 +62,7 @@ export class ReviewsService {
     createReviewResponseDto: CreateReviewResponseDto,
     user: User,
   ): Promise<ReviewResponse> {
-    const review = await this.reviewRepository.findOne({ where: { id: reviewId }, relations: ['responses'] });
+    const review = await this.reviewRepository.findOne({ where: { id: reviewId }, relations: ['response'] });
     if (!review) {
       throw new NotFoundException(`Review with id ${reviewId} not found`);
     }
@@ -76,7 +76,7 @@ export class ReviewsService {
   }
 
   async getResponsesForReview(reviewId: number): Promise<ReviewResponse> {
-    const review = await this.reviewRepository.findOne({ where: { id: reviewId }, relations: ['responses'] });
+    const review = await this.reviewRepository.findOne({ where: { id: reviewId }, relations: ['response'] });
     if (!review) {
       throw new NotFoundException(`Review with id ${reviewId} not found`);
     }
@@ -119,7 +119,7 @@ export class ReviewsService {
       const reviews = await this.reviewRepository.find({
         relations: ['store', 'user'],
         where: whereConditions,
-        take: limit, 
+        take: limit,
         skip: offset,
         select: {
           user: {
