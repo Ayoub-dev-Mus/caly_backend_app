@@ -73,6 +73,7 @@ export class ReviewsController {
     return this.reviewsService.getStoreRating(storeId);
   }
 
+  @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HasRoles(Role.ADMIN, Role.USER, Role.STORE_OWNER, Role.STORE_STAFF)
   @Post(':id/respond')

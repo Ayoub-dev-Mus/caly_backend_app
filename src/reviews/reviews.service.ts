@@ -76,12 +76,14 @@ export class ReviewsService {
   }
 
   async getResponsesForReview(reviewId: number): Promise<ReviewResponse> {
-    const review = await this.reviewRepository.findOne({ where: { id: reviewId }, relations: ['response'] });
+    const review = await this.reviewResponseRepository.findOne({ where: { review: {id:reviewId} }});
     if (!review) {
       throw new NotFoundException(`Review with id ${reviewId} not found`);
     }
 
-    return review.response;
+    console.log(review.response)
+
+    return review;
   }
 
   async getStoreRating(storeId: number): Promise<any> {
