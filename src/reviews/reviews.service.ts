@@ -42,14 +42,7 @@ export class ReviewsService {
       throw new NotFoundException(`Review response with id ${reviewResponseId} not found`);
     }
 
-    const existingReview = await this.reviewRepository.findOne({
-      where: { id: reviewResponse.review.id },  // assuming reviewId is in the response
-    });
-
-    if (existingReview && existingReview.response) {  // Assuming 'response' field indicates if a response exists
-      throw new BadRequestException('This review has already been responded to.');
-    }
-
+    
     await this.reviewResponseRepository.update(reviewResponseId, updateReviewResponseDto);
 
     return await this.reviewResponseRepository.findOne({
