@@ -42,7 +42,7 @@ export class ReviewsService {
       throw new NotFoundException(`Review response with id ${reviewResponseId} not found`);
     }
 
-    
+
     await this.reviewResponseRepository.update(reviewResponseId, updateReviewResponseDto);
 
     return await this.reviewResponseRepository.findOne({
@@ -69,7 +69,7 @@ export class ReviewsService {
   }
 
   async getResponsesForReview(reviewId: number): Promise<ReviewResponse> {
-    const review = await this.reviewResponseRepository.findOne({ where: { review: {id:reviewId} }});
+    const review = await this.reviewResponseRepository.findOne({ where: { review: { id: reviewId } } });
     if (!review) {
       throw new NotFoundException(`Review with id ${reviewId} not found`);
     }
@@ -200,6 +200,12 @@ export class ReviewsService {
     } catch (error) {
       // Handle error appropriately
       throw new Error(`Failed to remove review with id ${id}`);
+    }
+  }
+  async deleteReviewResponse(reviewResponseId: number): Promise<void> {
+    const result = await this.reviewResponseRepository.delete(reviewResponseId);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Review response with id ${reviewResponseId} not found`);
     }
   }
 
