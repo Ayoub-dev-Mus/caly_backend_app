@@ -89,19 +89,19 @@ export class Store {
   @Column({ nullable: true })
   tiktokLink: string;
 
-  @OneToMany(() => Specialist, (specialist) => specialist.store)
+  @OneToMany(() => Specialist, (specialist) => specialist.store, { onDelete: 'SET NULL' })
   specialists: Specialist[];
 
-  @OneToMany(() => Service, (service) => service.store)
+  @OneToMany(() => Service, (service) => service.store, { onDelete: 'SET NULL' })
   services: Service[];
 
-  @OneToMany(() => TimeSlot, (timeSlot) => timeSlot.store)
+  @OneToMany(() => TimeSlot, (timeSlot) => timeSlot.store, { onDelete: 'SET NULL' })
   timeSlots: TimeSlot[];
 
-  @OneToMany(() => Offer, (offer) => offer.store)
+  @OneToMany(() => Offer, (offer) => offer.store, { onDelete: 'SET NULL' })
   offers: Offer[];
 
-  @OneToMany(() => Review, (review) => review.store)
+  @OneToMany(() => Review, (review) => review.store, { onDelete: 'SET NULL' })
   reviews: Review[];
 
   @OneToOne(() => User)

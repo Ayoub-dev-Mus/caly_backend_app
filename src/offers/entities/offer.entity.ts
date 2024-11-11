@@ -34,6 +34,6 @@ export class Offer {
   @ManyToOne(() => Store, (store) => store.offers)
   store: Store;
 
-  @ManyToOne(() => Service, (service) => service.offers)
+  @ManyToOne(() => Service, (service) => service.offers , {onDelete:'CASCADE'})
   service: Service;
 }

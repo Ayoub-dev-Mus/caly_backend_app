@@ -25,16 +25,16 @@ export class Specialist {
   @Column()
   specialty: string;
 
-  @Column({nullable:true})
+  @Column({ nullable: true })
   profilePicture: string;
 
-  @ManyToMany(() => Service, (service) => service.specialists)
+  @ManyToMany(() => Service, (service) => service.specialists, { onDelete: 'SET NULL' })
   @JoinTable()
   services: Service[];
 
-  @ManyToOne(() => Store, (store) => store.specialists)
+  @ManyToOne(() => Store, (store) => store.specialists, { onDelete: 'SET NULL' })
   store: Store;
 
-  @OneToMany(() => Booking, (booking) => booking.specialist)
+  @OneToMany(() => Booking, (booking) => booking.specialist, { onDelete: 'SET NULL' })
   bookings: Booking[];
 }

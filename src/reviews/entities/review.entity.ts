@@ -3,15 +3,16 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Store } from 'src/stores/entities/store.entity';
 import { User } from 'src/users/entities/user.entity';
 import { ReviewResponse } from './reviewReponse';
-
 
 @Entity()
 export class Review {
@@ -36,8 +37,10 @@ export class Review {
   @ManyToOne(() => Store, (store) => store.reviews)
   store: Store;
 
-  @OneToMany(() => ReviewResponse, (response) => response.review)
-  responses: ReviewResponse[];
+  // Change this from @OneToMany to @OneToOne to allow only one response
+  @OneToOne(() => ReviewResponse, (response) => response.review)
+  @JoinColumn() // This tells TypeORM where to store the foreign key
+  response: ReviewResponse;
 
   @BeforeInsert()
   async checkRating() {

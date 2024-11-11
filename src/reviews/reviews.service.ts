@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -33,7 +33,7 @@ export class ReviewsService {
     updateReviewResponseDto: UpdateReviewResponseDto,
     user: User,
   ): Promise<ReviewResponse> {
-    // Check if the review response exists before updating
+    // Find the review response
     const reviewResponse = await this.reviewResponseRepository.findOne({
       where: { id: reviewResponseId },
     });
@@ -42,16 +42,16 @@ export class ReviewsService {
       throw new NotFoundException(`Review response with id ${reviewResponseId} not found`);
     }
 
-    // Optionally, you can add a check if the user has permission to update the review response
-    // For example, ensure the user is the owner or an admin
-    // if (reviewResponse.userId !== user.id && !user.isAdmin) {
-    //   throw new ForbiddenException('You do not have permission to update this review response');
-    // }
+    const existingReview = await this.reviewRepository.findOne({
+      where: { id: reviewResponse.review.id },  // assuming reviewId is in the response
+    });
 
-    // Perform the update using the repository's update method
+    if (existingReview && existingReview.response) {  // Assuming 'response' field indicates if a response exists
+      throw new BadRequestException('This review has already been responded to.');
+    }
+
     await this.reviewResponseRepository.update(reviewResponseId, updateReviewResponseDto);
 
-    // Return the updated entity (fetch it again from the database if needed)
     return await this.reviewResponseRepository.findOne({
       where: { id: reviewResponseId },
     });
@@ -75,23 +75,21 @@ export class ReviewsService {
     return this.reviewResponseRepository.save(reviewResponse);
   }
 
-  async getResponsesForReview(reviewId: number): Promise<ReviewResponse[]> {
+  async getResponsesForReview(reviewId: number): Promise<ReviewResponse> {
     const review = await this.reviewRepository.findOne({ where: { id: reviewId }, relations: ['responses'] });
     if (!review) {
       throw new NotFoundException(`Review with id ${reviewId} not found`);
     }
 
-    return review.responses;
+    return review.response;
   }
 
   async getStoreRating(storeId: number): Promise<any> {
     try {
-      // Fetch all reviews for the store
       const reviews = await this.reviewRepository.find({
         where: { store: { id: storeId } },
       });
 
-      // Calculate total reviews and total rating
       const totalReviews = reviews.length;
 
       const totalRatings = reviews.reduce((acc, review) => acc + review.rating, 0);
@@ -121,7 +119,7 @@ export class ReviewsService {
       const reviews = await this.reviewRepository.find({
         relations: ['store', 'user'],
         where: whereConditions,
-        take: limit, // Limit the number of reviews returned
+        take: limit, 
         skip: offset,
         select: {
           user: {

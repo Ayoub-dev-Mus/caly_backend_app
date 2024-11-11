@@ -11,6 +11,7 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
+  DeleteDateColumn,
 } from 'typeorm';
 import { Status } from '../enum/status';
 
@@ -34,17 +35,26 @@ export class Service {
   @Column({ nullable: true })
   status: Status;
 
-  @ManyToOne(() => Store, (store) => store.services, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Store, (store) => store.services,{ onDelete: 'SET NULL' })
   @JoinColumn({ name: 'storeId' })
   store: Store;
 
-  @ManyToMany(() => Specialist, (specialist) => specialist.services)
+  @ManyToMany(() => Specialist, (specialist) => specialist.services, { onDelete: 'SET NULL' })
   @JoinTable()
   specialists: Specialist[];
 
-  @OneToMany(() => Booking, (booking) => booking.service, { onDelete: 'CASCADE' })
+  @OneToMany(() => Booking, (booking) => booking.service, { onDelete: 'SET NULL' })
   bookings: Booking[];
 
-  @OneToMany(() => Offer, (offer) => offer.service, { onDelete: 'CASCADE' })
+  @OneToMany(() => Offer, (offer) => offer.service, { onDelete: 'SET NULL' })
   offers: Offer[];
+
+  // Soft delete column for marking the service as deleted
+  @DeleteDateColumn({ nullable: true })
+  deletedAt: Date;
+
+  // Method to soft delete the service
+  softDelete() {
+    this.deletedAt = new Date();
+  }
 }
